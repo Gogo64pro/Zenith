@@ -106,6 +106,7 @@ class Main {
 }
 ```
 - **!! To export to Java you must have a `package` set. You can export to java even if you are trying to export a normal function. From Java's side the function would be a method in the `functions` class**
+
  **Low-Level Control**
 ```
 unsafe {
@@ -119,13 +120,13 @@ unsafe {
  --target=jvm|native|wasm
  --braces=required|optional
 
-- Package Manager: zenith-pkg (WIP).
+- Package Manager: zenith-pkg (WIP). RIP if you think this will exist
 
 ## Roadmap
 
 - JVM target.
 
-- WASM support.
+- WASM support. (NOT PLANNED YET)
 
 - IDE plugins (VS Code/LSP).
 
@@ -135,7 +136,7 @@ unsafe {
 ### Keywords
 - ```let``` - Declares a dynamic variable
 - ```var``` - Declares a dynamic variable, same as let
-- ```dyanmic``` - Marks a variable as dynamic, alternative to `let` and `ver`
+- ```dyanmic``` - Marks a variable as dynamic, alternative to `let` and `var`
 - ```fun``` - Declares a dynamic function, can be used with static return type functions too
 - ```hoist``` - Hoists a variable to the top of it's scope. Defines at the normal point
 - `unsigned` - Makes a number variable unsigned
@@ -171,7 +172,7 @@ unsafe {
 - `float` - 4 byte decimal number
 - `double` -  8 byte decimal nunber
 
-**<span style="font-size: 0.95em; margin-left: 0.5em; display: block; ">Other Types</span>**
+**<span style="font-size: 0.95em; margin-left: 0.5em; display: block; ">Other primitive Types</span>**
 - `string` - A string !! Not a `class`
 - `freeobj` -  A javascript like object that can store data, functions, etc. If it is being used like a `struct` it will be compiled as if it is a `struct`. There are a couple of ways to use it 
 - `Number` - A JS like number that supports decimals and whole numbers up to 8 bytes
@@ -206,6 +207,7 @@ somestruct nicename = freeobj {} //Type conversion error
 
 - `IO` - simple console and file IO
 - `Result<T,E>` - for Rust-like error handling
+- Some other ones I forgot
 
 ### Blocks
 **Functions**
@@ -494,7 +496,7 @@ fun main() {
 ```
 **Structs**
 - Structs aren't the same as classes
-- They still support Inheritance, Constructors, destructors, and method overriding, operator overloading. They don't have automatic getters and setters. They should be used in simpler data structures
+- They still support Inheritance, Constructors, destructors, and method overriding, operator overloading. They don't have automatic getters and setters. They should be used in simpler data structures //Not sure about the getters and setters might remove that req
 ```
  struct Vector3{
      public int x;

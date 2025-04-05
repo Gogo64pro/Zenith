@@ -1,0 +1,39 @@
+"C:\Program Files\JetBrains\CLion 2023.1.4\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/JetBrains/CLion 2023.1.4/bin/ninja/win/x64/ninja.exe" "-DCMAKE_C_COMPILER=C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/cl.exe" "-DCMAKE_CXX_COMPILER=C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/cl.exe" -G Ninja -S C:\Users\gogop\CLionProjects\Zenith -B C:\Users\gogop\CLionProjects\Zenith\cmake-build-debug-visual-studio
+-- The C compiler identification is MSVC 19.43.34809.0
+-- The CXX compiler identification is MSVC 19.43.34809.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/cl.exe
+-- Check for working C compiler: C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/cl.exe - broken
+CMake Error at C:/Program Files/JetBrains/CLion 2023.1.4/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeTestCCompiler.cmake:70 (message):
+  The C compiler
+
+    "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.43.34808/bin/Hostx64/x64/cl.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: C:/Users/gogop/CLionProjects/Zenith/cmake-build-debug-visual-studio/CMakeFiles/CMakeScratch/TryCompile-9zrw68
+    
+    Run Build Command(s):C:/Program Files/JetBrains/CLion 2023.1.4/bin/ninja/win/x64/ninja.exe cmTC_3278d && [1/2] Building C object CMakeFiles\cmTC_3278d.dir\testCCompiler.c.obj
+    [2/2] Linking C executable cmTC_3278d.exe
+    FAILED: cmTC_3278d.exe 
+    cmd.exe /C "cd . && "C:\Program Files\JetBrains\CLion 2023.1.4\bin\cmake\win\x64\bin\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\cmTC_3278d.dir --rc=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\rc.exe --mt=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\mt.exe --manifests  -- C:\PROGRA~1\MIB055~1\2022\COMMUN~1\VC\Tools\MSVC\1443~1.348\bin\Hostx64\x64\link.exe /nologo CMakeFiles\cmTC_3278d.dir\testCCompiler.c.obj  /out:cmTC_3278d.exe /implib:cmTC_3278d.lib /pdb:cmTC_3278d.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+    LINK Pass 1: command "C:\PROGRA~1\MIB055~1\2022\COMMUN~1\VC\Tools\MSVC\1443~1.348\bin\Hostx64\x64\link.exe /nologo CMakeFiles\cmTC_3278d.dir\testCCompiler.c.obj /out:cmTC_3278d.exe /implib:cmTC_3278d.lib /pdb:cmTC_3278d.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTFILE:CMakeFiles\cmTC_3278d.dir/intermediate.manifest CMakeFiles\cmTC_3278d.dir/manifest.res" failed (exit code 1120) with the following output:
+    MSVCRTD.lib(utility_app.obj) : error LNK2019: unresolved external symbol __imp_RoInitialize referenced in function __scrt_initialize_winrt
+    cmTC_3278d.exe : fatal error LNK1120: 1 unresolved externals
+    ninja: build stopped: subcommand failed.
+    
+    
+
+  
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+See also "C:/Users/gogop/CLionProjects/Zenith/cmake-build-debug-visual-studio/CMakeFiles/CMakeOutput.log".
+See also "C:/Users/gogop/CLionProjects/Zenith/cmake-build-debug-visual-studio/CMakeFiles/CMakeError.log".

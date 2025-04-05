@@ -1,0 +1,32 @@
+fun add(let a, var b){
+    return a+b
+}
+fun add(int a, long b){
+    return a+b
+}
+fun int add(int a, float b){
+    return a+b
+}
+int add(int a, int b){
+    return a+b
+}
+int add({int a, int b}){
+    return a+b
+}
+int add({int a,int  b, long c}){
+    return a+b
+}
+@Async
+string getPacket(){
+    return Net.something()
+}
+long fibonacci(long num){
+    if(num==0){
+        return 0;
+    }
+    if(num==1){
+        return 1;
+    }
+    return fibonacci(num-1)+fibonacci(num-2)
+}
+//Removed (let a,b) b will be same as a because im too lazy to make a deep clone func

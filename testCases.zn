@@ -1,0 +1,227 @@
+class EmptyClass {}
+class Person {
+    privatew string name;
+    protectedw int age;
+    public double height;
+}
+class Calculator {
+    public int add(int a, int b) {
+        return a + b;
+    }
+
+    protected double sqrt(double num) {
+        return num * num;
+    }
+}
+class Vehicle {
+    privatew string model;
+    public int year;
+
+    public Vehicle(string model, int year) {
+        this.model = model;
+        this.year = year;
+    }
+}
+class Animal {
+    protectedw string species;
+}
+
+class Cat : Animal {
+    privatew string name;
+
+    public Cat(string name) {
+        this.name = name;
+        this.species = "Felis catus";
+    }
+}
+class BankAccount {
+    privatew double balance;
+    public const string accountNumber;
+    protectedw string owner;
+
+    public BankAccount(string accountNumber, string owner) : accountNumber(accountNumber) {
+        this.owner = owner;
+        this.balance = 0.0;
+    }
+
+    public void deposit(double amount) {
+        this.balance += amount;
+    }
+
+    protected bool withdraw(double amount) {
+        if (amount <= balance) {
+            balance -= amount;
+            return true;
+        }
+        return false;
+    }
+}
+class X {}
+
+//class ユーザー {} //Def failing this YEP I DID
+
+class StrangeFormatting {
+
+
+
+}
+
+class ProtectionDemo {
+    public int a;
+    protected int b;
+    private int c;
+    privatew int d;
+    protectedw int e;
+}
+
+//class {}
+
+//class Invalid
+
+class DuplicateFields {
+    public int x;
+    private int x;
+}
+
+//class BadProtection {
+//    publicw int x;
+//}
+
+//class : Base {}
+
+// Free Objects
+let obj = { x: 10, y: 20 };
+let inferredObj = { name: "Zenith", version: 1.0 };
+
+// Manual Memory
+fun main(){
+    unsafe {
+        let ptr = malloc(1024);
+        ptr[0] = 42;
+        free(ptr);
+    }
+}
+// Scope blocks
+//scope {
+    let buffer = malloc(512);
+    // auto-freed at end of scope
+//}
+
+// Static types
+int x = 10;
+//struct Point { int x, y; }
+Point p = {1, 2};
+
+// Dynamic types
+let y = "dynamic";
+dynamic z = 3.14;
+
+// Freeobj variations
+freeobj config = {
+    debug: true,
+    log: (msg) => IO.print(msg)
+};
+
+freeobj config2 = freeobj {
+    debug: true,
+    log: (msg) => IO.print(msg)
+};
+
+class Vehicle {
+    privatew string model;
+    public int year;
+
+    public Vehicle(string m, int y) {
+        this.model = m;
+        this.year = y;
+    }
+}
+
+//struct Color {
+//    byte r, g, b;
+//}
+//
+//union Number {
+//    int i;
+//    float f;
+//}
+
+@Async fun fetchData() -> Future<string> {
+    let data = await http.get("example.com");
+    return data;
+}
+
+//actor Counter {
+//    private int value = 0;
+//
+//    public int increment() {
+//        this.value++;
+//        return this.value;
+//    }
+//}
+unsafe {
+    extern "C" {
+        fn puts(s: *const char);
+    }
+
+    puts("Hello from C!");
+}
+
+// String interpolation
+let name = "World";
+IO.print("Hello, ${name}!");
+
+// Optional braces (when enabled)
+if (condition)
+    IO.print("No braces needed");
+
+// Hoisting
+hoist var x = 10;
+
+class RestrictedDemo {
+    privatew int adminCode;  // Class-only write
+    protectedw int auditId; // Hierarchy-only write
+    const public string id; // Immutable public
+}
+
+class Database {
+    privatew Connection conn;
+
+    public Database(string url) {
+        this.conn = new Connection(url);
+    }
+
+    @Async public fun query(string sql) -> Future<Result<freeobj, string>> {
+        try {
+            let result = await conn.execute(sql);
+            return Ok(result);
+        } catch (e) {
+            return Err(e.message);
+        }
+    }
+}
+
+fun main() {
+    let db = new Database("localhost:5432");
+    let result = await db.query("SELECT * FROM users");
+
+    match (result) {
+        Ok(data) => IO.print("Got ${data.length} rows"),
+        Err(msg) => IO.print("Error: ${msg}")
+    }
+}
+
+// Invalid memory access
+unsafe {
+    let ptr = malloc(10);
+    ptr[10] = 1;  // Should fail (out of bounds)
+}
+
+// Type mismatch
+struct Point { int x, y; }
+Point p = {1.5, 2};  // Should fail (float->int)
+
+// Invalid protection
+class Demo {
+    publicw int x;  // Should fail (no publicw)
+}

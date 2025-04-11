@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <memory>
 
 namespace zenith {
 	struct SourceLocation {
@@ -19,5 +20,6 @@ namespace zenith {
 
 	struct ExprNode : ASTNode {virtual bool isConstructorCall() const { return false; }};
 	struct StmtNode : ASTNode {};
+
 
 } // zenith

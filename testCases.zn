@@ -102,14 +102,14 @@ fun main(){
     }
 }
 // Scope blocks
-//scope {
-    let buffer = malloc(512);
-    // auto-freed at end of scope
-//}
+scope {
+  let buffer = malloc(512);
+  // auto-freed at end of scope
+}
 
 // Static types
 int x = 10;
-//struct Point { int x, y; }
+struct Point { int x, y; }
 Point p = {1, 2};
 
 // Dynamic types
@@ -137,31 +137,31 @@ class Vehicle {
     }
 }
 
-//struct Color {
-//    byte r, g, b;
-//}
-//
-//union Number {
-//    int i;
-//    float f;
-//}
+struct Color {
+    byte r, g, b;
+}
+
+union Number {
+    int i;
+    float f;
+}
 
 @Async fun fetchData() -> Future<string> {
     let data = await http.get("example.com");
     return data;
 }
 
-//actor Counter {
-//    private int value = 0;
-//
-//    public int increment() {
-//        this.value++;
-//        return this.value;
-//    }
-//}
+actor Counter {
+    private int value = 0;
+
+    public int increment() {
+        this.value++;
+        return this.value;
+    }
+}
 unsafe {
     extern "C" {
-        fn puts(s: *const char);
+        fun puts(*const char s);
     }
 
     puts("Hello from C!");
@@ -219,7 +219,7 @@ unsafe {
 
 // Type mismatch
 struct Point { int x, y; }
-Point p = {1.5, 2};  // Should fail (float->int)
+Point p = {1.5, 2};  // Should fail (floa->int)
 
 // Invalid protection
 class Demo {

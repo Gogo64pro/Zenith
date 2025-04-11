@@ -19,10 +19,28 @@ namespace zenith {
 			this->loc = loc;
 		}
 
-		std::string toString(int indent = 0) const {
+		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "Block {\n";
+			for (const auto& stmt : statements) {
+				ss << stmt->toString(indent + 2) << "\n";
+			}
+			ss << pad << "}";
+			return ss.str();
+		}
+	};
+
+	struct ScopeBlockNode : BlockNode {
+
+		explicit ScopeBlockNode(SourceLocation loc,
+		                        std::vector<std::unique_ptr<ASTNode>> stmts)
+				: BlockNode(std::move(loc), std::move(stmts)) {}
+
+		std::string toString(int indent = 0) const override {
+			std::string pad(indent, ' ');
+			std::stringstream ss;
+			ss << pad << "Scope Block {\n";
 			for (const auto& stmt : statements) {
 				ss << stmt->toString(indent + 2) << "\n";
 			}

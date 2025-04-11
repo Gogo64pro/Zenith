@@ -1,12 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <unordered_set>
 #include "../core/ASTNode.hpp"
 
 namespace zenith {
 	// Base type node
 	struct TypeNode : ASTNode {
-		enum Kind { PRIMITIVE, CLASS, STRUCT, ARRAY, FUNCTION, DYNAMIC } kind;
+		enum Kind { PRIMITIVE, OBJECT, ARRAY, FUNCTION, DYNAMIC, TEMPLATE } kind;
 
 		explicit TypeNode(SourceLocation loc, Kind k) : kind(k) {
 			this->loc = loc;
@@ -14,8 +15,11 @@ namespace zenith {
 
 		virtual std::string toString(int indent = 0) const {
 			std::string pad(indent, ' ');
-			static const char* kindNames[] = {"PRIMITIVE", "CLASS", "STRUCT", "ARRAY", "FUNCTION", "DYNAMIC"};
+			static const char* kindNames[] = {"PRIMITIVE", "CLASS", "Object", "FUNCTION", "DYNAMIC", "TEMPLATE"};
 			return pad + "Type(" + kindNames[kind] + ")";
+		}
+		virtual bool isDynamic() const {
+			return kind==DYNAMIC;
 		}
 	};
 
@@ -32,6 +36,13 @@ namespace zenith {
 			                                  "BOOL", "NUMBER", "BIGINT", "BIGNUMBER", "SHORT", "LONG", "BYTE"};
 			return pad + "PrimitiveType(" + typeNames[type] + ")";
 		}
+		bool isDynamic() const override {
+			static const std::unordered_set<Type> basic_types = {
+					STRING, NUMBER, BIGNUMBER, BIGINT
+			};
+
+			return !basic_types.contains(type);
+		}
 	};
 
 	// Class/struct types
@@ -39,7 +50,7 @@ namespace zenith {
 		std::string name;
 
 		NamedTypeNode(SourceLocation loc, std::string n)
-				: TypeNode(loc, CLASS), name(std::move(n)) {}
+				: TypeNode(loc, OBJECT), name(std::move(n)) {}
 
 		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
@@ -58,6 +69,37 @@ namespace zenith {
 			std::string pad(indent, ' ');
 			return pad + "ArrayType\n" +
 			       elementType->toString(indent + 2);
+		}
+	};
+	struct TemplateTypeNode : TypeNode {
+		std::string baseName;
+		std::vector<std::unique_ptr<TypeNode>> templateArgs;
+
+		TemplateTypeNode(SourceLocation loc,
+		                 std::string baseName,
+		                 std::vector<std::unique_ptr<TypeNode>> templateArgs)
+				: TypeNode(loc, TEMPLATE),
+				  baseName(std::move(baseName)),
+				  templateArgs(std::move(templateArgs)) {}
+
+		std::string toString(int indent = 0) const override {
+			std::string pad(indent, ' ');
+			std::stringstream ss;
+			ss << pad << "TemplateType(" << baseName << "<";
+			for (size_t i = 0; i < templateArgs.size(); ++i) {
+				if (i > 0) ss << ", ";
+				ss << templateArgs[i]->toString();
+			}
+			ss << ">)";
+			return ss.str();
+		}
+
+		bool isDynamic() const override {
+			// A template type is dynamic if any of its arguments are dynamic
+			for (const auto& arg : templateArgs) {
+				if (arg->isDynamic()) return true;
+			}
+			return false;
 		}
 	};
 }

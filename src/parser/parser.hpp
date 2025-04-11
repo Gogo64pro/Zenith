@@ -22,6 +22,7 @@ namespace zenith {
 		const Flags& flags;
 		std::ostream& errStream;
 		ErrorReporter errorReporter;
+		std::vector<std::unique_ptr<AnnotationNode>> pendingAnnotations;
 
 		// Helper methods
 		bool isAtEnd() const;
@@ -41,8 +42,10 @@ namespace zenith {
 		bool peekIsExpressionStart() const;
 		bool peekIsStatementTerminator() const;
 		bool peekIsBlockEnd() const;
+		bool peekIsTemplateStart() const;
 		bool isInStructInitializerContext() const;
 
+		//std::vector<std::unique_ptr<MemberDeclNode>> parseActorMembers(std::string& actorName);
 		// Parsing methods
 		std::unique_ptr<ExprNode> parseExpression(int precedence = 0);
 		std::unique_ptr<ExprNode> parsePrimary();
@@ -51,13 +54,20 @@ namespace zenith {
 		std::unique_ptr<StmtNode> parseStatement();
 		std::pair<std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>>, bool> parseParameters();
 		std::vector<std::string> parseArrowFunctionParams();
+		std::unique_ptr<MemberDeclNode> parseConstructor(const MemberDeclNode::Access &access, bool isConst, std::string &className, std::vector<std::unique_ptr<AnnotationNode>> &annotations);
+		std::unique_ptr<MemberDeclNode> parseField(std::vector<std::unique_ptr<AnnotationNode>> &annotations, const MemberDeclNode::Access &access, bool isConst);
+		std::unique_ptr<MemberDeclNode> parseMessageHandler(std::vector<std::unique_ptr<AnnotationNode>> annotations);
+		std::unique_ptr<MemberDeclNode> parseObjectPrimary(std::string &name, std::vector<std::unique_ptr<AnnotationNode>> &annotations, MemberDeclNode::Access defaultLevel = MemberDeclNode::PUBLIC);
 
 		// Declaration parsers
-		std::unique_ptr<VarDeclNode> parseVarDecl();
-		std::unique_ptr<FunctionDeclNode> parseFunction();
-		std::unique_ptr<ClassDeclNode> parseClass();
 		std::unique_ptr<ImportNode> parseImport();
+		std::unique_ptr<VarDeclNode> parseVarDecl();
+		std::unique_ptr<UnionDeclNode> parseUnion();
+		std::unique_ptr<ObjectDeclNode> parseObject();
+		std::unique_ptr<ActorDeclNode> parseActorDecl();
+		std::unique_ptr<FunctionDeclNode> parseFunction();
 		std::unique_ptr<AnnotationNode> parseAnnotation();
+		std::vector<std::unique_ptr<AnnotationNode>> parseAnnotations();
 
 		// Statement parsers
 		std::unique_ptr<IfNode> parseIfStmt();
@@ -65,6 +75,7 @@ namespace zenith {
 		std::unique_ptr<WhileNode> parseWhileStmt();
 		std::unique_ptr<DoWhileNode> parseDoWhileStmt();
 		std::unique_ptr<ReturnStmtNode> parseReturnStmt();
+		std::unique_ptr<ScopeBlockNode> parseScopeBlock();
 		std::unique_ptr<BlockNode> parseBlock();
 
 		// Expression parsers
@@ -76,6 +87,7 @@ namespace zenith {
 		std::unique_ptr<LambdaExprNode> parseArrowFunction(std::vector<std::string>&& params);
 		// Error handling
 		std::unique_ptr<ErrorNode> createErrorNode();
+		std::unique_ptr<MemberDeclNode> createErrorNodeAsMember();
 
 	public:
 		explicit Parser(std::vector<Token> tokens, const Flags& flags, std::ostream& errStream = std::cerr);

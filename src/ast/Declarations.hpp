@@ -5,12 +5,14 @@
 #include <vector>
 #include <memory>
 #include <sstream>
+#include <algorithm>
 #include "../core/ASTNode.hpp"
 #include "TypeNodes.hpp"
 #include "Statements.hpp"
 #include "Other.hpp"
 #include "../utils/RemovePadding.hpp"
 #include "../utils/small_vector.hpp"
+#include "../core/IAnnotatable.hpp"
 
 namespace zenith {
 	struct VarDeclNode : StmtNode {
@@ -42,7 +44,7 @@ namespace zenith {
 		}
 	};
 
-	struct FunctionDeclNode : ASTNode {
+	struct FunctionDeclNode : ASTNode, IAnnotatable {
 		virtual bool isLambda() const { return false; }
 		std::string name;
 		std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> params;
@@ -54,10 +56,11 @@ namespace zenith {
 
 		FunctionDeclNode(SourceLocation loc, std::string name,
 		                 std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> params,
-		                 std::unique_ptr<TypeNode> returnType, std::unique_ptr<BlockNode> body, bool async, bool structSugar = false)
+		                 std::unique_ptr<TypeNode> returnType, std::unique_ptr<BlockNode> body, bool async, bool structSugar = false, std::vector<std::unique_ptr<AnnotationNode>> ann = {})
 				: name(std::move(name)), params(std::move(params)), returnType(std::move(returnType)),
 				  body(std::move(body)), isAsync(async), usingStructSugar(structSugar) {
-			this->loc = loc;
+			this->loc = std::move(loc);
+			this->annotations =  std::move(ann);
 		}
 
 		std::string toString(int indent = 0) const override {
@@ -82,8 +85,8 @@ namespace zenith {
 		}
 	};
 
-	struct MemberDeclNode : ASTNode {
-		enum Kind : uint8_t { FIELD, METHOD, METHOD_CONSTRUCTOR };
+	struct MemberDeclNode : ASTNode, IAnnotatable{
+		enum Kind : uint8_t { FIELD, METHOD, METHOD_CONSTRUCTOR, MESSAGE_HANDLER};
 		enum Access : uint8_t { PUBLIC, PROTECTED, PRIVATE, PRIVATEW, PROTECTEDW };
 
 #pragma pack(push, 1)
@@ -101,7 +104,6 @@ namespace zenith {
 		std::unique_ptr<TypeNode> type;
 		small_vector<std::pair<std::string, std::unique_ptr<ExprNode>>, 1> initializers;
 		std::unique_ptr<BlockNode> body;
-		small_vector<std::unique_ptr<AnnotationNode>, 2> annotations;
 
 		MemberDeclNode(
 				SourceLocation loc,
@@ -120,7 +122,7 @@ namespace zenith {
 		    type(std::move(type)),
 		    body(std::move(body))
 		{
-			this->loc = loc;
+			this->loc = std::move(loc);
 			flags = {kind, access, isConst, isStatic, 0};
 
 			// Handle initializers
@@ -140,7 +142,7 @@ namespace zenith {
 
 		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
-			static const char* kindNames[] = {"FIELD", "METHOD", "METHOD_CONSTRUCTOR"};
+			static const char* kindNames[] = {"FIELD", "METHOD", "METHOD_CONSTRUCTOR", "MESSAGE_HANDLER"};
 			static const char* accessNames[] = {"PUBLIC", "PROTECTED", "PRIVATE", "PRIVATEW", "PROTECTEDW"};
 
 			std::stringstream ss;
@@ -174,60 +176,147 @@ namespace zenith {
 		           std::unique_ptr<TypeNode> returnType = nullptr,
 		           std::unique_ptr<BlockNode> body = nullptr,
 		           bool async = false)
-				: FunctionDeclNode(std::move(loc), "", std::move(params), std::move(returnType), std::move(body), async, false) {
+				: FunctionDeclNode(std::move(loc), "", std::move(params), std::move(returnType), std::move(body), async, false, {}) {
 			// Additional lambda-specific initialization
 		}
 	};
 
+	struct OperatorOverloadNode : ASTNode {
+		std::string op;  // Store the operator as a string literal (e.g., "+", "==")
+		std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> params;
+		std::unique_ptr<TypeNode> returnType;
+		std::unique_ptr<BlockNode> body;
 
-	struct ClassDeclNode : ASTNode {
-		std::string name;
-		std::string base;
-		std::vector<std::unique_ptr<MemberDeclNode>> members;
-
-		ClassDeclNode(SourceLocation loc, std::string name, std::string base,
-		              std::vector<std::unique_ptr<MemberDeclNode>> memb)
-				: name(std::move(name)), members(std::move(memb)), base(std::move(base)) {
+		OperatorOverloadNode(SourceLocation loc, std::string op,
+		                     std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> params,
+		                     std::unique_ptr<TypeNode> returnType,
+		                     std::unique_ptr<BlockNode> body)
+				: op(op), params(std::move(params)),
+				  returnType(std::move(returnType)), body(std::move(body)) {
 			this->loc = loc;
 		}
 
 		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
-			ss << pad << "CLASS " << name << " {\n";
+			ss << pad << "operator " << op << "(";
+			// Print parameters
+			for (size_t i = 0; i < params.size(); ++i) {
+				if (i > 0) ss << ", ";
+				ss << params[i].first << ": " << params[i].second->toString();
+			}
+			ss << ") -> " << returnType->toString() << " {\n";
+			ss << body->toString(indent + 2) << "\n";
+			ss << pad << "}";
+			return ss.str();
+		}
+
+		static bool isValidOp(std::string op){
+			if(op.size()>=4) return false;
+			std::string allowedChars = "+-*/%!>=<~";
+			return std::all_of(op.begin(), op.end(), [&allowedChars](char c) {
+				return allowedChars.find(c) != std::string::npos;
+			});
+		}
+	};
+	struct ObjectDeclNode : ASTNode {
+		enum class Kind {CLASS, STRUCT, ACTOR} kind;
+		std::string name;
+		std::string base;
+		std::vector<std::unique_ptr<MemberDeclNode>> members;
+		std::vector<std::unique_ptr<OperatorOverloadNode>> operators;
+		bool autoGettersSetters;
+
+		ObjectDeclNode(SourceLocation loc, Kind kind, std::string name, std::string base,
+		               std::vector<std::unique_ptr<MemberDeclNode>> memb,
+		               std::vector<std::unique_ptr<OperatorOverloadNode>> ops = {},
+		               bool autoGS = true)
+				: name(std::move(name)), members(std::move(memb)),
+				  base(std::move(base)), operators(std::move(ops)),
+				  autoGettersSetters(autoGS) {
+			this->loc = std::move(loc);
+			this->kind = kind;
+		}
+
+		std::string toString(int indent = 0) const override {
+			std::string pad(indent, ' ');
+			std::stringstream ss;
+			ss << pad << (kind == Kind::CLASS ? "CLASS " :
+			              kind == Kind::STRUCT ? "STRUCT " : "ACTOR ")
+			   << name << " {\n";
+
+			if (autoGettersSetters) {
+				ss << pad << "  // Auto-generated getters/setters enabled\n";
+			}
+
 			for (const auto& member : members) {
 				ss << member->toString(indent + 2) << "\n";
 			}
-			ss << pad << "}";
-			return ss.str();
-		}
-	};
 
-	struct StructDeclNode : ASTNode {
-		std::string name;
-		std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> fields;
-		bool isUnion;
-
-		StructDeclNode(SourceLocation loc, std::string n,
-		               std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> f,
-		               bool unionFlag)
-				: name(std::move(n)), fields(std::move(f)), isUnion(unionFlag) {
-			this->loc = loc;
-		}
-
-		std::string toString(int indent = 0) const {
-			std::string pad(indent, ' ');
-			std::stringstream ss;
-			ss << pad << (isUnion ? "UNION " : "STRUCT ") << name << " {\n";
-			for (const auto& field : fields) {
-				ss << pad << "  " << field.first;
-				if (field.second) ss << " : " << field.second->toString(indent+2);
-				ss << "\n";
+			for (const auto& op : operators) {
+				ss << op->toString(indent + 2) << "\n";
 			}
+
 			ss << pad << "}";
 			return ss.str();
 		}
 	};
+
+	struct UnionDeclNode : ASTNode{
+		std::string name;
+		std::vector<std::unique_ptr<TypeNode>> types;
+		UnionDeclNode(SourceLocation loc, std::string name, std::vector<std::unique_ptr<TypeNode>> types)
+		: name(std::move(name)), types(std::move(types)){
+			this->loc = std::move(loc);
+		}
+		std::string toString(int indent = 0) const override{
+			std::string pad(indent,' ');
+			std::stringstream ss;
+			ss << pad << "UNION {\n";
+			for(size_t i = 0;i<types.size();++i){
+				if(i>0) ss << ", ";
+				ss << types[i]->toString(indent+2) << '\n';
+			}
+			ss << "\n}";
+			return ss.str();
+		}
+	};
+
+	class ActorDeclNode : public ObjectDeclNode {
+	public:
+		explicit ActorDeclNode(
+				SourceLocation loc,
+				std::string name,
+				std::vector<std::unique_ptr<MemberDeclNode>> members,
+				std::string baseActor = ""
+		) : ObjectDeclNode(loc, ObjectDeclNode::Kind::ACTOR, std::move(name), std::move(baseActor), std::move(members)) {}
+	};
+
+//	struct StructDeclNode : ASTNode {
+//		std::string name;
+//		std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> fields;
+//		bool isUnion;
+//
+//		StructDeclNode(SourceLocation loc, std::string n,
+//		               std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> f,
+//		               bool unionFlag)
+//				: name(std::move(n)), fields(std::move(f)), isUnion(unionFlag) {
+//			this->loc = loc;
+//		}
+//
+//		std::string toString(int indent = 0) const {
+//			std::string pad(indent, ' ');
+//			std::stringstream ss;
+//			ss << pad << (isUnion ? "UNION " : "STRUCT ") << name << " {\n";
+//			for (const auto& field : fields) {
+//				ss << pad << "  " << field.first;
+//				if (field.second) ss << " : " << field.second->toString(indent+2);
+//				ss << "\n";
+//			}
+//			ss << pad << "}";
+//			return ss.str();
+//		}
+//	};
 
 
 }

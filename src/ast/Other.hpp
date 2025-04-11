@@ -11,8 +11,7 @@
 #include "../core/ASTNode.hpp"
 
 namespace zenith{
-	struct AnnotationNode : public ASTNode {
-	public:
+	struct AnnotationNode : ASTNode {
 		std::string name;
 		std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>> arguments;
 
@@ -46,7 +45,7 @@ namespace zenith{
 			return ss.str();
 		}
 	};
-	struct ErrorNode : public ASTNode {
+	struct ErrorNode : ASTNode {
 	public:
 		ErrorNode(SourceLocation loc){
 			this->loc=loc;

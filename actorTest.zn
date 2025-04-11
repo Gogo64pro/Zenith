@@ -1,0 +1,27 @@
+// Class case
+class Point {
+    privatew int x;
+    public int getX() { return x; }
+}
+
+// Actor case
+actor BankAccount {
+    privatew double balance;
+    on Deposit(double amount) { balance += amount; }
+}
+actor BankAccount {
+    privatew double balance = 0.0;
+
+    on Deposit(double amount) -> double{
+        this.balance += amount;
+        return this.balance;
+    }
+
+    on Withdraw(double amount) -> Result<double, string> { //Result<double, string>
+        if (amount > this.balance) {
+            return Err("Insufficient funds");
+        }
+        this.balance -= amount;
+        return Ok(this.balance);
+    }
+}

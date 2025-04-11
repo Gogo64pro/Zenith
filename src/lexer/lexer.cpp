@@ -1,5 +1,4 @@
 #include "lexer.hpp"
-#include "../core/ASTNode.hpp"
 #include "../exceptions/LexError.hpp"
 #include <cctype>
 #include <stdexcept>
@@ -14,10 +13,12 @@ const std::unordered_map<std::string, TokenType> Lexer::keywords = {
 		{"fun", TokenType::FUN},
 		{"unsafe", TokenType::UNSAFE},
 		{"class", TokenType::CLASS},
+		{"actor", TokenType::ACTOR},
 		{"struct", TokenType::STRUCT},
 		{"union", TokenType::UNION},
 		{"new", TokenType::NEW},
 		{"hoist", TokenType::HOIST},
+		{"scope", TokenType::SCOPE},
 
 		// Access modifiers
 		{"public", TokenType::PUBLIC},
@@ -32,6 +33,7 @@ const std::unordered_map<std::string, TokenType> Lexer::keywords = {
 		{"extern", TokenType::EXTERN},
 
 		// Types
+		{"bool", TokenType::BOOL},
 		{"int", TokenType::INT},
 		{"long", TokenType::LONG},
 		{"short", TokenType::SHORT},
@@ -54,6 +56,7 @@ const std::unordered_map<std::string, TokenType> Lexer::keywords = {
 		{"else", TokenType::ELSE},
 		{"do", TokenType::DO},
 		{"this", TokenType::THIS},
+		{"on", TokenType::ON},
 
 		// Literals
 		{"true", TokenType::TRUE},
@@ -225,12 +228,12 @@ void Lexer::string() {
 		advance();
 	}
 
-	if (isAtEnd()) LexError( {line,column,0,current} ,"Unterminated string");
+	if (isAtEnd()) throw LexError( {line,column,0,current} ,"Unterminated string");
 
 	advance();  // Consume closing "
 
 	// Calculate length including quotes
-	size_t length = current - start;
+	//size_t length = current - start;
 	addToken(TokenType::STRING_LIT);
 }
 
@@ -357,6 +360,9 @@ std::string Lexer::tokenToString(TokenType type) {
 		case TokenType::UNION: return "UNION";
 		case TokenType::NEW: return "NEW";
 		case TokenType::HOIST: return "HOIST";
+		case TokenType::ACTOR: return "ACTOR";
+		case TokenType::SCOPE: return "SCOPE";
+		case TokenType::ON: return "ON";
 
 			// Access modifiers
 		case TokenType::PUBLIC: return "PUBLIC";
@@ -383,6 +389,7 @@ std::string Lexer::tokenToString(TokenType type) {
 		case TokenType::NUMBER: return "NUMBER";
 		case TokenType::BIGINT: return "BIGINT";
 		case TokenType::BIGNUMBER: return "BIGNUMBER";
+		case TokenType::BOOL: return "BOOL";
 
 			// Literals
 		case TokenType::IDENTIFIER: return "IDENTIFIER";
@@ -406,6 +413,11 @@ std::string Lexer::tokenToString(TokenType type) {
 		case TokenType::LESS_EQUAL: return "LESS_EQUAL";
 		case TokenType::GREATER: return "GREATER";
 		case TokenType::GREATER_EQUAL: return "GREATER_EQUAL";
+		case TokenType::PLUS_EQUALS: return "PLUS_EQUALS";
+		case TokenType::MINUS_EQUALS: return "MINUS_EQUALS";
+		case TokenType::STAR_EQUALS: return "STAR_EQUALS";
+		case TokenType::SLASH_EQUALS: return "SLASH_EQUALS";
+		case TokenType::PERCENT_EQUALS: return "PERCENT_EQUALS";
 
 			// Punctuation
 		case TokenType::LBRACE: return "LBRACE";

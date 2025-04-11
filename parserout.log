@@ -1,28 +1,27 @@
-Error at 149:8 - Expected IDENTIFIER
-Error at 150:26 - Expected IDENTIFIER
-Error at 151:16 - Expected IDENTIFIER
+Error at 112:21 - Expected ';' after field declaration
+Error at 141:11 - Expected ';' after field declaration
+Error at 144:7 - Expected union name
+Error at 159:9 - Expected type after declaration
 Error at 164:18 - Expected parameter name
 Error at 167:9 - Expected IDENTIFIER
 Error at 172:3 - Expected IDENTIFIER
 Error at 175:14 - Expected IDENTIFIER
 Error at 184:11 - Expected type after declaration
-Error at 194:41 - Expected LBRACE
-Error at 196:13 - Expected type after declaration
-Error at 197:13 - Expected IDENTIFIER
-Error at 198:17 - Expected IDENTIFIER
-Error at 199:23 - Expected IDENTIFIER
 Error at 217:8 - Expected IDENTIFIER
-Error at 221:14 - Expected IDENTIFIER
+Error at 221:21 - Expected ';' after field declaration
 Error at 226:13 - Expected type after declaration
 Program {
   CLASS EmptyClass {
+    // Auto-generated getters/setters enabled
   }
   CLASS Person {
+    // Auto-generated getters/setters enabled
     PRIVATEW  FIELD name : PrimitiveType(STRING);
     PROTECTEDW  FIELD age : PrimitiveType(INT);
     PUBLIC  FIELD height : PrimitiveType(DOUBLE);
   }
   CLASS Calculator {
+    // Auto-generated getters/setters enabled
     PUBLIC  METHOD add : PrimitiveType(INT) Block {
       return BinaryOp(+)
           Var(a)
@@ -35,6 +34,7 @@ Program {
     }
   }
   CLASS Vehicle {
+    // Auto-generated getters/setters enabled
     PRIVATEW  FIELD model : PrimitiveType(STRING);
     PUBLIC  FIELD year : PrimitiveType(INT);
     PUBLIC  METHOD_CONSTRUCTOR Vehicle Block {
@@ -53,9 +53,11 @@ Program {
     }
   }
   CLASS Animal {
+    // Auto-generated getters/setters enabled
     PROTECTEDW  FIELD species : PrimitiveType(STRING);
   }
   CLASS Cat {
+    // Auto-generated getters/setters enabled
     PRIVATEW  FIELD name : PrimitiveType(STRING);
     PUBLIC  METHOD_CONSTRUCTOR Cat Block {
       ExprStmt
@@ -73,6 +75,7 @@ Program {
     }
   }
   CLASS BankAccount {
+    // Auto-generated getters/setters enabled
     PRIVATEW  FIELD balance : PrimitiveType(DOUBLE);
     PUBLIC CONST  FIELD accountNumber : PrimitiveType(STRING);
     PROTECTEDW  FIELD owner : PrimitiveType(STRING);
@@ -98,7 +101,7 @@ Program {
             balance
           Var(amount)
     }
-    PROTECTED  METHOD withdraw : NamedType(bool) Block {
+    PROTECTED  METHOD withdraw : PrimitiveType(BOOL) Block {
       If
         BinaryOp(<=)
           Var(amount)
@@ -115,10 +118,13 @@ Program {
     }
   }
   CLASS X {
+    // Auto-generated getters/setters enabled
   }
   CLASS StrangeFormatting {
+    // Auto-generated getters/setters enabled
   }
   CLASS ProtectionDemo {
+    // Auto-generated getters/setters enabled
     PUBLIC  FIELD a : PrimitiveType(INT);
     PROTECTED  FIELD b : PrimitiveType(INT);
     PRIVATE  FIELD c : PrimitiveType(INT);
@@ -126,6 +132,7 @@ Program {
     PROTECTEDW  FIELD e : PrimitiveType(INT);
   }
   CLASS DuplicateFields {
+    // Auto-generated getters/setters enabled
     PUBLIC  FIELD x : PrimitiveType(INT);
     PRIVATE  FIELD x : PrimitiveType(INT);
   }
@@ -162,6 +169,9 @@ DYNAMIC buffer = Call
   Arguments:
   Literal(NUMBER: 512)
 STATIC x : PrimitiveType(INT) = Literal(NUMBER: 10)
+  STRUCT Point {
+    // Auto-generated getters/setters enabled
+  }
 STATIC p : NamedType(Point) = Positional{  Literal(NUMBER: 1),   Literal(NUMBER: 2)}
 DYNAMIC y = Literal(STRING: "dynamic")
 DYNAMIC z = Literal(NUMBER: 3.14)
@@ -188,6 +198,7 @@ STATIC config2 : Type(DYNAMIC) = FreeObject {
   }
 }
   CLASS Vehicle {
+    // Auto-generated getters/setters enabled
     PRIVATEW  FIELD model : PrimitiveType(STRING);
     PUBLIC  FIELD year : PrimitiveType(INT);
     PUBLIC  METHOD_CONSTRUCTOR Vehicle Block {
@@ -205,14 +216,37 @@ STATIC config2 : Type(DYNAMIC) = FreeObject {
           Var(y)
     }
   }
+  STRUCT Color {
+    // Auto-generated getters/setters enabled
+  }
+STATIC f : PrimitiveType(FLOAT)
+  ASYNCTemplateType(Future<PrimitiveType(STRING)>) fetchData() Block {
 DYNAMIC data = Var(await)
+      ExprStmt
+        Call
+          MemberAccess(.)
+            Var(http)
+            get
+          Arguments:
+          Literal(STRING: "example.com")
+      return Var(data)
+    }
+  ACTOR Counter {
+    // Auto-generated getters/setters enabled
+    PRIVATE  FIELD value : PrimitiveType(INT)Literal(NUMBER: 0);
+    PUBLIC  METHOD increment : PrimitiveType(INT) Block {
+      <PARSE ERROR>
+    }
+  }
 DYNAMIC name = Literal(STRING: "World")
 DYNAMIC x = Literal(NUMBER: 10)
   CLASS RestrictedDemo {
+    // Auto-generated getters/setters enabled
     PRIVATEW  FIELD adminCode : PrimitiveType(INT);
     PROTECTEDW  FIELD auditId : PrimitiveType(INT);
   }
   CLASS Database {
+    // Auto-generated getters/setters enabled
     PRIVATEW  FIELD conn : NamedType(Connection);
     PUBLIC  METHOD_CONSTRUCTOR Database Block {
       ExprStmt
@@ -221,6 +255,38 @@ DYNAMIC x = Literal(NUMBER: 10)
             This
             conn
           new Connection(Var(url))
+    }
+    Annotation @Async
+    PUBLIC  METHOD query : TemplateType(Future<TemplateType(Result<Type(DYNAMIC), PrimitiveType(STRING)>)>) Block {
+      ExprStmt
+        Var(try)
+      Block {
+DYNAMIC result = Var(await)
+        ExprStmt
+          Call
+            MemberAccess(.)
+              Var(conn)
+              execute
+            Arguments:
+            Var(sql)
+        return Call
+            Var(Ok)
+            Arguments:
+            Var(result)
+      }
+      ExprStmt
+        Call
+          Var(catch)
+          Arguments:
+          Var(e)
+      Block {
+        return Call
+            Var(Err)
+            Arguments:
+            MemberAccess(.)
+              Var(e)
+              message
+      }
     }
   }
   main() Block {
@@ -251,7 +317,11 @@ DYNAMIC ptr = Call
   Var(malloc)
   Arguments:
   Literal(NUMBER: 10)
+  STRUCT Point {
+    // Auto-generated getters/setters enabled
+  }
 STATIC p : NamedType(Point) = Positional{  Literal(NUMBER: 1.5),   Literal(NUMBER: 2)}
   CLASS Demo {
+    // Auto-generated getters/setters enabled
   }
 }

@@ -223,7 +223,7 @@ void Lexer::string() {
 		advance();
 	}
 
-	if (isAtEnd()) Error( {line,column,0,current} ,"Unterminated string");
+	if (isAtEnd()) throw Error( {line,column,0,current} ,"Unterminated string");
 
 	advance();  // Consume closing "
 

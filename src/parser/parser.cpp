@@ -130,12 +130,12 @@ std::unique_ptr<ast::ExprNode> Parser::parsePrimary() {
 		throw Error(startLoc,"Expected '{' after free obj, Achievement unlocked: How did we get here?");
 	}
 	else if (match(lexer::TokenType::LPAREN)) {
-			auto params = parseArrowFunctionParams();
-			if (match(lexer::TokenType::LAMBARROW)) {
-				return parseArrowFunction(std::move(params));
-			}
-			// else treat as normal parenthesized expression
+		auto params = parseArrowFunctionParams();
+		if (match(lexer::TokenType::LAMBARROW)) {
+			return parseArrowFunction(std::move(params));
 		}
+		// else treat as normal parenthesized expression
+	}
 	else if (match({lexer::TokenType::IDENTIFIER, lexer::TokenType::THIS})) {
 		lexer::Token identToken = advance();
 		std::unique_ptr<ast::ExprNode> expr;
@@ -166,14 +166,14 @@ std::unique_ptr<ast::ExprNode> Parser::parsePrimary() {
 	}
 
 	throw Error(currentToken.loc,
-						"Expected primary expression, got " +
-						lexer::Lexer::tokenToString(currentToken.type));
+		"Expected primary expression, got " +
+		lexer::Lexer::tokenToString(currentToken.type));
 }
 
 lexer::Token Parser::advance() {
 	if (isAtEnd()) {
 		return lexer::Token{lexer::TokenType::EOF_TOKEN, "",
-						tokens.empty() ? ast::SourceLocation{1,1,0, 0} : tokens.back().loc};
+			tokens.empty() ? ast::SourceLocation{1,1,0, 0} : tokens.back().loc};
 	}
 
 	lexer::Token result = tokens[current];  // 1. Get current token first
@@ -192,29 +192,30 @@ lexer::Token Parser::advance() {
 }
 
 Parser::Parser(std::vector<lexer::Token> tokens, const utils::Flags& flags, std::ostream& errStream)
-		: tokens(std::move(tokens)),
-			currentToken(this->tokens.empty() ?
-						lexer::Token{lexer::TokenType::EOF_TOKEN, "", {1, 1, 0}} :
-						this->tokens[0]) , flags(flags), errStream(errStream), errorReporter(std::cout) {
+	: tokens(std::move(tokens)),
+		currentToken(this->tokens.empty() ?
+			lexer::Token{lexer::TokenType::EOF_TOKEN, "", {1, 1, 0}} :
+			this->tokens[0]) , flags(flags), errStream(errStream), errorReporter(std::cout) {
 	current = 0;
 }
 
 bool Parser::isAtEnd() const {
 	return current >= tokens.size();
 }
+
 std::unique_ptr<ast::TypeNode> Parser::parseType() {
 	ast::SourceLocation startLoc = currentToken.loc;
 
 	// Handle built-in types (from lexer::TokenType)
 	if (match({lexer::TokenType::INT, lexer::TokenType::LONG, lexer::TokenType::SHORT,
-				lexer::TokenType::BYTE, lexer::TokenType::FLOAT, lexer::TokenType::DOUBLE,
-				lexer::TokenType::STRING, lexer::TokenType::NUMBER, lexer::TokenType::BIGINT,
-				lexer::TokenType::BIGNUMBER, lexer::TokenType::FREEOBJ})) {
+		lexer::TokenType::BYTE, lexer::TokenType::FLOAT, lexer::TokenType::DOUBLE,
+		lexer::TokenType::STRING, lexer::TokenType::NUMBER, lexer::TokenType::BIGINT,
+		lexer::TokenType::BIGNUMBER, lexer::TokenType::FREEOBJ})) {
 
 		lexer::Token typeToken = advance();
 
 		ast::PrimitiveTypeNode::Type kind;
-				if (typeToken.type == lexer::TokenType::INT   ) kind = ast::PrimitiveTypeNode::INT;
+		     if (typeToken.type == lexer::TokenType::INT   ) kind = ast::PrimitiveTypeNode::INT;
 		else if (typeToken.type == lexer::TokenType::LONG  ) kind = ast::PrimitiveTypeNode::LONG;
 		else if (typeToken.type == lexer::TokenType::SHORT ) kind = ast::PrimitiveTypeNode::SHORT;
 		else if (typeToken.type == lexer::TokenType::BYTE  ) kind = ast::PrimitiveTypeNode::BYTE;
@@ -245,8 +246,8 @@ std::unique_ptr<ast::TypeNode> Parser::parseType() {
 	}
 
 	throw Error(
-			currentToken.loc,
-			"Expected type name, got " + lexer::Lexer::tokenToString(currentToken.type)
+		currentToken.loc,
+		"Expected type name, got " + lexer::Lexer::tokenToString(currentToken.type)
 	);
 }
 
@@ -296,35 +297,34 @@ const lexer::Token &Parser::previousToken() const {
 
 int Parser::getPrecedence(lexer::TokenType type) {
 	static const std::unordered_map<lexer::TokenType, int> precedences = {
-			// Assignment
-			{lexer::TokenType::EQUAL, 1},
-			{lexer::TokenType::PLUS_EQUALS, 1},
-			{lexer::TokenType::MINUS_EQUALS, 1},
-			{lexer::TokenType::STAR_EQUALS, 1},
-			{lexer::TokenType::SLASH_EQUALS, 1},
-			{lexer::TokenType::PERCENT_EQUALS, 1},
+		// Assignment
+		{lexer::TokenType::EQUAL, 1},
+		{lexer::TokenType::PLUS_EQUALS, 1},
+		{lexer::TokenType::MINUS_EQUALS, 1},
+		{lexer::TokenType::STAR_EQUALS, 1},
+		{lexer::TokenType::SLASH_EQUALS, 1},
+		{lexer::TokenType::PERCENT_EQUALS, 1},
 
-			// Logical
-			{lexer::TokenType::OR, 2},
-			{lexer::TokenType::AND, 3},
+		// Logical
+		{lexer::TokenType::OR, 2},
+		{lexer::TokenType::AND, 3},
 
-			// Equality
-			{lexer::TokenType::BANG_EQUAL, 4},
-			{lexer::TokenType::EQUAL_EQUAL, 4},
+		// Equality
+		{lexer::TokenType::BANG_EQUAL, 4},
+		{lexer::TokenType::EQUAL_EQUAL, 4},
 
-			// Comparison
-			{lexer::TokenType::LESS, 5},
-			{lexer::TokenType::LESS_EQUAL, 5},
-			{lexer::TokenType::GREATER, 5},
-			{lexer::TokenType::GREATER_EQUAL, 5},
+		// Comparison
+		{lexer::TokenType::LESS, 5},
+		{lexer::TokenType::LESS_EQUAL, 5},
+		{lexer::TokenType::GREATER, 5},
+		{lexer::TokenType::GREATER_EQUAL, 5},
 
-			// Arithmetic
-			{lexer::TokenType::PLUS, 6},
-			{lexer::TokenType::MINUS, 6},
-			{lexer::TokenType::STAR, 7},
-			{lexer::TokenType::SLASH, 7},
-			{lexer::TokenType::PERCENT, 7}
-
+		// Arithmetic
+		{lexer::TokenType::PLUS, 6},
+		{lexer::TokenType::MINUS, 6},
+		{lexer::TokenType::STAR, 7},
+		{lexer::TokenType::SLASH, 7},
+		{lexer::TokenType::PERCENT, 7}
 	};
 
 	auto it = precedences.find(type);
@@ -374,7 +374,7 @@ std::unique_ptr<ast::ProgramNode> Parser::parse() {
 
 bool Parser::isBuiltInType(lexer::TokenType type) {
 	static const std::unordered_set<lexer::TokenType> builtInTypes = {
-			lexer::TokenType::INT, lexer::TokenType::LONG, lexer::TokenType::SHORT, lexer::TokenType::BYTE, lexer::TokenType::FLOAT, lexer::TokenType::DOUBLE, lexer::TokenType::STRING, lexer::TokenType::FREEOBJ
+		lexer::TokenType::INT, lexer::TokenType::LONG, lexer::TokenType::SHORT, lexer::TokenType::BYTE, lexer::TokenType::FLOAT, lexer::TokenType::DOUBLE, lexer::TokenType::STRING, lexer::TokenType::FREEOBJ
 	};
 	return builtInTypes.count(type) > 0;
 }
@@ -440,13 +440,13 @@ std::unique_ptr<ast::FunctionDeclNode> Parser::parseFunction() {
 	auto body = parseBlock();
 
 	return std::make_unique<ast::FunctionDeclNode>(
-			loc,
-			std::move(name),
-			std::move(params),
-			std::move(returnType),
-			std::move(body),
-			isAsync,
-			structSugar
+		loc,
+		std::move(name),
+		std::move(params),
+		std::move(returnType),
+		std::move(body),
+		isAsync,
+		structSugar
 	);
 }
 
@@ -556,7 +556,7 @@ lexer::Token Parser::peek(size_t offset) const {
 	size_t idx = current + offset;
 	if (idx >= tokens.size()) {
 		return lexer::Token{lexer::TokenType::EOF_TOKEN, "",
-						tokens.empty() ? ast::SourceLocation{1,1,0} : tokens.back().loc};
+			tokens.empty() ? ast::SourceLocation{1,1,0} : tokens.back().loc};
 	}
 	return tokens[idx];
 
@@ -593,7 +593,7 @@ std::unique_ptr<ast::IfNode> Parser::parseIfStmt() {
 		if (flags.bracesRequired) {
 			if (!match(lexer::TokenType::LBRACE)) {
 				throw Error(currentToken.loc,
-									"Expected '{' after 'else' (braces are required)");
+					"Expected '{' after 'else' (braces are required)");
 			}
 			elseBranch = parseBlock();
 		} else {
@@ -602,10 +602,10 @@ std::unique_ptr<ast::IfNode> Parser::parseIfStmt() {
 	}
 
 	return std::make_unique<ast::IfNode>(
-			loc,
-			std::move(condition),
-			std::move(thenBranch),
-			std::move(elseBranch)
+		loc,
+		std::move(condition),
+		std::move(thenBranch),
+		std::move(elseBranch)
 	);
 }
 
@@ -619,7 +619,7 @@ std::unique_ptr<ast::ForNode> Parser::parseForStmt() {
 		advance(); // Empty initializer
 	}
 	else if (match({lexer::TokenType::LET, lexer::TokenType::VAR, lexer::TokenType::DYNAMIC}) ||
-				isBuiltInType(currentToken.type)) {
+		isBuiltInType(currentToken.type)) {
 		init = parseVarDecl();
 	}
 	else {
@@ -642,12 +642,12 @@ std::unique_ptr<ast::ForNode> Parser::parseForStmt() {
 	// Enforce braces if required
 	if (flags.bracesRequired && !match(lexer::TokenType::LBRACE)) {
 		throw Error(currentToken.loc,
-							"Expected '{' after 'for' (braces are required)");
+			"Expected '{' after 'for' (braces are required)");
 	}
 
 	auto body = parseStatement(); // parseBlock() if braces are required
 	return std::make_unique<ast::ForNode>(loc, std::move(init), std::move(condition),
-										std::move(increment), std::move(body));
+		std::move(increment), std::move(body));
 }
 
 std::unique_ptr<ast::WhileNode> Parser::parseWhileStmt() {
@@ -659,7 +659,7 @@ std::unique_ptr<ast::WhileNode> Parser::parseWhileStmt() {
 	// Enforce braces if required
 	if (flags.bracesRequired && !match(lexer::TokenType::LBRACE)) {
 		throw Error(currentToken.loc,
-							"Expected '{' after 'while' (braces are required)");
+			"Expected '{' after 'while' (braces are required)");
 	}
 
 	auto body = parseStatement(); // parseBlock() if braces are required
@@ -672,7 +672,7 @@ std::unique_ptr<ast::DoWhileNode> Parser::parseDoWhileStmt() {
 	// Enforce braces if required
 	if (flags.bracesRequired && !match(lexer::TokenType::LBRACE)) {
 		throw Error(currentToken.loc,
-							"Expected '{' after 'do' (braces are required)");
+			"Expected '{' after 'do' (braces are required)");
 	}
 
 	auto body = parseStatement(); // parseBlock() if braces are required
@@ -798,9 +798,9 @@ std::unique_ptr<ast::ExprNode> Parser::parseArrayAccess(std::unique_ptr<ast::Exp
 
 		// Create new array access node
 		arrayExpr = std::make_unique<ast::ArrayAccessNode>(
-				loc,
-				std::move(arrayExpr),  // The array being accessed
-				std::move(indexExpr)   // The index expression
+			loc,
+			std::move(arrayExpr),  // The array being accessed
+			std::move(indexExpr)   // The index expression
 		);
 	}
 
@@ -959,16 +959,16 @@ std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
 				auto body = parseBlock();
 
 				members.push_back(std::make_unique<ast::MemberDeclNode>(
-						loc,
-						ast::MemberDeclNode::METHOD_CONSTRUCTOR,
-						access,
-						isConst,
-						std::move(className),  // Move the string
-						nullptr,
-						nullptr,  // No field init
-						std::move(initializers),  // Ctor inits
-						std::move(body),
-						std::move(annotations)
+					loc,
+					ast::MemberDeclNode::METHOD_CONSTRUCTOR,
+					access,
+					isConst,
+					std::move(className),  // Move the string
+					nullptr,
+					nullptr,  // No field init
+					std::move(initializers),  // Ctor inits
+					std::move(body),
+					std::move(annotations)
 				));
 			}
 				// Check if it's a method (reuse parseFunctionDecl)
@@ -1006,16 +1006,16 @@ std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
 				consume(lexer::TokenType::SEMICOLON, "Expected ';' after field declaration");
 
 				members.push_back(std::make_unique<ast::MemberDeclNode>(
-						currentToken.loc,
-						ast::MemberDeclNode::FIELD,
-						access,
-						isConst,
-						std::move(name),          // std::string&&
-						std::move(type),          // unique_ptr<TypeNode>
-						std::move(initializer),   // unique_ptr<ast::ExprNode> (field init)
-						std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>>{},// Empty ctor inits
-						nullptr,                  // No body
-						std::move(annotations)    // vector<unique_ptr<AnnotationNode>>
+					currentToken.loc,
+					ast::MemberDeclNode::FIELD,
+					access,
+					isConst,
+					std::move(name),          // std::string&&
+					std::move(type),          // unique_ptr<TypeNode>
+					std::move(initializer),   // unique_ptr<ast::ExprNode> (field init)
+					std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>>{},// Empty ctor inits
+					nullptr,                  // No body
+					std::move(annotations)    // vector<unique_ptr<AnnotationNode>>
 				));
 			}
 		} catch (const Error& e) {
@@ -1028,10 +1028,10 @@ std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
 	consume(lexer::TokenType::RBRACE, "Expected '}' after class body");
 
 	return std::make_unique<ast::ClassDeclNode>(
-			classLoc,
-			std::move(className),
-			std::move(baseClass),
-			std::move(members)
+		classLoc,
+		std::move(className),
+		std::move(baseClass),
+		std::move(members)
 	);
 }
 

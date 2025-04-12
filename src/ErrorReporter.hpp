@@ -3,7 +3,7 @@
 #include <ostream>
 #include <unordered_map>
 #include <vector>
-#include "ast/ASTNode.hpp"
+#include "ast/Node.hpp"
 
 namespace zenith{
 	class ErrorReporter{

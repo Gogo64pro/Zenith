@@ -1,63 +1,65 @@
 #pragma once
 
 #include <memory>
-#include "ASTNode.hpp"
+#include "Node.hpp"
 
 namespace zenith::ast {
-	// Base type node
-	struct TypeNode : ASTNode {
-		enum Kind { PRIMITIVE, CLASS, STRUCT, ARRAY, FUNCTION, DYNAMIC } kind;
 
-		explicit TypeNode(SourceLocation loc, Kind k) : kind(k) {
-			this->loc = loc;
-		}
+// Base type node
+struct TypeNode : Node {
+	enum Kind { PRIMITIVE, CLASS, STRUCT, ARRAY, FUNCTION, DYNAMIC } kind;
 
-		virtual std::string toString(int indent = 0) const {
-			std::string pad(indent, ' ');
-			static const char* kindNames[] = {"PRIMITIVE", "CLASS", "STRUCT", "ARRAY", "FUNCTION", "DYNAMIC"};
-			return pad + "Type(" + kindNames[kind] + ")";
-		}
-	};
+	explicit TypeNode(SourceLocation loc, Kind k) : kind(k) {
+		this->loc = loc;
+	}
 
-	// Primitive types (int, float, etc.)
-	struct PrimitiveTypeNode : TypeNode {
-		enum Type { INT, FLOAT, DOUBLE, STRING, BOOL, NUMBER, BIGINT, BIGNUMBER, SHORT, LONG, BYTE } type;
+	virtual std::string toString(int indent = 0) const {
+		std::string pad(indent, ' ');
+		static const char* kindNames[] = {"PRIMITIVE", "CLASS", "STRUCT", "ARRAY", "FUNCTION", "DYNAMIC"};
+		return pad + "Type(" + kindNames[kind] + ")";
+	}
+};
 
-		PrimitiveTypeNode(SourceLocation loc, Type t)
-				: TypeNode(loc, PRIMITIVE), type(t) {}
+// Primitive types (int, float, etc.)
+struct PrimitiveTypeNode : TypeNode {
+	enum Type { INT, FLOAT, DOUBLE, STRING, BOOL, NUMBER, BIGINT, BIGNUMBER, SHORT, LONG, BYTE } type;
 
-		std::string toString(int indent = 0) const override {
-			std::string pad(indent, ' ');
-			static const char* typeNames[] = {"INT", "FLOAT", "DOUBLE", "STRING",
-			                                  "BOOL", "NUMBER", "BIGINT", "BIGNUMBER", "SHORT", "LONG", "BYTE"};
-			return pad + "PrimitiveType(" + typeNames[type] + ")";
-		}
-	};
+	PrimitiveTypeNode(SourceLocation loc, Type t)
+			: TypeNode(loc, PRIMITIVE), type(t) {}
 
-	// Class/struct types
-	struct NamedTypeNode : TypeNode {
-		std::string name;
+	std::string toString(int indent = 0) const override {
+		std::string pad(indent, ' ');
+		static const char* typeNames[] = {"INT", "FLOAT", "DOUBLE", "STRING",
+											"BOOL", "NUMBER", "BIGINT", "BIGNUMBER", "SHORT", "LONG", "BYTE"};
+		return pad + "PrimitiveType(" + typeNames[type] + ")";
+	}
+};
 
-		NamedTypeNode(SourceLocation loc, std::string n)
-				: TypeNode(loc, CLASS), name(std::move(n)) {}
+// Class/struct types
+struct NamedTypeNode : TypeNode {
+	std::string name;
 
-		std::string toString(int indent = 0) const override {
-			std::string pad(indent, ' ');
-			return pad + "NamedType(" + name + ")";
-		}
-	};
+	NamedTypeNode(SourceLocation loc, std::string n)
+			: TypeNode(loc, CLASS), name(std::move(n)) {}
 
-	// Array types
-	struct ArrayTypeNode : TypeNode {
-		std::unique_ptr<TypeNode> elementType;
+	std::string toString(int indent = 0) const override {
+		std::string pad(indent, ' ');
+		return pad + "NamedType(" + name + ")";
+	}
+};
 
-		ArrayTypeNode(SourceLocation loc, std::unique_ptr<TypeNode> elemType)
-				: TypeNode(loc, ARRAY), elementType(std::move(elemType)) {}
+// Array types
+struct ArrayTypeNode : TypeNode {
+	std::unique_ptr<TypeNode> elementType;
 
-		std::string toString(int indent = 0) const override {
-			std::string pad(indent, ' ');
-			return pad + "ArrayType\n" +
-			       elementType->toString(indent + 2);
-		}
-	};
-}
+	ArrayTypeNode(SourceLocation loc, std::unique_ptr<TypeNode> elemType)
+			: TypeNode(loc, ARRAY), elementType(std::move(elemType)) {}
+
+	std::string toString(int indent = 0) const override {
+		std::string pad(indent, ' ');
+		return pad + "ArrayType\n" +
+				elementType->toString(indent + 2);
+	}
+};
+
+} // zenith::ast

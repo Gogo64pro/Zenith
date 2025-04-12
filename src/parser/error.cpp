@@ -2,13 +2,13 @@
 // Created by gogop on 3/29/2025.
 //
 
-#include "ParseError.hpp"
+#include "error.hpp"
 
 #include <string>
 
 namespace zenith::parser {
 
-std::string ParseError::format() const {
+std::string Error::format() const {
 	// Create fresh string every time (no static)
 	std::string msg = std::runtime_error::what();
 	return "Error at " + std::to_string(location.line) +
@@ -16,7 +16,7 @@ std::string ParseError::format() const {
 			" - " + msg;
 }
 
-const char* ParseError::what() const noexcept {
+const char* Error::what() const noexcept {
 	// Use thread_local to prevent corruption
 	thread_local std::string formatted;
 	formatted = format();

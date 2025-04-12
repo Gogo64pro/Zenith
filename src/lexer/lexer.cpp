@@ -1,6 +1,6 @@
 #include "lexer.hpp"
-#include "../ast/ASTNode.hpp"
-#include "LexError.hpp"
+#include "../ast/Node.hpp"
+#include "error.hpp"
 #include <cctype>
 #include <stdexcept>
 
@@ -152,7 +152,7 @@ void Lexer::scanToken() {
 					advance();
 				}
 				if (isAtEnd()) {
-					throw LexError( {line,column,0,current} ,"Unterminated block comment");
+					throw Error( {line,column,0,current} ,"Unterminated block comment");
 				}
 				// Consume the '*/'
 				advance();
@@ -175,11 +175,11 @@ void Lexer::scanToken() {
 			break;
 		case '&':
 			if (match('&')) addToken(TokenType::AND);
-			else throw LexError( {line,column,0,current} ,"Unexpected character: &");
+			else throw Error( {line,column,0,current} ,"Unexpected character: &");
 			break;
 		case '|':
 			if (match('|')) addToken(TokenType::OR);
-			else throw LexError( {line,column,0,current} ,"Unexpected character: |");
+			else throw Error( {line,column,0,current} ,"Unexpected character: |");
 			break;
 		case '<':
 			addToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS);
@@ -214,7 +214,7 @@ void Lexer::scanToken() {
 			} else if (isalpha(c) || c == '_') {
 				identifier();
 			} else {
-				throw LexError( {line,column,0,current} ,"Unexpected character: " + std::string(1, c));
+				throw Error( {line,column,0,current} ,"Unexpected character: " + std::string(1, c));
 			}
 			break;
 	}
@@ -225,7 +225,7 @@ void Lexer::string() {
 		advance();
 	}
 
-	if (isAtEnd()) LexError( {line,column,0,current} ,"Unterminated string");
+	if (isAtEnd()) Error( {line,column,0,current} ,"Unterminated string");
 
 	advance();  // Consume closing "
 
@@ -266,7 +266,7 @@ void Lexer::templateString() {
 
 	// Handle closing
 	if (isAtEnd()) {
-		throw LexError({line, column, 0, current}, "Unterminated template string");
+		throw Error({line, column, 0, current}, "Unterminated template string");
 	}
 
 	// Add final template part (if any)

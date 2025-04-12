@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <unordered_set>
 #include "../ast/Expressions.hpp"
-#include "ParseError.hpp"
+#include "error.hpp"
 
 namespace zenith::parser {
 
@@ -66,7 +66,7 @@ lexer::Token Parser::consume(lexer::TokenType type, const std::string& errorMess
 	if (match(type)) {
 		return advance();
 	}
-	throw ParseError(currentToken.loc, errorMessage);
+	throw Error(currentToken.loc, errorMessage);
 }
 
 lexer::Token Parser::consume(lexer::TokenType type) {
@@ -127,7 +127,7 @@ std::unique_ptr<ast::ExprNode> Parser::parsePrimary() {
 		if (match(lexer::TokenType::LBRACE)) {
 			return parseFreeObject();
 		}
-		throw ParseError(startLoc,"Expected '{' after free obj, Achievement unlocked: How did we get here?");
+		throw Error(startLoc,"Expected '{' after free obj, Achievement unlocked: How did we get here?");
 	}
 	else if (match(lexer::TokenType::LPAREN)) {
 			auto params = parseArrowFunctionParams();
@@ -165,7 +165,7 @@ std::unique_ptr<ast::ExprNode> Parser::parsePrimary() {
 		return expr;  // No move needed here (RVO applies)
 	}
 
-	throw ParseError(currentToken.loc,
+	throw Error(currentToken.loc,
 						"Expected primary expression, got " +
 						lexer::Lexer::tokenToString(currentToken.type));
 }
@@ -244,7 +244,7 @@ std::unique_ptr<ast::TypeNode> Parser::parseType() {
 		return std::make_unique<ast::NamedTypeNode>(startLoc, typeToken.lexeme);
 	}
 
-	throw ParseError(
+	throw Error(
 			currentToken.loc,
 			"Expected type name, got " + lexer::Lexer::tokenToString(currentToken.type)
 	);
@@ -333,7 +333,7 @@ int Parser::getPrecedence(lexer::TokenType type) {
 
 std::unique_ptr<ast::ProgramNode> Parser::parse() {
 	ast::SourceLocation startLoc = currentToken.loc;
-	std::vector<std::unique_ptr<ast::ASTNode>> declarations;
+	std::vector<std::unique_ptr<ast::Node>> declarations;
 	while (!isAtEnd()) {
 		try {
 			if (match(lexer::TokenType::IMPORT)) {
@@ -361,7 +361,7 @@ std::unique_ptr<ast::ProgramNode> Parser::parse() {
 				// Handle other top-level constructs
 				advance();
 			}
-		} catch (const ParseError& e) {
+		} catch (const Error& e) {
 			errorReporter.report(e.location,e.format());
 			errStream << e.what() << std::endl;
 			synchronize();
@@ -454,13 +454,13 @@ std::unique_ptr<ast::BlockNode> Parser::parseBlock() {
 	ast::SourceLocation startLoc = currentToken.loc;
 	consume(lexer::TokenType::LBRACE);
 
-	std::vector<std::unique_ptr<ast::ASTNode>> statements;
+	std::vector<std::unique_ptr<ast::Node>> statements;
 	try {
 		while (!match(lexer::TokenType::RBRACE) && !isAtEnd()) {
 			statements.push_back(parseStatement());
 		}
 		consume(lexer::TokenType::RBRACE,"Expected '}' after block");
-	} catch (const ParseError&) {
+	} catch (const Error&) {
 		synchronize(); // Your error recovery method
 		if (!match(lexer::TokenType::RBRACE)) {
 			// Insert synthetic '}' if missing
@@ -529,7 +529,7 @@ std::unique_ptr<ast::StmtNode> Parser::parseStatement() {
 	}
 
 	// Error recovery
-	throw ParseError(currentToken.loc, "Unexpected token in statement: " + currentToken.lexeme);
+	throw Error(currentToken.loc, "Unexpected token in statement: " + currentToken.lexeme);
 }
 
 bool Parser::peekIsExpressionStart() const {
@@ -572,10 +572,10 @@ std::unique_ptr<ast::IfNode> Parser::parseIfStmt() {
 	std::unique_ptr<ast::StmtNode> thenBranch;
 	try {
 		if (flags.bracesRequired && !match(lexer::TokenType::LBRACE)) {
-			throw ParseError(currentToken.loc, "Expected '{' after 'if'");
+			throw Error(currentToken.loc, "Expected '{' after 'if'");
 		}
 		thenBranch = parseStatement();
-	} catch (const ParseError& e) {
+	} catch (const Error& e) {
 		errorReporter.report(e.location,"Error in if body " + e.format());
 		errStream << "Error in if body: " << e.what() << std::endl;
 		synchronize(); // Skip to next statement
@@ -587,12 +587,12 @@ std::unique_ptr<ast::IfNode> Parser::parseIfStmt() {
 	}
 
 	// Parse 'else' branch (also enforce braces if required)
-	std::unique_ptr<ast::ASTNode> elseBranch;
+	std::unique_ptr<ast::Node> elseBranch;
 	if (match(lexer::TokenType::ELSE)) {
 		advance();
 		if (flags.bracesRequired) {
 			if (!match(lexer::TokenType::LBRACE)) {
-				throw ParseError(currentToken.loc,
+				throw Error(currentToken.loc,
 									"Expected '{' after 'else' (braces are required)");
 			}
 			elseBranch = parseBlock();
@@ -614,7 +614,7 @@ std::unique_ptr<ast::ForNode> Parser::parseForStmt() {
 	consume(lexer::TokenType::LPAREN);
 
 	// Parse init/condition/increment (unchanged)
-	std::unique_ptr<ast::ASTNode> init;
+	std::unique_ptr<ast::Node> init;
 	if (match(lexer::TokenType::SEMICOLON)) {
 		advance(); // Empty initializer
 	}
@@ -641,7 +641,7 @@ std::unique_ptr<ast::ForNode> Parser::parseForStmt() {
 
 	// Enforce braces if required
 	if (flags.bracesRequired && !match(lexer::TokenType::LBRACE)) {
-		throw ParseError(currentToken.loc,
+		throw Error(currentToken.loc,
 							"Expected '{' after 'for' (braces are required)");
 	}
 
@@ -658,7 +658,7 @@ std::unique_ptr<ast::WhileNode> Parser::parseWhileStmt() {
 
 	// Enforce braces if required
 	if (flags.bracesRequired && !match(lexer::TokenType::LBRACE)) {
-		throw ParseError(currentToken.loc,
+		throw Error(currentToken.loc,
 							"Expected '{' after 'while' (braces are required)");
 	}
 
@@ -671,7 +671,7 @@ std::unique_ptr<ast::DoWhileNode> Parser::parseDoWhileStmt() {
 
 	// Enforce braces if required
 	if (flags.bracesRequired && !match(lexer::TokenType::LBRACE)) {
-		throw ParseError(currentToken.loc,
+		throw Error(currentToken.loc,
 							"Expected '{' after 'do' (braces are required)");
 	}
 
@@ -1018,7 +1018,7 @@ std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
 						std::move(annotations)    // vector<unique_ptr<AnnotationNode>>
 				));
 			}
-		} catch (const ParseError& e) {
+		} catch (const Error& e) {
 			errorReporter.report(e.location, e.format());
 			errStream << e.what() << std::endl;
 			synchronize();
@@ -1182,7 +1182,7 @@ std::unique_ptr<ast::LambdaExprNode> Parser::parseArrowFunction(std::vector<std:
 	// Handle single-expression body
 	if (!match(lexer::TokenType::LBRACE)) {
 		auto expr = parseExpression();
-		auto stmts = std::vector<std::unique_ptr<ast::ASTNode>>();
+		auto stmts = std::vector<std::unique_ptr<ast::Node>>();
 		stmts.push_back(std::make_unique<ast::ReturnStmtNode>(loc, std::move(expr)));
 		auto body = std::make_unique<ast::BlockNode>(loc, std::move(stmts));
 

@@ -2,7 +2,7 @@
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
 #include "utils/mainargs.hpp"
-#include "parser/ParseError.hpp"
+#include "parser/error.hpp"
 #include "utils/ReadFile.hpp"
 
 
@@ -39,11 +39,11 @@ int main(int argc, char *argv[]) {
 
 	std::ofstream parserOut("parserout.log");
 	try{
-		//throw ParseError({0,0,0,0},"STEEPEST"); //Debugger test error
+		//throw Error({0,0,0,0},"STEEPEST"); //Debugger test error
 		parser::Parser parser(tokens,flags,parserOut);
 		parserOut << parser.parse()->toString() << std::endl;
-	}catch (const parser::ParseError &e) {
-		parserOut << "Parser error (ParseError): " << e.format() << std::endl;
+	}catch (const parser::Error &e) {
+		parserOut << "Parser error (Error): " << e.format() << std::endl;
 		return 1;
 	} catch (const std::exception &e) {
 		parserOut << "Parser error (std::exception): " << e.what() << std::endl;

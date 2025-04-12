@@ -4,80 +4,82 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "../ast/ASTNode.hpp"
+#include "../ast/Node.hpp"
 
 namespace zenith::lexer {
-	enum class TokenType {
-		// Keywords
-		LET, VAR, FUN, UNSAFE, CLASS, STRUCT, UNION,
-		PUBLIC, PRIVATE, PROTECTED, PRIVATEW, PROTECTEDW,CONST,
-		IMPORT, PACKAGE, JAVA, EXTERN, NEW, HOIST,IF,FOR,WHILE,RETURN,ELSE,/*ELIF,*/DO,
 
-		// Types
-		INT, LONG, SHORT, BYTE, FLOAT, DOUBLE,
-		STRING, DYNAMIC, FREEOBJ, NUMBER, BIGINT, BIGNUMBER,
+enum class TokenType {
+	// Keywords
+	LET, VAR, FUN, UNSAFE, CLASS, STRUCT, UNION,
+	PUBLIC, PRIVATE, PROTECTED, PRIVATEW, PROTECTEDW,CONST,
+	IMPORT, PACKAGE, JAVA, EXTERN, NEW, HOIST,IF,FOR,WHILE,RETURN,ELSE,/*ELIF,*/DO,
 
-		// Literals
-		IDENTIFIER, INTEGER, FLOAT_LIT, STRING_LIT,TRUE,FALSE,NULL_LIT,TEMPLATE_LIT,TEMPLATE_PART,
+	// Types
+	INT, LONG, SHORT, BYTE, FLOAT, DOUBLE,
+	STRING, DYNAMIC, FREEOBJ, NUMBER, BIGINT, BIGNUMBER,
 
-		// Operators
-		PLUS, MINUS, STAR, SLASH, PERCENT,
-		EQUAL, EQUAL_EQUAL, BANG_EQUAL,
-		LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,BANG,
-		PLUS_EQUALS, MINUS_EQUALS, STAR_EQUALS, SLASH_EQUALS, PERCENT_EQUALS,
+	// Literals
+	IDENTIFIER, INTEGER, FLOAT_LIT, STRING_LIT,TRUE,FALSE,NULL_LIT,TEMPLATE_LIT,TEMPLATE_PART,
 
-		//Logical
-		AND,OR,
+	// Operators
+	PLUS, MINUS, STAR, SLASH, PERCENT,
+	EQUAL, EQUAL_EQUAL, BANG_EQUAL,
+	LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,BANG,
+	PLUS_EQUALS, MINUS_EQUALS, STAR_EQUALS, SLASH_EQUALS, PERCENT_EQUALS,
 
-		// Punctuation
-		LBRACE, RBRACE, LPAREN, RPAREN, LBRACKET, RBRACKET, DOLLAR_LBRACE, //paren skobi, brace kudravi skobi, brackets kvadratni skobi
-		COMMA, DOT, SEMICOLON, COLON, ARROW, LAMBARROW, BACKTICK,
+	//Logical
+	AND,OR,
 
-		// Special
-		AT, // For annotations
-		THIS,
-		EOF_TOKEN
-	};
+	// Punctuation
+	LBRACE, RBRACE, LPAREN, RPAREN, LBRACKET, RBRACKET, DOLLAR_LBRACE, //paren skobi, brace kudravi skobi, brackets kvadratni skobi
+	COMMA, DOT, SEMICOLON, COLON, ARROW, LAMBARROW, BACKTICK,
 
-	struct Token {
-		TokenType type;
-		std::string lexeme;
-		ast::SourceLocation loc;
-		Token(TokenType type, std::string lexeme, ast::SourceLocation loc): type(type), lexeme(std::move(lexeme)), loc(loc) {}
-		Token(TokenType type, std::string lexeme, size_t line, size_t column, size_t length)
-				: type(type), lexeme(std::move(lexeme)),
-				  loc{line, column, length, 0} {}  // fileOffset=0
-	};
+	// Special
+	AT, // For annotations
+	THIS,
+	EOF_TOKEN
+};
 
-	class Lexer {
-	public:
-		Lexer(const std::string& source, const std::string& name);
-		std::vector<Token> tokenize() && ;
-		static std::string tokenToString(TokenType type);
-		size_t tokenStart = 0;
-		size_t startColumn = 1;
-	private:
-		char advance();
-		bool match(char expected);
-		void addToken(TokenType type);
-		void scanToken();
-		void identifier();
-		void number();
-		void string();
-		void templateString();
-		bool isAtEnd() const;
-		char peekNext() const;
-		char peek() const;
+struct Token {
+	TokenType type;
+	std::string lexeme;
+	ast::SourceLocation loc;
+	Token(TokenType type, std::string lexeme, ast::SourceLocation loc): type(type), lexeme(std::move(lexeme)), loc(loc) {}
+	Token(TokenType type, std::string lexeme, size_t line, size_t column, size_t length)
+			: type(type), lexeme(std::move(lexeme)),
+				loc{line, column, length, 0} {}  // fileOffset=0
+};
 
-		const std::string& source;
-		const std::string& fileName;
-		std::vector<Token> tokens;
-		size_t start = 0;
-		size_t current = 0;
-		size_t line = 1;
-		size_t column = 1;
+class Lexer {
+public:
+	Lexer(const std::string& source, const std::string& name);
+	std::vector<Token> tokenize() && ;
+	static std::string tokenToString(TokenType type);
+	size_t tokenStart = 0;
+	size_t startColumn = 1;
+private:
+	char advance();
+	bool match(char expected);
+	void addToken(TokenType type);
+	void scanToken();
+	void identifier();
+	void number();
+	void string();
+	void templateString();
+	bool isAtEnd() const;
+	char peekNext() const;
+	char peek() const;
 
-		static const std::unordered_map<std::string, TokenType> keywords;
+	const std::string& source;
+	const std::string& fileName;
+	std::vector<Token> tokens;
+	size_t start = 0;
+	size_t current = 0;
+	size_t line = 1;
+	size_t column = 1;
 
-	};
-}
+	static const std::unordered_map<std::string, TokenType> keywords;
+
+};
+
+} // zenith::lexer

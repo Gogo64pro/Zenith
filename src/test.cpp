@@ -1,10 +1,10 @@
 #include <iostream>
-#include "src/exceptions/ParseError.hpp"
+#include "src/exceptions/error.hpp"
 
 int main(){
 	try {
-		throw zenith::ParseError({1,5,0,0},"Test Error");
-	} catch(const zenith::ParseError& e){
+		throw zenith::Error({1,5,0,0},"Test Error");
+	} catch(const zenith::Error& e){
 		std::cout << "Caught: " << e.what() << std::endl;
 	}
 }

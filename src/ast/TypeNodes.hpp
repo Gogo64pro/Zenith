@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
-#include "../ast/ASTNode.hpp"
+#include "ASTNode.hpp"
 
-namespace zenith {
+namespace zenith::ast {
 	// Base type node
 	struct TypeNode : ASTNode {
 		enum Kind { PRIMITIVE, CLASS, STRUCT, ARRAY, FUNCTION, DYNAMIC } kind;

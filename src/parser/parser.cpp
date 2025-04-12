@@ -8,43 +8,43 @@
 
 namespace zenith {
 	// Fixed parseVarDecl to return the node
-	std::unique_ptr<VarDeclNode> Parser::parseVarDecl() {
-		SourceLocation loc = currentToken.loc;
+	std::unique_ptr<ast::VarDeclNode> Parser::parseVarDecl() {
+		ast::SourceLocation loc = currentToken.loc;
 		bool isHoisted = match(TokenType::HOIST);
-		VarDeclNode::Kind kind = VarDeclNode::DYNAMIC; // Default to dynamic
-		std::unique_ptr<TypeNode> typeNode;
+		ast::VarDeclNode::Kind kind = ast::VarDeclNode::DYNAMIC; // Default to dynamic
+		std::unique_ptr<ast::TypeNode> typeNode;
 
 		// Case 1: Static typed declaration (int a = 12)
 		if (isBuiltInType(currentToken.type) || currentToken.type == TokenType::IDENTIFIER) {
-			kind = VarDeclNode::STATIC;
+			kind = ast::VarDeclNode::STATIC;
 			typeNode = parseType();
 		}
 			// Case 2: Dynamic declaration (let/var/dynamic)
 		else if (match(TokenType::LET) || match(TokenType::VAR) || match(TokenType::DYNAMIC)) {
-			kind = VarDeclNode::DYNAMIC;
+			kind = ast::VarDeclNode::DYNAMIC;
 			advance();
 		}
 
 		std::string name = consume(TokenType::IDENTIFIER).lexeme;
 
 		// Handle type annotation for dynamic variables (let a: int = 10)
-		if (kind == VarDeclNode::DYNAMIC && match(TokenType::COLON)) {
+		if (kind == ast::VarDeclNode::DYNAMIC && match(TokenType::COLON)) {
 			typeNode = parseType();
 		}
 
 		// Handle initialization
-		std::unique_ptr<ExprNode> initializer;
+		std::unique_ptr<ast::ExprNode> initializer;
 		if (match(TokenType::EQUAL)) {
 			consume(TokenType::EQUAL);
 			initializer = parseExpression();
 
 			// Special case: Class initialization (SomeClassName a = new SomeClassName())
-			if (kind == VarDeclNode::STATIC && initializer->isConstructorCall()) {
-				kind = VarDeclNode::CLASS_INIT;
+			if (kind == ast::VarDeclNode::STATIC && initializer->isConstructorCall()) {
+				kind = ast::VarDeclNode::CLASS_INIT;
 			}
 		}
 
-		return std::make_unique<VarDeclNode>(
+		return std::make_unique<ast::VarDeclNode>(
 				loc, kind, std::move(name),
 				std::move(typeNode), std::move(initializer),
 				isHoisted
@@ -72,7 +72,7 @@ namespace zenith {
 		return consume(type, "Expected " + Lexer::tokenToString(type));
 	}
 
-	std::unique_ptr<ExprNode> Parser::parseExpression(int precedence) { // Remove default arg here
+	std::unique_ptr<ast::ExprNode> Parser::parseExpression(int precedence) { // Remove default arg here
 		auto expr = parsePrimary();
 
 		while (true) {
@@ -83,7 +83,7 @@ namespace zenith {
 
 			advance();
 			auto right = parseExpression(opPrecedence);
-			expr = std::make_unique<BinaryOpNode>(
+			expr = std::make_unique<ast::BinaryOpNode>(
 					op.loc, // Pass operator location
 					op.type,
 					std::move(expr),
@@ -94,8 +94,8 @@ namespace zenith {
 		return expr;
 	}
 
-	std::unique_ptr<ExprNode> Parser::parsePrimary() {
-		SourceLocation startLoc = currentToken.loc;
+	std::unique_ptr<ast::ExprNode> Parser::parsePrimary() {
+		ast::SourceLocation startLoc = currentToken.loc;
 
 		// Handle all the simple cases first
 		if (match(TokenType::NEW)) {
@@ -103,18 +103,18 @@ namespace zenith {
 		}
 		else if (match({TokenType::NUMBER,TokenType::INTEGER,TokenType::FLOAT_LIT})) {
 			Token numToken = advance();
-			return std::make_unique<LiteralNode>(startLoc, LiteralNode::NUMBER, numToken.lexeme);
+			return std::make_unique<ast::LiteralNode>(startLoc, ast::LiteralNode::NUMBER, numToken.lexeme);
 		}
 		else if (match(TokenType::STRING_LIT)) {
 			Token strToken = advance();
-			return std::make_unique<LiteralNode>(startLoc, LiteralNode::STRING, strToken.lexeme);
+			return std::make_unique<ast::LiteralNode>(startLoc, ast::LiteralNode::STRING, strToken.lexeme);
 		} else if (match(TokenType::TRUE) || match(TokenType::FALSE)) {
 			Token boolToken = advance();
-			return std::make_unique<LiteralNode>(startLoc, LiteralNode::BOOL, boolToken.lexeme);
+			return std::make_unique<ast::LiteralNode>(startLoc, ast::LiteralNode::BOOL, boolToken.lexeme);
 		}
 		else if (match(TokenType::NULL_LIT)) {
 			advance();
-			return std::make_unique<LiteralNode>(startLoc, LiteralNode::NIL, "nil");
+			return std::make_unique<ast::LiteralNode>(startLoc, ast::LiteralNode::NIL, "nil");
 		}
 		else if (match(TokenType::LBRACE)) {
 			if (isInStructInitializerContext()) {
@@ -137,12 +137,12 @@ namespace zenith {
 			}
 		else if (match({TokenType::IDENTIFIER, TokenType::THIS})) {
 			Token identToken = advance();
-			std::unique_ptr<ExprNode> expr;
+			std::unique_ptr<ast::ExprNode> expr;
 
 			if (identToken.type == TokenType::THIS) {
-				expr = std::make_unique<ThisNode>(startLoc);
+				expr = std::make_unique<ast::ThisNode>(startLoc);
 			} else {
-				expr = std::make_unique<VarNode>(startLoc, identToken.lexeme);
+				expr = std::make_unique<ast::VarNode>(startLoc, identToken.lexeme);
 			}
 
 			// Handle chained operations
@@ -172,7 +172,7 @@ namespace zenith {
 	Token Parser::advance() {
 		if (isAtEnd()) {
 			return Token{TokenType::EOF_TOKEN, "",
-			             tokens.empty() ? SourceLocation{1,1,0, 0} : tokens.back().loc};
+			             tokens.empty() ? ast::SourceLocation{1,1,0, 0} : tokens.back().loc};
 		}
 
 		Token result = tokens[current];  // 1. Get current token first
@@ -201,8 +201,8 @@ namespace zenith {
 	bool Parser::isAtEnd() const {
 		return current >= tokens.size();
 	}
-	std::unique_ptr<TypeNode> Parser::parseType() {
-		SourceLocation startLoc = currentToken.loc;
+	std::unique_ptr<ast::TypeNode> Parser::parseType() {
+		ast::SourceLocation startLoc = currentToken.loc;
 
 		// Handle built-in types (from TokenType)
 		if (match({TokenType::INT, TokenType::LONG, TokenType::SHORT,
@@ -212,35 +212,35 @@ namespace zenith {
 
 			Token typeToken = advance();
 
-			PrimitiveTypeNode::Type kind;
-			if (typeToken.type == TokenType::INT) kind = PrimitiveTypeNode::INT;
-			else if (typeToken.type == TokenType::LONG) kind = PrimitiveTypeNode::LONG;
-			else if (typeToken.type == TokenType::SHORT) kind = PrimitiveTypeNode::SHORT;
-			else if (typeToken.type == TokenType::BYTE) kind = PrimitiveTypeNode::BYTE;
-			else if (typeToken.type == TokenType::FLOAT) kind = PrimitiveTypeNode::FLOAT;
-			else if (typeToken.type == TokenType::DOUBLE) kind = PrimitiveTypeNode::DOUBLE;
-			else if (typeToken.type == TokenType::STRING) kind = PrimitiveTypeNode::STRING;
-			else if (typeToken.type == TokenType::NUMBER) kind = PrimitiveTypeNode::NUMBER;
-			else if (typeToken.type == TokenType::BIGINT) kind = PrimitiveTypeNode::BIGINT;
+			ast::PrimitiveTypeNode::Type kind;
+			     if (typeToken.type == TokenType::INT   ) kind = ast::PrimitiveTypeNode::INT;
+			else if (typeToken.type == TokenType::LONG  ) kind = ast::PrimitiveTypeNode::LONG;
+			else if (typeToken.type == TokenType::SHORT ) kind = ast::PrimitiveTypeNode::SHORT;
+			else if (typeToken.type == TokenType::BYTE  ) kind = ast::PrimitiveTypeNode::BYTE;
+			else if (typeToken.type == TokenType::FLOAT ) kind = ast::PrimitiveTypeNode::FLOAT;
+			else if (typeToken.type == TokenType::DOUBLE) kind = ast::PrimitiveTypeNode::DOUBLE;
+			else if (typeToken.type == TokenType::STRING) kind = ast::PrimitiveTypeNode::STRING;
+			else if (typeToken.type == TokenType::NUMBER) kind = ast::PrimitiveTypeNode::NUMBER;
+			else if (typeToken.type == TokenType::BIGINT) kind = ast::PrimitiveTypeNode::BIGINT;
 			else if (typeToken.type == TokenType::FREEOBJ) {
 				// For freeobj, we'll return a TypeNode with DYNAMIC kind since it's a special case
-				return std::make_unique<TypeNode>(startLoc, TypeNode::DYNAMIC);
+				return std::make_unique<ast::TypeNode>(startLoc, ast::TypeNode::DYNAMIC);
 			}
-			else kind = PrimitiveTypeNode::BIGNUMBER;
+			else kind = ast::PrimitiveTypeNode::BIGNUMBER;
 
-			return std::make_unique<PrimitiveTypeNode>(startLoc, kind);
+			return std::make_unique<ast::PrimitiveTypeNode>(startLoc, kind);
 		}
 		else if (match(TokenType::LBRACKET)) {
 			// Array type (e.g., [int] or [MyClass])
 			advance(); // Consume '['
 			auto elementType = parseType();
 			consume(TokenType::RBRACKET, "Expected ']' after array type");
-			return std::make_unique<ArrayTypeNode>(startLoc, std::move(elementType));
+			return std::make_unique<ast::ArrayTypeNode>(startLoc, std::move(elementType));
 		}
 		else if (match(TokenType::IDENTIFIER)) {
 			// User-defined type (class/struct/type alias)
 			Token typeToken = advance();
-			return std::make_unique<NamedTypeNode>(startLoc, typeToken.lexeme);
+			return std::make_unique<ast::NamedTypeNode>(startLoc, typeToken.lexeme);
 		}
 
 		throw ParseError(
@@ -330,9 +330,9 @@ namespace zenith {
 		return it != precedences.end() ? it->second : 0;
 	}
 
-	std::unique_ptr<ProgramNode> Parser::parse() {
-		SourceLocation startLoc = currentToken.loc;
-		std::vector<std::unique_ptr<ASTNode>> declarations;
+	std::unique_ptr<ast::ProgramNode> Parser::parse() {
+		ast::SourceLocation startLoc = currentToken.loc;
+		std::vector<std::unique_ptr<ast::ASTNode>> declarations;
 		while (!isAtEnd()) {
 			try {
 				if (match(TokenType::IMPORT)) {
@@ -366,7 +366,7 @@ namespace zenith {
 				synchronize();
 			}
 		}
-		auto program = std::make_unique<ProgramNode>(startLoc,std::move(declarations));
+		auto program = std::make_unique<ast::ProgramNode>(startLoc,std::move(declarations));
 
 		return program;
 	}
@@ -378,12 +378,12 @@ namespace zenith {
 		return builtInTypes.count(type) > 0;
 	}
 
-	std::unique_ptr<NewExprNode> Parser::parseNewExpression() {
-		SourceLocation location = consume(TokenType::NEW).loc; // Eat 'new' keyword
+	std::unique_ptr<ast::NewExprNode> Parser::parseNewExpression() {
+		ast::SourceLocation location = consume(TokenType::NEW).loc; // Eat 'new' keyword
 		std::string className = consume(TokenType::IDENTIFIER).lexeme;
 
 		consume(TokenType::LPAREN);
-		std::vector<std::unique_ptr<ExprNode>> args;
+		std::vector<std::unique_ptr<ast::ExprNode>> args;
 		if (!match(TokenType::RPAREN)) {
 			do {
 				args.push_back(parseExpression());
@@ -391,11 +391,11 @@ namespace zenith {
 			consume(TokenType::RPAREN);
 		}
 
-		return std::make_unique<NewExprNode>(location,className, std::move(args));
+		return std::make_unique<ast::NewExprNode>(location,className, std::move(args));
 	}
 
-	std::unique_ptr<FunctionDeclNode> Parser::parseFunction() {
-		SourceLocation loc = currentToken.loc;
+	std::unique_ptr<ast::FunctionDeclNode> Parser::parseFunction() {
+		ast::SourceLocation loc = currentToken.loc;
 		bool hasFunKeyword = false;
 
 		// Handle annotations
@@ -412,7 +412,7 @@ namespace zenith {
 		}
 
 		// Parse return type (optional)
-		std::unique_ptr<TypeNode> returnType;
+		std::unique_ptr<ast::TypeNode> returnType;
 		if (match(TokenType::FUN)) {
 			hasFunKeyword = true;
 			advance();
@@ -438,7 +438,7 @@ namespace zenith {
 
 		auto body = parseBlock();
 
-		return std::make_unique<FunctionDeclNode>(
+		return std::make_unique<ast::FunctionDeclNode>(
 				loc,
 				std::move(name),
 				std::move(params),
@@ -449,11 +449,11 @@ namespace zenith {
 		);
 	}
 
-	std::unique_ptr<BlockNode> Parser::parseBlock() {
-		SourceLocation startLoc = currentToken.loc;
+	std::unique_ptr<ast::BlockNode> Parser::parseBlock() {
+		ast::SourceLocation startLoc = currentToken.loc;
 		consume(TokenType::LBRACE);
 
-		std::vector<std::unique_ptr<ASTNode>> statements;
+		std::vector<std::unique_ptr<ast::ASTNode>> statements;
 		try {
 			while (!match(TokenType::RBRACE) && !isAtEnd()) {
 				statements.push_back(parseStatement());
@@ -467,11 +467,11 @@ namespace zenith {
 			}
 		}
 
-		return std::make_unique<BlockNode>(startLoc, std::move(statements));
+		return std::make_unique<ast::BlockNode>(startLoc, std::move(statements));
 	}
 
-	std::unique_ptr<StmtNode> Parser::parseStatement() {
-		SourceLocation loc = currentToken.loc;
+	std::unique_ptr<ast::StmtNode> Parser::parseStatement() {
+		ast::SourceLocation loc = currentToken.loc;
 
 		// Declaration statements
 		if (match({TokenType::LET, TokenType::VAR, TokenType::DYNAMIC})) {
@@ -490,7 +490,7 @@ namespace zenith {
 		if (match(TokenType::THIS)) {
 			auto expr = parseExpression();
 			if (match(TokenType::SEMICOLON)) advance();
-			return std::make_unique<ExprStmtNode>(loc, std::move(expr));
+			return std::make_unique<ast::ExprStmtNode>(loc, std::move(expr));
 		}
 
 		// Control flow statements
@@ -518,13 +518,13 @@ namespace zenith {
 			if (match(TokenType::SEMICOLON)) {
 				advance();
 			}
-			return std::make_unique<ExprStmtNode>(loc, std::move(expr));
+			return std::make_unique<ast::ExprStmtNode>(loc, std::move(expr));
 		}
 
 		// Empty statement (just a semicolon)
 		if (match(TokenType::SEMICOLON)) {
 			advance();
-			return std::make_unique<EmptyStmtNode>(loc);
+			return std::make_unique<ast::EmptyStmtNode>(loc);
 		}
 
 		// Error recovery
@@ -555,20 +555,20 @@ namespace zenith {
 		size_t idx = current + offset;
 		if (idx >= tokens.size()) {
 			return Token{TokenType::EOF_TOKEN, "",
-			             tokens.empty() ? SourceLocation{1,1,0} : tokens.back().loc};
+			             tokens.empty() ? ast::SourceLocation{1,1,0} : tokens.back().loc};
 		}
 		return tokens[idx];
 
 	}
 
-	std::unique_ptr<IfNode> Parser::parseIfStmt() {
-		SourceLocation loc = consume(TokenType::IF).loc;
+	std::unique_ptr<ast::IfNode> Parser::parseIfStmt() {
+		ast::SourceLocation loc = consume(TokenType::IF).loc;
 		consume(TokenType::LPAREN, "Expected '(' after 'if'");
 		auto condition = parseExpression();
 		consume(TokenType::RPAREN, "Expected ')' after if condition");
 
 		// Parse 'then' branch (enforce braces if required)
-		std::unique_ptr<StmtNode> thenBranch;
+		std::unique_ptr<ast::StmtNode> thenBranch;
 		try {
 			if (flags.bracesRequired && !match(TokenType::LBRACE)) {
 				throw ParseError(currentToken.loc, "Expected '{' after 'if'");
@@ -579,14 +579,14 @@ namespace zenith {
 			errStream << "Error in if body: " << e.what() << std::endl;
 			synchronize(); // Skip to next statement
 			auto errorNode = createErrorNode();
-			thenBranch = std::unique_ptr<StmtNode>(dynamic_cast<StmtNode*>(errorNode.release()));
+			thenBranch = std::unique_ptr<ast::StmtNode>(dynamic_cast<ast::StmtNode*>(errorNode.release()));
 			if (!thenBranch) {  // Fallback if cast fails
-				thenBranch = std::make_unique<EmptyStmtNode>(errorNode->loc);
+				thenBranch = std::make_unique<ast::EmptyStmtNode>(errorNode->loc);
 			}
 		}
 
 		// Parse 'else' branch (also enforce braces if required)
-		std::unique_ptr<ASTNode> elseBranch;
+		std::unique_ptr<ast::ASTNode> elseBranch;
 		if (match(TokenType::ELSE)) {
 			advance();
 			if (flags.bracesRequired) {
@@ -600,7 +600,7 @@ namespace zenith {
 			}
 		}
 
-		return std::make_unique<IfNode>(
+		return std::make_unique<ast::IfNode>(
 				loc,
 				std::move(condition),
 				std::move(thenBranch),
@@ -608,12 +608,12 @@ namespace zenith {
 		);
 	}
 
-	std::unique_ptr<ForNode> Parser::parseForStmt() {
-		SourceLocation loc = consume(TokenType::FOR).loc;
+	std::unique_ptr<ast::ForNode> Parser::parseForStmt() {
+		ast::SourceLocation loc = consume(TokenType::FOR).loc;
 		consume(TokenType::LPAREN);
 
 		// Parse init/condition/increment (unchanged)
-		std::unique_ptr<ASTNode> init;
+		std::unique_ptr<ast::ASTNode> init;
 		if (match(TokenType::SEMICOLON)) {
 			advance(); // Empty initializer
 		}
@@ -622,17 +622,17 @@ namespace zenith {
 			init = parseVarDecl();
 		}
 		else {
-			init = std::make_unique<ExprStmtNode>(currentToken.loc, parseExpression());
+			init = std::make_unique<ast::ExprStmtNode>(currentToken.loc, parseExpression());
 		}
 		consume(TokenType::SEMICOLON);
 
-		std::unique_ptr<ExprNode> condition;
+		std::unique_ptr<ast::ExprNode> condition;
 		if (!match(TokenType::SEMICOLON)) {
 			condition = parseExpression();
 		}
 		consume(TokenType::SEMICOLON);
 
-		std::unique_ptr<ExprNode> increment;
+		std::unique_ptr<ast::ExprNode> increment;
 		if (!match(TokenType::RPAREN)) {
 			increment = parseExpression();
 		}
@@ -645,12 +645,12 @@ namespace zenith {
 		}
 
 		auto body = parseStatement(); // parseBlock() if braces are required
-		return std::make_unique<ForNode>(loc, std::move(init), std::move(condition),
+		return std::make_unique<ast::ForNode>(loc, std::move(init), std::move(condition),
 		                                 std::move(increment), std::move(body));
 	}
 
-	std::unique_ptr<WhileNode> Parser::parseWhileStmt() {
-		SourceLocation loc = consume(TokenType::WHILE).loc;
+	std::unique_ptr<ast::WhileNode> Parser::parseWhileStmt() {
+		ast::SourceLocation loc = consume(TokenType::WHILE).loc;
 		consume(TokenType::LPAREN, "Expected '(' after 'while'");
 		auto condition = parseExpression();
 		consume(TokenType::RPAREN, "Expected ')' after while condition");
@@ -662,11 +662,11 @@ namespace zenith {
 		}
 
 		auto body = parseStatement(); // parseBlock() if braces are required
-		return std::make_unique<WhileNode>(loc, std::move(condition), std::move(body));
+		return std::make_unique<ast::WhileNode>(loc, std::move(condition), std::move(body));
 	}
 
-	std::unique_ptr<DoWhileNode> Parser::parseDoWhileStmt() {
-		SourceLocation loc = consume(TokenType::DO).loc;
+	std::unique_ptr<ast::DoWhileNode> Parser::parseDoWhileStmt() {
+		ast::SourceLocation loc = consume(TokenType::DO).loc;
 
 		// Enforce braces if required
 		if (flags.bracesRequired && !match(TokenType::LBRACE)) {
@@ -686,20 +686,20 @@ namespace zenith {
 			advance();
 		}
 
-		return std::make_unique<DoWhileNode>(loc, std::move(condition), std::move(body));
+		return std::make_unique<ast::DoWhileNode>(loc, std::move(condition), std::move(body));
 	}
 
-	std::unique_ptr<ReturnStmtNode> Parser::parseReturnStmt() {
-		SourceLocation loc = consume(TokenType::RETURN).loc;
+	std::unique_ptr<ast::ReturnStmtNode> Parser::parseReturnStmt() {
+		ast::SourceLocation loc = consume(TokenType::RETURN).loc;
 
 		// Handle empty return (no expression)
 		if (match(TokenType::SEMICOLON)) {
 			advance();  // Consume the semicolon
-			return std::make_unique<ReturnStmtNode>(loc, nullptr);
+			return std::make_unique<ast::ReturnStmtNode>(loc, nullptr);
 		}
 
 		// Parse return value (optional in Zenith)
-		std::unique_ptr<ExprNode> value;
+		std::unique_ptr<ast::ExprNode> value;
 		if (!peekIsStatementTerminator()) {
 			value = parseExpression();
 		}
@@ -714,16 +714,16 @@ namespace zenith {
 			parseAnnotation();
 		}
 
-		return std::make_unique<ReturnStmtNode>(loc, std::move(value));
+		return std::make_unique<ast::ReturnStmtNode>(loc, std::move(value));
 	}
 
 	bool Parser::peekIsStatementTerminator() const {
 		return match({TokenType::SEMICOLON, TokenType::RBRACE, TokenType::EOF_TOKEN});
 	}
 
-	std::unique_ptr<FreeObjectNode> Parser::parseFreeObject() {
-		SourceLocation loc = consume(TokenType::LBRACE).loc;
-		std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>> properties;
+	std::unique_ptr<ast::FreeObjectNode> Parser::parseFreeObject() {
+		ast::SourceLocation loc = consume(TokenType::LBRACE).loc;
+		std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>> properties;
 
 		if (!match(TokenType::RBRACE)) {
 			do {
@@ -740,14 +740,14 @@ namespace zenith {
 		}
 
 		consume(TokenType::RBRACE);
-		return std::make_unique<FreeObjectNode>(loc, std::move(properties));
+		return std::make_unique<ast::FreeObjectNode>(loc, std::move(properties));
 	}
 
-	std::unique_ptr<CallNode> Parser::parseFunctionCall(std::unique_ptr<ExprNode> callee) {
-		SourceLocation loc = callee->loc;
+	std::unique_ptr<ast::CallNode> Parser::parseFunctionCall(std::unique_ptr<ast::ExprNode> callee) {
+		ast::SourceLocation loc = callee->loc;
 		consume(TokenType::LPAREN);
 
-		std::vector<std::unique_ptr<ExprNode>> args;
+		std::vector<std::unique_ptr<ast::ExprNode>> args;
 		if (!match(TokenType::RPAREN)) {
 			do {
 				args.push_back(parseExpression());
@@ -755,38 +755,38 @@ namespace zenith {
 		}
 
 		consume(TokenType::RPAREN);
-		return std::make_unique<CallNode>(loc, std::move(callee), std::move(args));
+		return std::make_unique<ast::CallNode>(loc, std::move(callee), std::move(args));
 	}
 
-	std::unique_ptr<MemberAccessNode> Parser::parseMemberAccess(std::unique_ptr<ExprNode> object) {
+	std::unique_ptr<ast::MemberAccessNode> Parser::parseMemberAccess(std::unique_ptr<ast::ExprNode> object) {
 		// Horse guarantee: We only get called when we see a DOT, if not I'm a horse or tramvai
-		SourceLocation loc = object->loc;
+		ast::SourceLocation loc = object->loc;
 
 		// First access (guaranteed to exist)
 		advance(); // Consume '.'
 		std::string member = consume(TokenType::IDENTIFIER).lexeme;
-		auto result = std::make_unique<MemberAccessNode>(loc, std::move(object), member);
+		auto result = std::make_unique<ast::MemberAccessNode>(loc, std::move(object), member);
 
 		// Handle additional accesses or calls
 		while (match(TokenType::DOT)) {
 			advance();
 			member = consume(TokenType::IDENTIFIER).lexeme;
-			result = std::make_unique<MemberAccessNode>(loc, std::move(result), member);
+			result = std::make_unique<ast::MemberAccessNode>(loc, std::move(result), member);
 
 			if (match(TokenType::LPAREN)) {
-				// Temporarily degrade to ExprNode for the call
-				auto temp = std::unique_ptr<ExprNode>(result.release());
+				// Temporarily degrade to ast::ExprNode for the call
+				auto temp = std::unique_ptr<ast::ExprNode>(result.release());
 				temp = parseFunctionCall(std::move(temp));
 				// Then immediately cast back - if this fails, we deserve to be horses
-				result.reset(dynamic_cast<MemberAccessNode*>(temp.release()));
+				result.reset(dynamic_cast<ast::MemberAccessNode*>(temp.release()));
 			}
 		}
 
 		return result;
 	}
 
-	std::unique_ptr<ExprNode> Parser::parseArrayAccess(std::unique_ptr<ExprNode> arrayExpr) {
-		SourceLocation loc = currentToken.loc;
+	std::unique_ptr<ast::ExprNode> Parser::parseArrayAccess(std::unique_ptr<ast::ExprNode> arrayExpr) {
+		ast::SourceLocation loc = currentToken.loc;
 
 		// Keep processing chained array accesses (e.g., arr[1][2][3])
 		while (match(TokenType::LBRACKET)) {
@@ -796,7 +796,7 @@ namespace zenith {
 			consume(TokenType::RBRACKET, "Expected ']' after array index");
 
 			// Create new array access node
-			arrayExpr = std::make_unique<ArrayAccessNode>(
+			arrayExpr = std::make_unique<ast::ArrayAccessNode>(
 					loc,
 					std::move(arrayExpr),  // The array being accessed
 					std::move(indexExpr)   // The index expression
@@ -806,14 +806,14 @@ namespace zenith {
 		return arrayExpr;
 	}
 
-	std::unique_ptr<AnnotationNode> Parser::parseAnnotation() {
-		SourceLocation loc = consume(TokenType::AT).loc; // Eat '@' symbol
+	std::unique_ptr<ast::AnnotationNode> Parser::parseAnnotation() {
+		ast::SourceLocation loc = consume(TokenType::AT).loc; // Eat '@' symbol
 
 		// Parse annotation name
 		std::string name = consume(TokenType::IDENTIFIER).lexeme;
 
 		// Parse optional annotation arguments
-		std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>> arguments;
+		std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>> arguments;
 
 		if (match(TokenType::LPAREN)) {
 			advance(); // Consume '('
@@ -837,15 +837,15 @@ namespace zenith {
 			consume(TokenType::RPAREN); // Consume ')'
 		}
 
-		return std::make_unique<AnnotationNode>(loc, name, std::move(arguments));
+		return std::make_unique<ast::AnnotationNode>(loc, name, std::move(arguments));
 	}
 
-	std::unique_ptr<ErrorNode> Parser::createErrorNode() {
-		return std::make_unique<ErrorNode>(currentToken.loc);
+	std::unique_ptr<ast::ErrorNode> Parser::createErrorNode() {
+		return std::make_unique<ast::ErrorNode>(currentToken.loc);
 	}
 
-	std::unique_ptr<ImportNode> Parser::parseImport() {
-		SourceLocation loc = consume(TokenType::IMPORT).loc;
+	std::unique_ptr<ast::ImportNode> Parser::parseImport() {
+		ast::SourceLocation loc = consume(TokenType::IMPORT).loc;
 		std::string importPath;
 		bool isJavaImport = false;
 
@@ -887,11 +887,11 @@ namespace zenith {
 			advance();
 		}
 
-		return std::make_unique<ImportNode>(loc, importPath, isJavaImport);
+		return std::make_unique<ast::ImportNode>(loc, importPath, isJavaImport);
 	}
 
-	std::unique_ptr<ClassDeclNode> Parser::parseClass() {
-		SourceLocation classLoc = consume(TokenType::CLASS).loc;
+	std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
+		ast::SourceLocation classLoc = consume(TokenType::CLASS).loc;
 		std::string className = consume(TokenType::IDENTIFIER, "Expected class name").lexeme;
 
 		// Parse inheritance
@@ -903,33 +903,33 @@ namespace zenith {
 
 		// Parse class body
 		consume(TokenType::LBRACE, "Expected '{' after class declaration");
-		std::vector<std::unique_ptr<MemberDeclNode>> members;
+		std::vector<std::unique_ptr<ast::MemberDeclNode>> members;
 
 		while (!match(TokenType::RBRACE) && !isAtEnd()) {
 			try {
 				// Parse annotations
-				std::vector<std::unique_ptr<AnnotationNode>> annotations;
+				std::vector<std::unique_ptr<ast::AnnotationNode>> annotations;
 				while (match(TokenType::AT)) {
 					annotations.push_back(parseAnnotation());
 				}
 
 				// Parse access modifier
-				MemberDeclNode::Access access = MemberDeclNode::PUBLIC;
+				ast::MemberDeclNode::Access access = ast::MemberDeclNode::PUBLIC;
 				if (match(TokenType::PUBLIC)) {
 					advance();
-					access = MemberDeclNode::PUBLIC;
+					access = ast::MemberDeclNode::PUBLIC;
 				} else if (match(TokenType::PROTECTED)) {
 					advance();
-					access = MemberDeclNode::PROTECTED;
+					access = ast::MemberDeclNode::PROTECTED;
 				} else if (match(TokenType::PRIVATE)) {
 					advance();
-					access = MemberDeclNode::PRIVATE;
+					access = ast::MemberDeclNode::PRIVATE;
 				} else if (match(TokenType::PRIVATEW)) {
 					advance();
-					access = MemberDeclNode::PRIVATEW;
+					access = ast::MemberDeclNode::PRIVATEW;
 				} else if (match(TokenType::PROTECTEDW)) {
 					advance();
-					access = MemberDeclNode::PROTECTEDW;
+					access = ast::MemberDeclNode::PROTECTEDW;
 				}
 
 				// Parse const modifier
@@ -939,8 +939,8 @@ namespace zenith {
 				// Check if it's a constructor
 				if (match(TokenType::IDENTIFIER) && currentToken.lexeme == className) {
 					// Constructor
-					SourceLocation loc = advance().loc;
-					std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>> initializers;
+					ast::SourceLocation loc = advance().loc;
+					std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>> initializers;
 					auto params = parseParameters();
 					if (match(TokenType::COLON)) {
 						advance(); // Consume the ':'
@@ -957,9 +957,9 @@ namespace zenith {
 					}
 					auto body = parseBlock();
 
-					members.push_back(std::make_unique<MemberDeclNode>(
+					members.push_back(std::make_unique<ast::MemberDeclNode>(
 							loc,
-							MemberDeclNode::METHOD_CONSTRUCTOR,
+							ast::MemberDeclNode::METHOD_CONSTRUCTOR,
 							access,
 							isConst,
 							std::move(className),  // Move the string
@@ -974,29 +974,29 @@ namespace zenith {
 				else if (isPotentialMethod()) {
 					auto funcDecl = parseFunction();
 					// Convert FunctionDeclNode to MemberDeclNode
-					members.push_back(std::make_unique<MemberDeclNode>(
+					members.push_back(std::make_unique<ast::MemberDeclNode>(
 							funcDecl->loc,
-							MemberDeclNode::METHOD,
+							ast::MemberDeclNode::METHOD,
 							access,
 							isConst,
 							std::move(funcDecl->name),    // std::string&&
 							std::move(funcDecl->returnType), // unique_ptr<TypeNode>
 							nullptr,                      // No field init
-							std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>>{},// Empty ctor inits
+							std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>>{},// Empty ctor inits
 							std::move(funcDecl->body),    // unique_ptr<BlockNode>
 							std::move(annotations)        // vector<unique_ptr<AnnotationNode>>
 					));
 				}
 				else {
 					// Field declaration
-					std::unique_ptr<TypeNode> type;
+					std::unique_ptr<ast::TypeNode> type;
 					if (isBuiltInType(currentToken.type) || currentToken.type == TokenType::IDENTIFIER) {
 						type = parseType();
 					}
 
 					std::string name = consume(TokenType::IDENTIFIER, "Expected type after declaration").lexeme;
 
-					std::unique_ptr<ExprNode> initializer;
+					std::unique_ptr<ast::ExprNode> initializer;
 					if (match(TokenType::EQUAL)) {
 						advance();
 						initializer = parseExpression();
@@ -1004,15 +1004,15 @@ namespace zenith {
 
 					consume(TokenType::SEMICOLON, "Expected ';' after field declaration");
 
-					members.push_back(std::make_unique<MemberDeclNode>(
+					members.push_back(std::make_unique<ast::MemberDeclNode>(
 							currentToken.loc,
-							MemberDeclNode::FIELD,
+							ast::MemberDeclNode::FIELD,
 							access,
 							isConst,
 							std::move(name),          // std::string&&
 							std::move(type),          // unique_ptr<TypeNode>
-							std::move(initializer),   // unique_ptr<ExprNode> (field init)
-							std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>>{},// Empty ctor inits
+							std::move(initializer),   // unique_ptr<ast::ExprNode> (field init)
+							std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>>{},// Empty ctor inits
 							nullptr,                  // No body
 							std::move(annotations)    // vector<unique_ptr<AnnotationNode>>
 					));
@@ -1026,7 +1026,7 @@ namespace zenith {
 
 		consume(TokenType::RBRACE, "Expected '}' after class body");
 
-		return std::make_unique<ClassDeclNode>(
+		return std::make_unique<ast::ClassDeclNode>(
 				classLoc,
 				std::move(className),
 				std::move(baseClass),
@@ -1038,8 +1038,8 @@ namespace zenith {
 		return match(TokenType::RBRACE) || isAtEnd();
 	}
 
-	std::pair<std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>>, bool>  Parser::parseParameters() {
-		std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> params;
+	std::pair<std::vector<std::pair<std::string, std::unique_ptr<ast::TypeNode>>>, bool>  Parser::parseParameters() {
+		std::vector<std::pair<std::string, std::unique_ptr<ast::TypeNode>>> params;
 
 		consume(TokenType::LPAREN, "Expected '(' after function declaration");
 
@@ -1048,22 +1048,22 @@ namespace zenith {
 		if (inStructSyntax) {
 			consume(TokenType::LBRACE);
 		}
-		std::unique_ptr<TypeNode> currentType = nullptr;
+		std::unique_ptr<ast::TypeNode> currentType = nullptr;
 		bool firstParam = true;
 		while (!(inStructSyntax ? match(TokenType::RBRACE) : match(TokenType::RPAREN))) {
 			if (!firstParam) consume(TokenType::COMMA);
 			firstParam = false;
 
-			std::unique_ptr<TypeNode> paramType;
+			std::unique_ptr<ast::TypeNode> paramType;
 			if(isBuiltInType(currentToken.type) || (currentToken.type == TokenType::IDENTIFIER)){
 				paramType = parseType();
 			}else if(match({TokenType::LET,TokenType::VAR,TokenType::DYNAMIC})){
 				advance();
-				paramType = std::make_unique<TypeNode>(currentToken.loc, TypeNode::DYNAMIC);
+				paramType = std::make_unique<ast::TypeNode>(currentToken.loc, ast::TypeNode::DYNAMIC);
 			}/*else if (lastExplicitType) {
             paramType = lastExplicitType->clone();
 			}*/else{
-				paramType = std::make_unique<TypeNode>(currentToken.loc, TypeNode::DYNAMIC);
+				paramType = std::make_unique<ast::TypeNode>(currentToken.loc, ast::TypeNode::DYNAMIC);
 			}
 			std::string name = consume(TokenType::IDENTIFIER, "Expected parameter name").lexeme;
 			params.emplace_back(name, std::move(paramType));
@@ -1121,9 +1121,9 @@ namespace zenith {
 		return false;
 	}
 
-	std::unique_ptr<StructInitializerNode> Parser::parseStructInitializer() {
-		SourceLocation loc = consume(TokenType::LBRACE).loc;
-		std::vector<StructInitializerNode::StructFieldInitializer> fields;
+	std::unique_ptr<ast::StructInitializerNode> Parser::parseStructInitializer() {
+		ast::SourceLocation loc = consume(TokenType::LBRACE).loc;
+		std::vector<ast::StructInitializerNode::StructFieldInitializer> fields;
 
 		if (!match(TokenType::RBRACE)) {
 			do {
@@ -1151,7 +1151,7 @@ namespace zenith {
 		}
 
 		consume(TokenType::RBRACE);
-		return std::make_unique<StructInitializerNode>(loc, std::move(fields));
+		return std::make_unique<ast::StructInitializerNode>(loc, std::move(fields));
 	}
 
 	std::vector<std::string> Parser::parseArrowFunctionParams() {
@@ -1168,31 +1168,31 @@ namespace zenith {
 		return params;
 	}
 
-	std::unique_ptr<LambdaExprNode> Parser::parseArrowFunction(std::vector<std::string>&& params) {
-		SourceLocation loc = consume(TokenType::LAMBARROW).loc;
+	std::unique_ptr<ast::LambdaExprNode> Parser::parseArrowFunction(std::vector<std::string>&& params) {
+		ast::SourceLocation loc = consume(TokenType::LAMBARROW).loc;
 
 		// Convert string params to typed params (with null types for lambdas)
-		std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> typedParams;
+		std::vector<std::pair<std::string, std::unique_ptr<ast::TypeNode>>> typedParams;
 		typedParams.reserve(params.size());
 		for (auto& param : params) {
 			typedParams.emplace_back(std::move(param), nullptr);
 		}
-		std::unique_ptr<LambdaNode> lambda;
+		std::unique_ptr<ast::LambdaNode> lambda;
 		// Handle single-expression body
 		if (!match(TokenType::LBRACE)) {
 			auto expr = parseExpression();
-			auto stmts = std::vector<std::unique_ptr<ASTNode>>();
-			stmts.push_back(std::make_unique<ReturnStmtNode>(loc, std::move(expr)));
-			auto body = std::make_unique<BlockNode>(loc, std::move(stmts));
+			auto stmts = std::vector<std::unique_ptr<ast::ASTNode>>();
+			stmts.push_back(std::make_unique<ast::ReturnStmtNode>(loc, std::move(expr)));
+			auto body = std::make_unique<ast::BlockNode>(loc, std::move(stmts));
 
-			lambda = std::make_unique<LambdaNode>(loc,std::move(typedParams),nullptr, std::move(body),false);
-			return std::make_unique<LambdaExprNode>(loc,std::move(lambda));
+			lambda = std::make_unique<ast::LambdaNode>(loc,std::move(typedParams),nullptr, std::move(body),false);
+			return std::make_unique<ast::LambdaExprNode>(loc,std::move(lambda));
 		}
 
 		// Handle block body
 		auto body = parseBlock();
-		lambda = std::make_unique<LambdaNode>(loc,std::move(typedParams),nullptr,std::move(body),false);
+		lambda = std::make_unique<ast::LambdaNode>(loc,std::move(typedParams),nullptr,std::move(body),false);
 
-		return std::make_unique<LambdaExprNode>(loc,std::move(lambda));
+		return std::make_unique<ast::LambdaExprNode>(loc,std::move(lambda));
 	}
 }

@@ -44,42 +44,42 @@ namespace zenith {
 		bool isInStructInitializerContext() const;
 
 		// Parsing methods
-		std::unique_ptr<ExprNode> parseExpression(int precedence = 0);
-		std::unique_ptr<ExprNode> parsePrimary();
-		std::unique_ptr<StructInitializerNode> parseStructInitializer();
-		std::unique_ptr<TypeNode> parseType();
-		std::unique_ptr<StmtNode> parseStatement();
-		std::pair<std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>>, bool> parseParameters();
+		std::unique_ptr<ast::ExprNode> parseExpression(int precedence = 0);
+		std::unique_ptr<ast::ExprNode> parsePrimary();
+		std::unique_ptr<ast::StructInitializerNode> parseStructInitializer();
+		std::unique_ptr<ast::TypeNode> parseType();
+		std::unique_ptr<ast::StmtNode> parseStatement();
+		std::pair<std::vector<std::pair<std::string, std::unique_ptr<ast::TypeNode>>>, bool> parseParameters();
 		std::vector<std::string> parseArrowFunctionParams();
 
 		// Declaration parsers
-		std::unique_ptr<VarDeclNode> parseVarDecl();
-		std::unique_ptr<FunctionDeclNode> parseFunction();
-		std::unique_ptr<ClassDeclNode> parseClass();
-		std::unique_ptr<ImportNode> parseImport();
-		std::unique_ptr<AnnotationNode> parseAnnotation();
+		std::unique_ptr<ast::VarDeclNode> parseVarDecl();
+		std::unique_ptr<ast::FunctionDeclNode> parseFunction();
+		std::unique_ptr<ast::ClassDeclNode> parseClass();
+		std::unique_ptr<ast::ImportNode> parseImport();
+		std::unique_ptr<ast::AnnotationNode> parseAnnotation();
 
 		// Statement parsers
-		std::unique_ptr<IfNode> parseIfStmt();
-		std::unique_ptr<ForNode> parseForStmt();
-		std::unique_ptr<WhileNode> parseWhileStmt();
-		std::unique_ptr<DoWhileNode> parseDoWhileStmt();
-		std::unique_ptr<ReturnStmtNode> parseReturnStmt();
-		std::unique_ptr<BlockNode> parseBlock();
+		std::unique_ptr<ast::IfNode> parseIfStmt();
+		std::unique_ptr<ast::ForNode> parseForStmt();
+		std::unique_ptr<ast::WhileNode> parseWhileStmt();
+		std::unique_ptr<ast::DoWhileNode> parseDoWhileStmt();
+		std::unique_ptr<ast::ReturnStmtNode> parseReturnStmt();
+		std::unique_ptr<ast::BlockNode> parseBlock();
 
 		// Expression parsers
-		std::unique_ptr<NewExprNode> parseNewExpression();
-		std::unique_ptr<FreeObjectNode> parseFreeObject();
-		std::unique_ptr<CallNode> parseFunctionCall(std::unique_ptr<ExprNode> callee);
-		std::unique_ptr<MemberAccessNode> parseMemberAccess(std::unique_ptr<ExprNode> object);
-		std::unique_ptr<ExprNode> parseArrayAccess(std::unique_ptr<ExprNode> arrayExpr);
-		std::unique_ptr<LambdaExprNode> parseArrowFunction(std::vector<std::string>&& params);
+		std::unique_ptr<ast::NewExprNode> parseNewExpression();
+		std::unique_ptr<ast::FreeObjectNode> parseFreeObject();
+		std::unique_ptr<ast::CallNode> parseFunctionCall(std::unique_ptr<ast::ExprNode> callee);
+		std::unique_ptr<ast::MemberAccessNode> parseMemberAccess(std::unique_ptr<ast::ExprNode> object);
+		std::unique_ptr<ast::ExprNode> parseArrayAccess(std::unique_ptr<ast::ExprNode> arrayExpr);
+		std::unique_ptr<ast::LambdaExprNode> parseArrowFunction(std::vector<std::string>&& params);
 		// Error handling
-		std::unique_ptr<ErrorNode> createErrorNode();
+		std::unique_ptr<ast::ErrorNode> createErrorNode();
 
 	public:
 		explicit Parser(std::vector<Token> tokens, const Flags& flags, std::ostream& errStream = std::cerr);
-		std::unique_ptr<ProgramNode> parse();
+		std::unique_ptr<ast::ProgramNode> parse();
 
 	};
 }

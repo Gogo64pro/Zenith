@@ -6,9 +6,9 @@
 
 #include <memory>
 #include <vector>
-#include "../ast/ASTNode.hpp"
+#include "ASTNode.hpp"
 
-namespace zenith {
+namespace zenith::ast {
 	// Block statements { ... }
 	struct BlockNode : StmtNode {
 		std::vector<std::unique_ptr<ASTNode>> statements;

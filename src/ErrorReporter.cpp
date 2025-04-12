@@ -4,7 +4,7 @@
 
 namespace zenith{
 
-	void ErrorReporter::report(const SourceLocation &loc, const std::string &message, const std::string &errorType) {
+	void ErrorReporter::report(const ast::SourceLocation &loc, const std::string &message, const std::string &errorType) {
 		std::string line = getSourceLine(loc);
 
 		// Format the error message
@@ -27,7 +27,7 @@ namespace zenith{
 		errStream << "\033[0m\n";
 	}
 
-	std::string ErrorReporter::getSourceLine(const SourceLocation &loc) {
+	std::string ErrorReporter::getSourceLine(const ast::SourceLocation &loc) {
 		// First check if we have this file in cache at all
 		auto fileIt = fileLineCache.find(loc.file);
 		if (fileIt != fileLineCache.end()) {

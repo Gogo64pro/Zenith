@@ -42,8 +42,8 @@ namespace zenith{
 	struct Token {
 		TokenType type;
 		std::string lexeme;
-		SourceLocation loc;
-		Token(TokenType type, std::string lexeme, SourceLocation loc): type(type), lexeme(std::move(lexeme)), loc(loc) {}
+		ast::SourceLocation loc;
+		Token(TokenType type, std::string lexeme, ast::SourceLocation loc): type(type), lexeme(std::move(lexeme)), loc(loc) {}
 		Token(TokenType type, std::string lexeme, size_t line, size_t column, size_t length)
 				: type(type), lexeme(std::move(lexeme)),
 				  loc{line, column, length, 0} {}  // fileOffset=0

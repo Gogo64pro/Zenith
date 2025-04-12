@@ -101,7 +101,7 @@ bool Lexer::match(char expected) {
 void Lexer::addToken(TokenType type) {
 	std::string text = source.substr(start, current - start);
 	size_t length = current - start;
-	tokens.emplace_back(type, text, SourceLocation{
+	tokens.emplace_back(type, text, ast::SourceLocation{
 			line,
 			startColumn,  // You'll need to track start column separately
 			length,
@@ -237,7 +237,7 @@ void Lexer::string() {
 void Lexer::templateString() {
 	// Add opening backtick
 	tokens.emplace_back(TokenType::BACKTICK, "`",
-	                    SourceLocation{line, column, 1, current, fileName});
+	                    ast::SourceLocation{line, column, 1, current, fileName});
 	advance();  // Consume opening backtick
 	start = current;  // Start of actual template content
 	startColumn = column;  // Track starting column
@@ -251,11 +251,11 @@ void Lexer::templateString() {
 			if (current > start) {
 				std::string text = source.substr(start, current - start);
 				tokens.emplace_back(TokenType::TEMPLATE_PART, text,
-				                    SourceLocation{line, startColumn, text.length(), start,fileName});
+				                    ast::SourceLocation{line, startColumn, text.length(), start,fileName});
 			}
 			advance(); advance();
 			tokens.emplace_back(TokenType::DOLLAR_LBRACE, "${",
-			                    SourceLocation{line, column - 2, 2, current - 2,fileName});
+			                    ast::SourceLocation{line, column - 2, 2, current - 2,fileName});
 			start = current;
 			return;  // Return to let parser handle interpolation
 		}
@@ -273,12 +273,12 @@ void Lexer::templateString() {
 	if (current > start) {
 		std::string text = source.substr(start, current - start);
 		tokens.emplace_back(TokenType::TEMPLATE_PART, text,
-		                    SourceLocation{line, startColumn, text.length(), start, fileName});
+		                    ast::SourceLocation{line, startColumn, text.length(), start, fileName});
 	}
 
 	// Add closing backtick
 	tokens.emplace_back(TokenType::BACKTICK, "`",
-	                    SourceLocation{line, column, 1, current, fileName});
+	                    ast::SourceLocation{line, column, 1, current, fileName});
 	advance();  // Consume closing backtick
 }
 

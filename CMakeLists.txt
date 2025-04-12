@@ -19,7 +19,6 @@ add_executable(Zenith
 	src/lexer/lexer.hpp src/lexer/lexer.cpp
 	src/parser/parser.hpp src/parser/parser.cpp
 	src/ast/ASTNode.hpp
-	src/ast/MainNodes.cpp src/ast/MainNodes.hpp
 	src/ast/Declarations.hpp src/ast/Declarations.hpp
 	src/ast/Statements.hpp src/ast/Expressions.hpp
 	src/parser/ParseError.cpp src/parser/ParseError.hpp

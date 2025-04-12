@@ -11,7 +11,7 @@
 #include "../ast/ASTNode.hpp"
 #include "../lexer/lexer.hpp"
 
-namespace zenith{
+namespace zenith::ast {
 	// --- Literal Values ---
 	struct LiteralNode : ExprNode {
 		enum Type : uint8_t { NUMBER, STRING, BOOL, NIL } type;

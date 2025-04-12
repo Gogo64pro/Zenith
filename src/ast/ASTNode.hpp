@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 
-namespace zenith {
+namespace zenith::ast {
 	struct SourceLocation {
 		size_t line;
 		size_t column;
@@ -20,4 +20,4 @@ namespace zenith {
 	struct ExprNode : ASTNode {virtual bool isConstructorCall() const { return false; }};
 	struct StmtNode : ASTNode {};
 
-} // zenith
+} // zenith::ast

@@ -8,9 +8,9 @@
 #include <memory>
 #include <vector>
 #include <sstream>
-#include "../ast/ASTNode.hpp"
+#include "ASTNode.hpp"
 
-namespace zenith{
+namespace zenith::ast {
 	struct AnnotationNode : public ASTNode {
 	public:
 		std::string name;

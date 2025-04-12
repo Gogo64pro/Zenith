@@ -5,14 +5,14 @@
 #include <vector>
 #include <memory>
 #include <sstream>
-#include "../ast/ASTNode.hpp"
+#include "ASTNode.hpp"
 #include "TypeNodes.hpp"
 #include "Statements.hpp"
 #include "Other.hpp"
 #include "../utils/RemovePadding.hpp"
 #include "../utils/small_vector.hpp"
 
-namespace zenith {
+namespace zenith::ast {
 	struct VarDeclNode : StmtNode {
 		enum Kind { STATIC, DYNAMIC, CLASS_INIT } kind;
 		std::string name;

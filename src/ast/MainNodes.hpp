@@ -7,9 +7,9 @@
 #include <vector>
 #include <memory>
 #include <sstream>
-#include "../ast/ASTNode.hpp"
+#include "ASTNode.hpp"
 
-namespace zenith {
+namespace zenith::ast {
 	struct ProgramNode : ASTNode {
 		std::vector<std::unique_ptr<ASTNode>> declarations;
 

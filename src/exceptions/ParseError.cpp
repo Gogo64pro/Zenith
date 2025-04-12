@@ -4,6 +4,8 @@
 
 #include "ParseError.hpp"
 
+#include <string>
+
 namespace zenith {
 	std::string ParseError::format() const {
 		// Create fresh string every time (no static)

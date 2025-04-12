@@ -4,6 +4,8 @@
 
 #include "LexError.hpp"
 
+#include <string>
+
 namespace zenith {
 	std::string LexError::format() const {
 		std::string msg = std::runtime_error::what();

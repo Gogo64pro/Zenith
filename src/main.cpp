@@ -40,9 +40,9 @@ int main(int argc, char *argv[]) {
 	std::ofstream parserOut("parserout.log");
 	try{
 		//throw ParseError({0,0,0,0},"STEEPEST"); //Debugger test error
-		Parser parser(tokens,flags,parserOut);
+		parser::Parser parser(tokens,flags,parserOut);
 		parserOut << parser.parse()->toString() << std::endl;
-	}catch (const ParseError &e) {
+	}catch (const parser::ParseError &e) {
 		parserOut << "Parser error (ParseError): " << e.format() << std::endl;
 		return 1;
 	} catch (const std::exception &e) {

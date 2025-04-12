@@ -1,10 +1,9 @@
-// src/lexer/lexer.hpp
 #pragma once
 
+#include "../ast/Node.hpp"
+#include <cassert>
 #include <string>
 #include <vector>
-#include <unordered_map>
-#include "../ast/Node.hpp"
 
 namespace zenith::lexer {
 
@@ -44,12 +43,20 @@ struct Token {
 	TokenType type;
 	std::string lexeme;
 	ast::SourceLocation loc;
+
+	Token(TokenType type, std::string lexeme, size_t line, size_t column, size_t length) : Token(type, std::move(lexeme), {line, column, length, 0}) {}
+
 	Token(TokenType type, char const*      lexeme, ast::SourceLocation loc) : Token(type, std::string(lexeme), std::move(loc)) {}
 	Token(TokenType type, std::string_view lexeme, ast::SourceLocation loc) : Token(type, std::string(lexeme), std::move(loc)) {}
-	Token(TokenType type, std::string      lexeme, ast::SourceLocation loc) : type(type), lexeme(std::move(lexeme)), loc(std::move(loc)) {}
-	Token(TokenType type, std::string lexeme, size_t line, size_t column, size_t length)
-		: Token(type, std::move(lexeme), {line, column, length, 0}) {}
+	Token(TokenType type, std::string      lexeme, ast::SourceLocation loc) : type(type), lexeme(std::move(lexeme)), loc(std::move(loc))
+	{
+		assert(this->lexeme.size() == loc.length);
+	}
 };
+// todo: make these true
+// static_assert(std::is_trivially_copyable_v<Token>);
+// static_assert(std::is_trivially_destructible_v<Token>);
+// static_assert(sizeof(Token) <= 32); // or thereabouts. Token is too big
 
 class Lexer {
 public:

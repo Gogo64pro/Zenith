@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <string>
 
 namespace zenith::ast {
 
@@ -9,7 +10,6 @@ struct SourceLocation {
 	size_t column;
 	size_t length;
 	size_t fileOffset;
-	std::string file;
 };
 
 struct Node {

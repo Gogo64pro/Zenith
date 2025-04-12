@@ -1,25 +1,13 @@
 #include "lexer.hpp"
 #include "../ast/Node.hpp"
+#include "../utils/hash.hpp"
 #include "error.hpp"
 #include <cctype>
-#include <stdexcept>
 
 namespace zenith::lexer {
 
 // Keyword map initialization
-struct StringHash {
-	using is_transparent = void;
-	[[nodiscard]] size_t operator()(const char *txt) const {
-		return std::hash<std::string_view>{}(txt);
-	}
-	[[nodiscard]] size_t operator()(std::string_view txt) const {
-		return std::hash<std::string_view>{}(txt);
-	}
-	[[nodiscard]] size_t operator()(const std::string &txt) const {
-		return std::hash<std::string>{}(txt);
-	}
-};
-const std::unordered_map<std::string, TokenType, StringHash, std::equal_to<>> keywords = {
+static const StringHashMap<TokenType> keywords = {
 	// Keywords
 	{"let", TokenType::LET},
 	{"var", TokenType::VAR},
@@ -117,7 +105,6 @@ void Lexer::addToken(TokenType type) {
 		startColumn,  // You'll need to track start column separately
 		length,
 		start,         // File offset (if needed)
-		std::string(fileName)
 	});
 	tokenStart = current;  // Reset for next token
 }
@@ -248,7 +235,7 @@ void Lexer::string() {
 void Lexer::templateString() {
 	// Add opening backtick
 	tokens.emplace_back(TokenType::BACKTICK, "`",
-	                    ast::SourceLocation{line, column, 1, current, std::string(fileName)});
+	                    ast::SourceLocation{line, column, 1, current});
 	advance();  // Consume opening backtick
 	start = current;  // Start of actual template content
 	startColumn = column;  // Track starting column
@@ -262,11 +249,11 @@ void Lexer::templateString() {
 			if (current > start) {
 				const auto text = source.substr(start, current - start);
 				tokens.emplace_back(TokenType::TEMPLATE_PART, text,
-				                    ast::SourceLocation{line, startColumn, text.length(), start,std::string(fileName)});
+				                    ast::SourceLocation{line, startColumn, text.length(), start});
 			}
 			advance(); advance();
 			tokens.emplace_back(TokenType::DOLLAR_LBRACE, "${",
-			                    ast::SourceLocation{line, column - 2, 2, current - 2,std::string(fileName)});
+			                    ast::SourceLocation{line, column - 2, 2, current - 2});
 			start = current;
 			return;  // Return to let parser handle interpolation
 		}
@@ -284,12 +271,12 @@ void Lexer::templateString() {
 	if (current > start) {
 		const auto text = source.substr(start, current - start);
 		tokens.emplace_back(TokenType::TEMPLATE_PART, text,
-		                    ast::SourceLocation{line, startColumn, text.length(), start, std::string(fileName)});
+		                    ast::SourceLocation{line, startColumn, text.length(), start});
 	}
 
 	// Add closing backtick
 	tokens.emplace_back(TokenType::BACKTICK, "`",
-	                    ast::SourceLocation{line, column, 1, current, std::string(fileName)});
+	                    ast::SourceLocation{line, column, 1, current});
 	advance();  // Consume closing backtick
 }
 

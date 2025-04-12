@@ -362,7 +362,7 @@ std::unique_ptr<ast::ProgramNode> Parser::parse() {
 				advance();
 			}
 		} catch (const Error& e) {
-			errorReporter.report(e.location,e.format());
+			errorReporter.report(flags.inputFile, e.location, e.format());
 			errStream << e.what() << std::endl;
 			synchronize();
 		}
@@ -576,7 +576,7 @@ std::unique_ptr<ast::IfNode> Parser::parseIfStmt() {
 		}
 		thenBranch = parseStatement();
 	} catch (const Error& e) {
-		errorReporter.report(e.location,"Error in if body " + e.format());
+		errorReporter.report(flags.inputFile, e.location, "Error in if body " + e.format());
 		errStream << "Error in if body: " << e.what() << std::endl;
 		synchronize(); // Skip to next statement
 		auto errorNode = createErrorNode();
@@ -1019,7 +1019,7 @@ std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
 				));
 			}
 		} catch (const Error& e) {
-			errorReporter.report(e.location, e.format());
+			errorReporter.report(flags.inputFile, e.location, e.format());
 			errStream << e.what() << std::endl;
 			synchronize();
 		}

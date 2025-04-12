@@ -4,11 +4,11 @@
 
 namespace zenith {
 
-void ErrorReporter::report(const ast::SourceLocation &loc, std::string_view message, std::string_view errorType) {
-	std::string line = getSourceLine(loc);
+void ErrorReporter::report(std::string_view file, const ast::SourceLocation &loc, std::string_view message, std::string_view errorType) {
+	std::string line = getSourceLine(file, loc);
 
 	// Format the error message
-	errStream << "\033[1m" << loc.file << ":" << loc.line << ":" << loc.column << ": "
+	errStream << "\033[1m" << file << ":" << loc.line << ":" << loc.column << ": "
 	          << "\033[1;31m" << errorType << ": \033[0m"
 	          << message << "\n";
 
@@ -27,9 +27,9 @@ void ErrorReporter::report(const ast::SourceLocation &loc, std::string_view mess
 	errStream << "\033[0m\n";
 }
 
-std::string ErrorReporter::getSourceLine(const ast::SourceLocation &loc) {
+std::string ErrorReporter::getSourceLine(std::string_view filepath, const ast::SourceLocation &loc) {
 	// First check if we have this file in cache at all
-	auto fileIt = fileLineCache.find(loc.file);
+	auto fileIt = fileLineCache.find(filepath);
 	if (fileIt != fileLineCache.end()) {
 		// File is cached, check if we have this line
 		const auto& lineCache = fileIt->second;
@@ -38,8 +38,9 @@ std::string ErrorReporter::getSourceLine(const ast::SourceLocation &loc) {
 		}
 	}
 
+	// todo: wtf -- don't scan the file again
 	// If not, read the file line by line
-	std::ifstream file(loc.file);
+	std::ifstream file{std::string(filepath)};
 	if (!file) {
 		return "[could not open file]";
 	}
@@ -54,7 +55,7 @@ std::string ErrorReporter::getSourceLine(const ast::SourceLocation &loc) {
 
 		if (currentLineNum == loc.line) {
 			// Cache the lines we've read so far
-			fileLineCache[loc.file] = std::move(newLineCache);
+			fileLineCache.insert({std::string(filepath), std::move(newLineCache)});
 			return currentLine;
 		}
 	}
@@ -62,7 +63,7 @@ std::string ErrorReporter::getSourceLine(const ast::SourceLocation &loc) {
 	// If we get here, the line number was too large
 	// Cache whatever lines we did read
 	if (!newLineCache.empty()) {
-		fileLineCache[loc.file] = std::move(newLineCache);
+		fileLineCache.insert({std::string(filepath), std::move(newLineCache)});
 	}
 	return "[line number out of range]";
 }

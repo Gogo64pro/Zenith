@@ -1,8 +1,8 @@
 #pragma once
-//Definitions and declarations
-//This file is a mess
-#include <vector>
+
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace zenith::utils {
 

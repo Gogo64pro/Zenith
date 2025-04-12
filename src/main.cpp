@@ -1,21 +1,14 @@
 #include <iostream>
+
 #include "lexer/lexer.hpp"
+#include "parser/error.hpp"
 #include "parser/parser.hpp"
 #include "utils/mainargs.hpp"
-#include "parser/error.hpp"
 #include "utils/ReadFile.hpp"
 
+namespace zenith {
 
-using namespace zenith;
-
-int main(int argc, char *argv[]) {
-	auto flags = utils::ArgumentParser::parse(argc, argv);
-	if(flags.target != utils::Target::native){
-		std::cerr << "Target not set to native" << std::endl << "Not implemented" << std::endl;
-		return 0;
-	}
-
-
+std::vector<lexer::Token> lex(utils::Flags &flags) {
 	std::string source = utils::readFile(flags.inputFile);
 	std::vector<lexer::Token> tokens;
 	lexer::Lexer lexer(source, flags.inputFile);
@@ -30,19 +23,18 @@ int main(int argc, char *argv[]) {
 		}
 	} catch (const std::exception &e) {
 		lexerOut << "Lexer error: " << e.what() << std::endl;
-		return 1;
+		throw e; // awkward
 	}
 	std::cout << "Done Lexing \n";
-	lexerOut.close();
+	return tokens;
+}
 
-
-
+int parse(std::vector<lexer::Token> tokens, utils::Flags &flags) {
 	std::ofstream parserOut("parserout.log");
-	try{
-		//throw Error({0,0,0,0},"STEEPEST"); //Debugger test error
+	try {
 		parser::Parser parser(tokens,flags,parserOut);
 		parserOut << parser.parse()->toString() << std::endl;
-	}catch (const parser::Error &e) {
+	} catch (const parser::Error &e) {
 		parserOut << "Parser error (Error): " << e.format() << std::endl;
 		return 1;
 	} catch (const std::exception &e) {
@@ -53,13 +45,27 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	std::cout << "Done Parsing \n";
-
+	return 0;
 }
-//	std::string source = R"(
-//		class Example {
-//			privatew int x;
-//			public string name;
-//			fun greet() {
-//				IO.print("Hello, ${this.name}!");
-//			}
-//	})";
+
+} // zenith
+
+int main(int argc, char *argv[]) try {
+	using namespace zenith;
+
+	auto flags = utils::ArgumentParser::parse(argc, argv);
+	if (flags.target != utils::Target::native) {
+		std::cerr << "Target not set to native\nNot implemented\n";
+		return 0;
+	}
+
+	return parse(lex(flags), flags);
+}
+catch (const std::exception &e) {
+	std::cerr << "Error: " << e.what() << '\n';
+	return 1;
+}
+catch (...) {
+	std::cerr << "unknown error\n";
+	return 1;
+}

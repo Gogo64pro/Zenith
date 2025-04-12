@@ -4,20 +4,20 @@
 #include <vector>
 #include <string>
 
-using namespace zenith;
+namespace zenith::utils {
 
-enum Target{
+enum Target {
 	native,
 	jvm
 };
 
-enum GC{
+enum GC {
 	generational,
 	refcounting,
 	none
 };
 
-struct Flags{
+struct Flags {
 	bool bracesRequired = true;
 	Target target = Target::native;
 	GC gc = GC::generational;
@@ -76,21 +76,9 @@ public:
 
 		if (!foundInputFile) {
 			throw std::runtime_error("No input file specified");
-		};
+		}
 		return flags;
 	}
 };
 
-
-//std::vector<std::string> args_to_vector(int argc, char* argv[]) {
-//	std::vector<std::string> args;
-//	args.reserve(argc);
-//
-//	for (int i = 0; i < argc; ++i) {
-//		args.emplace_back(argv[i]);
-//	}
-//	return args;
-//}
-//Flags processArguments(const std::vector<std::string>& args){
-//	return ArgumentParser::parse(args);
-//}
+} // zenith::utils

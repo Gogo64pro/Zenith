@@ -11,5 +11,4 @@ add_executable(Zenith
 	src/parser/error.cpp
 	src/parser/parser.cpp
 	src/utils/ReadFile.cpp
-	src/utils/RemovePadding.cpp
-	src/utils/small_vector.cpp)
+	src/utils/RemovePadding.cpp)

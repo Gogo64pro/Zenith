@@ -94,10 +94,10 @@ private:
 // --- Function Calls ---
 struct CallNode : ExprNode {
 	std::unique_ptr<ExprNode> callee;
-	small_vector<std::unique_ptr<ExprNode>, 4> arguments;
+	utils::small_vector<std::unique_ptr<ExprNode>, 4> arguments;
 
 	CallNode(SourceLocation loc, std::unique_ptr<ExprNode> c,
-				small_vector<std::unique_ptr<ExprNode>, 4> args)
+				utils::small_vector<std::unique_ptr<ExprNode>, 4> args)
 			: ExprNode(), callee(std::move(c)), arguments(std::move(args)) {
 		this->loc = loc;
 	}
@@ -136,10 +136,10 @@ struct MemberAccessNode : ExprNode {
 
 // --- Free Objects ---
 struct FreeObjectNode : ExprNode {
-	small_vector<std::pair<std::string, std::unique_ptr<ExprNode>>, 4> properties;
+	utils::small_vector<std::pair<std::string, std::unique_ptr<ExprNode>>, 4> properties;
 
 	FreeObjectNode(SourceLocation loc,
-					small_vector<std::pair<std::string, std::unique_ptr<ExprNode>>, 4> props)
+		utils::small_vector<std::pair<std::string, std::unique_ptr<ExprNode>>, 4> props)
 			: ExprNode(), properties(std::move(props)) {
 		this->loc = loc;
 	}
@@ -193,10 +193,10 @@ struct ArrayAccessNode : ExprNode {
 // --- Object Construction ---
 struct NewExprNode : ExprNode {
 	std::string className;
-	small_vector<std::unique_ptr<ExprNode>, 4> args;
+	utils::small_vector<std::unique_ptr<ExprNode>, 4> args;
 
 	NewExprNode(SourceLocation loc, std::string _class,
-				small_vector<std::unique_ptr<ExprNode>, 4> args)
+		utils::small_vector<std::unique_ptr<ExprNode>, 4> args)
 			: ExprNode(), className(_class), args(std::move(args)) {
 		this->loc = loc;
 	}
@@ -257,15 +257,15 @@ struct ReturnStmtNode : StmtNode {
 
 		// Get the value's string without forcing its first line to indent
 
-		return pad + "return " + removePadUntilNewLine(value->toString(indent+2));
+		return pad + "return " + utils::removePadUntilNewLine(value->toString(indent+2));
 	}
 };
 // --- Template Strings ---
 struct TemplateStringNode : ExprNode {
-	small_vector<std::unique_ptr<ExprNode>, 4> parts;
+	utils::small_vector<std::unique_ptr<ExprNode>, 4> parts;
 
 	TemplateStringNode(SourceLocation loc,
-						small_vector<std::unique_ptr<ExprNode>, 4> parts)
+		utils::small_vector<std::unique_ptr<ExprNode>, 4> parts)
 			: ExprNode(), parts(std::move(parts)) {
 		this->loc = loc;
 	}

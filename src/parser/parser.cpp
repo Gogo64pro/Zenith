@@ -191,7 +191,7 @@ lexer::Token Parser::advance() {
 	return result;  // Return what was current when we entered
 }
 
-Parser::Parser(std::vector<lexer::Token> tokens, const Flags& flags, std::ostream& errStream)
+Parser::Parser(std::vector<lexer::Token> tokens, const utils::Flags& flags, std::ostream& errStream)
 		: tokens(std::move(tokens)),
 			currentToken(this->tokens.empty() ?
 						lexer::Token{lexer::TokenType::EOF_TOKEN, "", {1, 1, 0}} :

@@ -78,7 +78,7 @@ struct FunctionDeclNode : Node {
 			}
 		}
 		if(usingStructSugar) ss << "}";
-		ss << ") " << removePadUntilNewLine(body->toString(indent+2));
+		ss << ") " << utils::removePadUntilNewLine(body->toString(indent+2));
 		return ss.str();
 	}
 };
@@ -100,9 +100,9 @@ struct MemberDeclNode : Node {
 	Flags flags;
 	std::string name;
 	std::unique_ptr<TypeNode> type;
-	small_vector<std::pair<std::string, std::unique_ptr<ExprNode>>, 1> initializers;
+	utils::small_vector<std::pair<std::string, std::unique_ptr<ExprNode>>, 1> initializers;
 	std::unique_ptr<BlockNode> body;
-	small_vector<std::unique_ptr<AnnotationNode>, 2> annotations;
+	utils::small_vector<std::unique_ptr<AnnotationNode>, 2> annotations;
 
 	MemberDeclNode(
 			SourceLocation loc,
@@ -160,7 +160,7 @@ struct MemberDeclNode : Node {
 			ss << initializers[i].second->toString();
 		}
 		if (body) {
-			ss << " " << removePadUntilNewLine(body->toString(indent));
+			ss << " " << utils::removePadUntilNewLine(body->toString(indent));
 		} else if (flags.kind == FIELD) {
 			ss << ";";
 		}

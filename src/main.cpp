@@ -9,14 +9,14 @@
 using namespace zenith;
 
 int main(int argc, char *argv[]) {
-	auto flags = ArgumentParser::parse(argc, argv);
-	if(flags.target != Target::native){
+	auto flags = utils::ArgumentParser::parse(argc, argv);
+	if(flags.target != utils::Target::native){
 		std::cerr << "Target not set to native" << std::endl << "Not implemented" << std::endl;
 		return 0;
 	}
 
 
-	std::string source = readFile(flags.inputFile);
+	std::string source = utils::readFile(flags.inputFile);
 	std::vector<lexer::Token> tokens;
 	lexer::Lexer lexer(source, flags.inputFile);
 	std::ofstream lexerOut("lexerout.log");

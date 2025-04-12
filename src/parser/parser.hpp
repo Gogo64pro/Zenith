@@ -20,7 +20,7 @@ private:
 	size_t current = 0;
 	size_t previous = 0;
 	lexer::Token currentToken;
-	const Flags& flags;
+	const utils::Flags& flags;
 	std::ostream& errStream;
 	ErrorReporter errorReporter;
 
@@ -79,7 +79,7 @@ private:
 	std::unique_ptr<ast::ErrorNode> createErrorNode();
 
 public:
-	explicit Parser(std::vector<lexer::Token> tokens, const Flags& flags, std::ostream& errStream = std::cerr);
+	explicit Parser(std::vector<lexer::Token> tokens, const utils::Flags& flags, std::ostream& errStream = std::cerr);
 	std::unique_ptr<ast::ProgramNode> parse();
 
 };

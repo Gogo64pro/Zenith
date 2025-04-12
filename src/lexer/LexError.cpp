@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace zenith {
+namespace zenith::lexer {
 	std::string LexError::format() const {
 		std::string msg = std::runtime_error::what();
 		return "Error at " + std::to_string(location.line) +
@@ -20,4 +20,4 @@ namespace zenith {
 		return formatted.c_str();
 	}
 
-} // zenith
+} // zenith::lexer

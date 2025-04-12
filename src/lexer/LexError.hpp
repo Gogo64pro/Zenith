@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include "../ast/ASTNode.hpp"
 
-namespace zenith {
+namespace zenith::lexer {
 
 	class LexError : public std::runtime_error {
 		public:
@@ -18,4 +18,4 @@ namespace zenith {
 			std::string format() const;
 	};
 
-} // zenith
+} // zenith::lexer

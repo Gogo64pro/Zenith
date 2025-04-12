@@ -17,15 +17,15 @@ int main(int argc, char *argv[]) {
 
 
 	std::string source = readFile(flags.inputFile);
-	std::vector<Token> tokens;
-	Lexer lexer(source, flags.inputFile);
+	std::vector<lexer::Token> tokens;
+	lexer::Lexer lexer(source, flags.inputFile);
 	std::ofstream lexerOut("lexerout.log");
 	try {
 		tokens = std::move(lexer).tokenize();
 		for (const auto &token: tokens) {
 			lexerOut << "Line " << token.loc.line
 			<< ":" << token.loc.column
-			<< " - " << Lexer::tokenToString(token.type)
+			<< " - " << lexer::Lexer::tokenToString(token.type)
 			<< " (" << token.lexeme << ")\n";
 		}
 	} catch (const std::exception &e) {

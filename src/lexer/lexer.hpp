@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include "../ast/ASTNode.hpp"
 
-namespace zenith{
+namespace zenith::lexer {
 	enum class TokenType {
 		// Keywords
 		LET, VAR, FUN, UNSAFE, CLASS, STRUCT, UNION,

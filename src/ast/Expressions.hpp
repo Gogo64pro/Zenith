@@ -48,7 +48,7 @@ namespace zenith::ast {
 		std::unique_ptr<ExprNode> left;
 		std::unique_ptr<ExprNode> right;
 
-		BinaryOpNode(SourceLocation loc, TokenType tokenType,
+		BinaryOpNode(SourceLocation loc, lexer::TokenType tokenType,
 		             std::unique_ptr<ExprNode> leftExpr,
 		             std::unique_ptr<ExprNode> rightExpr)
 				: ExprNode(), op(convertTokenType(tokenType)),
@@ -66,25 +66,25 @@ namespace zenith::ast {
 		}
 
 	private:
-		static Op convertTokenType(TokenType type) {
+		static Op convertTokenType(lexer::TokenType type) {
 			switch(type) {
-				case TokenType::PLUS: return ADD;
-				case TokenType::MINUS: return SUB;
-				case TokenType::STAR: return MUL;
-				case TokenType::SLASH: return DIV;
-				case TokenType::EQUAL_EQUAL: return EQ;
-				case TokenType::BANG_EQUAL: return NEQ;
-				case TokenType::LESS: return LT;
-				case TokenType::GREATER: return GT;
-				case TokenType::LESS_EQUAL: return LTE;
-				case TokenType::GREATER_EQUAL: return GTE;
-				case TokenType::EQUAL: return ASN;
-				case TokenType::PERCENT: return MOD;
-				case TokenType::PLUS_EQUALS: return ADD_ASN;
-				case TokenType::MINUS_EQUALS: return SUB_ASN;
-				case TokenType::STAR_EQUALS: return MUL_ASN;
-				case TokenType::SLASH_EQUALS: return DIV_ASN;
-				case TokenType::PERCENT_EQUALS: return MOD_ASN;
+				case lexer::TokenType::PLUS: return ADD;
+				case lexer::TokenType::MINUS: return SUB;
+				case lexer::TokenType::STAR: return MUL;
+				case lexer::TokenType::SLASH: return DIV;
+				case lexer::TokenType::EQUAL_EQUAL: return EQ;
+				case lexer::TokenType::BANG_EQUAL: return NEQ;
+				case lexer::TokenType::LESS: return LT;
+				case lexer::TokenType::GREATER: return GT;
+				case lexer::TokenType::LESS_EQUAL: return LTE;
+				case lexer::TokenType::GREATER_EQUAL: return GTE;
+				case lexer::TokenType::EQUAL: return ASN;
+				case lexer::TokenType::PERCENT: return MOD;
+				case lexer::TokenType::PLUS_EQUALS: return ADD_ASN;
+				case lexer::TokenType::MINUS_EQUALS: return SUB_ASN;
+				case lexer::TokenType::STAR_EQUALS: return MUL_ASN;
+				case lexer::TokenType::SLASH_EQUALS: return DIV_ASN;
+				case lexer::TokenType::PERCENT_EQUALS: return MOD_ASN;
 				default: throw std::invalid_argument("Invalid binary operator");
 			}
 		}

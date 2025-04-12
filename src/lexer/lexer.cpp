@@ -4,7 +4,7 @@
 #include <cctype>
 #include <stdexcept>
 
-using namespace zenith;
+namespace zenith::lexer {
 
 // Keyword map initialization
 const std::unordered_map<std::string, TokenType> Lexer::keywords = {
@@ -445,3 +445,5 @@ std::string Lexer::tokenToString(TokenType type) {
 		default: return "UNKNOWN";
 	}
 }
+
+} // zenith::lexer

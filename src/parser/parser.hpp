@@ -15,29 +15,29 @@
 namespace zenith {
 	class Parser {
 	private:
-		std::vector<Token> tokens;
+		std::vector<lexer::Token> tokens;
 		size_t current = 0;
 		size_t previous = 0;
-		Token currentToken;
+		lexer::Token currentToken;
 		const Flags& flags;
 		std::ostream& errStream;
 		ErrorReporter errorReporter;
 
 		// Helper methods
 		bool isAtEnd() const;
-		bool match(TokenType type) const;
-		bool match(std::initializer_list<TokenType> types) const;
-		Token advance();
-		Token consume(TokenType type, const std::string& errorMessage);
-		Token consume(TokenType type);
-		Token peek(size_t offset = 1) const;
-		const Token& previousToken() const;
+		bool match(lexer::TokenType type) const;
+		bool match(std::initializer_list<lexer::TokenType> types) const;
+		lexer::Token advance();
+		lexer::Token consume(lexer::TokenType type, const std::string& errorMessage);
+		lexer::Token consume(lexer::TokenType type);
+		lexer::Token peek(size_t offset = 1) const;
+		const lexer::Token& previousToken() const;
 		void synchronize();
 		bool isPotentialMethod() const;
 
 		// Type checking
-		static bool isBuiltInType(TokenType type);
-		static int getPrecedence(TokenType type);
+		static bool isBuiltInType(lexer::TokenType type);
+		static int getPrecedence(lexer::TokenType type);
 		bool peekIsExpressionStart() const;
 		bool peekIsStatementTerminator() const;
 		bool peekIsBlockEnd() const;
@@ -78,7 +78,7 @@ namespace zenith {
 		std::unique_ptr<ast::ErrorNode> createErrorNode();
 
 	public:
-		explicit Parser(std::vector<Token> tokens, const Flags& flags, std::ostream& errStream = std::cerr);
+		explicit Parser(std::vector<lexer::Token> tokens, const Flags& flags, std::ostream& errStream = std::cerr);
 		std::unique_ptr<ast::ProgramNode> parse();
 
 	};

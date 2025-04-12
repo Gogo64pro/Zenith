@@ -62,7 +62,7 @@ bool Parser::match(std::initializer_list<lexer::TokenType> types) const {
 	return std::find(types.begin(), types.end(), currentToken.type) != types.end();
 }
 
-lexer::Token Parser::consume(lexer::TokenType type, const std::string& errorMessage) {
+lexer::Token Parser::consume(lexer::TokenType type, std::string_view errorMessage) {
 	if (match(type)) {
 		return advance();
 	}

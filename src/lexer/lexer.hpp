@@ -44,15 +44,16 @@ struct Token {
 	TokenType type;
 	std::string lexeme;
 	ast::SourceLocation loc;
-	Token(TokenType type, std::string lexeme, ast::SourceLocation loc): type(type), lexeme(std::move(lexeme)), loc(loc) {}
+	Token(TokenType type, char const*      lexeme, ast::SourceLocation loc) : Token(type, std::string(lexeme), std::move(loc)) {}
+	Token(TokenType type, std::string_view lexeme, ast::SourceLocation loc) : Token(type, std::string(lexeme), std::move(loc)) {}
+	Token(TokenType type, std::string      lexeme, ast::SourceLocation loc) : type(type), lexeme(std::move(lexeme)), loc(std::move(loc)) {}
 	Token(TokenType type, std::string lexeme, size_t line, size_t column, size_t length)
-			: type(type), lexeme(std::move(lexeme)),
-				loc{line, column, length, 0} {}  // fileOffset=0
+		: Token(type, std::move(lexeme), {line, column, length, 0}) {}
 };
 
 class Lexer {
 public:
-	Lexer(const std::string& source, const std::string& name);
+	Lexer(std::string_view source, std::string_view name);
 	std::vector<Token> tokenize() && ;
 	static std::string tokenToString(TokenType type);
 	size_t tokenStart = 0;
@@ -70,16 +71,13 @@ private:
 	char peekNext() const;
 	char peek() const;
 
-	const std::string& source;
-	const std::string& fileName;
+	std::string_view source;
+	std::string_view fileName;
 	std::vector<Token> tokens;
 	size_t start = 0;
 	size_t current = 0;
 	size_t line = 1;
 	size_t column = 1;
-
-	static const std::unordered_map<std::string, TokenType> keywords;
-
 };
 
 } // zenith::lexer

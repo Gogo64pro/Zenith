@@ -10,6 +10,6 @@
 
 namespace zenith::utils {
 
-std::string readFile(const std::string& filePath);
+std::string readFile(std::string_view filePath);
 
 } // zenith::utils

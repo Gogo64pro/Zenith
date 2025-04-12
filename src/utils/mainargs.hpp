@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace zenith::utils {
@@ -35,7 +36,7 @@ public:
 		bool foundInputFile = false;
 
 		for (size_t i = 1; i < args.size(); ++i) {
-			const std::string &arg = args[i];
+			const std::string_view arg = args[i];
 
 			try {
 				if (arg == "--braces=optional") {
@@ -45,13 +46,13 @@ public:
 					flags.bracesRequired = true;
 				}
 				else if (arg.starts_with("--target=")) {
-					std::string value = arg.substr(9);
+					const auto value = arg.substr(9);
 					if (value == "native") flags.target = Target::native;
 					else if (value == "jvm") flags.target = Target::jvm;
 					else throw std::runtime_error("Invalid target");
 				}
 				else if (arg.starts_with("--gc=")) {
-					std::string value = arg.substr(5);
+					const auto value = arg.substr(5);
 					if (value == "generational") flags.gc = GC::generational;
 					else if (value == "refcounting") flags.gc = GC::refcounting;
 					else if (value == "none") flags.gc = GC::none;
@@ -67,10 +68,10 @@ public:
 					}
 				}
 				else {
-					throw std::runtime_error("Unknown option: " + arg);
+					throw std::runtime_error("Unknown option: " + std::string(arg));
 				}
 			} catch (const std::exception &e) {
-				throw std::runtime_error("Error processing argument '" + arg + "': " + e.what());
+				throw std::runtime_error("Error processing argument '" + std::string(arg) + "': " + e.what());
 			}
 		}
 

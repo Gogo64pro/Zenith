@@ -7,62 +7,73 @@
 namespace zenith::lexer {
 
 // Keyword map initialization
-const std::unordered_map<std::string, TokenType> Lexer::keywords = {
-		// Keywords
-		{"let", TokenType::LET},
-		{"var", TokenType::VAR},
-		{"fun", TokenType::FUN},
-		{"unsafe", TokenType::UNSAFE},
-		{"class", TokenType::CLASS},
-		{"struct", TokenType::STRUCT},
-		{"union", TokenType::UNION},
-		{"new", TokenType::NEW},
-		{"hoist", TokenType::HOIST},
+struct StringHash {
+	using is_transparent = void;
+	[[nodiscard]] size_t operator()(const char *txt) const {
+		return std::hash<std::string_view>{}(txt);
+	}
+	[[nodiscard]] size_t operator()(std::string_view txt) const {
+		return std::hash<std::string_view>{}(txt);
+	}
+	[[nodiscard]] size_t operator()(const std::string &txt) const {
+		return std::hash<std::string>{}(txt);
+	}
+};
+const std::unordered_map<std::string, TokenType, StringHash, std::equal_to<>> keywords = {
+	// Keywords
+	{"let", TokenType::LET},
+	{"var", TokenType::VAR},
+	{"fun", TokenType::FUN},
+	{"unsafe", TokenType::UNSAFE},
+	{"class", TokenType::CLASS},
+	{"struct", TokenType::STRUCT},
+	{"union", TokenType::UNION},
+	{"new", TokenType::NEW},
+	{"hoist", TokenType::HOIST},
 
-		// Access modifiers
-		{"public", TokenType::PUBLIC},
-		{"private", TokenType::PRIVATE},
-		{"protected", TokenType::PROTECTED},
-		{"privatew", TokenType::PRIVATEW},
-		{"protectedw", TokenType::PROTECTEDW},
+	// Access modifiers
+	{"public", TokenType::PUBLIC},
+	{"private", TokenType::PRIVATE},
+	{"protected", TokenType::PROTECTED},
+	{"privatew", TokenType::PRIVATEW},
+	{"protectedw", TokenType::PROTECTEDW},
 
-		// Modules
-		{"import", TokenType::IMPORT},
-		{"package", TokenType::PACKAGE},
-		{"extern", TokenType::EXTERN},
+	// Modules
+	{"import", TokenType::IMPORT},
+	{"package", TokenType::PACKAGE},
+	{"extern", TokenType::EXTERN},
 
-		// Types
-		{"int", TokenType::INT},
-		{"long", TokenType::LONG},
-		{"short", TokenType::SHORT},
-		{"byte", TokenType::BYTE},
-		{"float", TokenType::FLOAT},
-		{"double", TokenType::DOUBLE},
-		{"string", TokenType::STRING},
-		{"dynamic", TokenType::DYNAMIC},
-		{"freeobj", TokenType::FREEOBJ},
-		{"Number", TokenType::NUMBER},
-		{"BigInt", TokenType::BIGINT},
-		{"BigNumber", TokenType::BIGNUMBER},
+	// Types
+	{"int", TokenType::INT},
+	{"long", TokenType::LONG},
+	{"short", TokenType::SHORT},
+	{"byte", TokenType::BYTE},
+	{"float", TokenType::FLOAT},
+	{"double", TokenType::DOUBLE},
+	{"string", TokenType::STRING},
+	{"dynamic", TokenType::DYNAMIC},
+	{"freeobj", TokenType::FREEOBJ},
+	{"Number", TokenType::NUMBER},
+	{"BigInt", TokenType::BIGINT},
+	{"BigNumber", TokenType::BIGNUMBER},
 
-		{"const", TokenType::CONST},
-		{"java", TokenType::JAVA},
-		{"if", TokenType::IF},
-		{"for", TokenType::FOR},
-		{"while", TokenType::WHILE},
-		{"return", TokenType::RETURN},
-		{"else", TokenType::ELSE},
-		{"do", TokenType::DO},
-		{"this", TokenType::THIS},
+	{"const", TokenType::CONST},
+	{"java", TokenType::JAVA},
+	{"if", TokenType::IF},
+	{"for", TokenType::FOR},
+	{"while", TokenType::WHILE},
+	{"return", TokenType::RETURN},
+	{"else", TokenType::ELSE},
+	{"do", TokenType::DO},
+	{"this", TokenType::THIS},
 
-		// Literals
-		{"true", TokenType::TRUE},
-		{"false", TokenType::FALSE},
-		{"null", TokenType::NULL_LIT},
-
+	// Literals
+	{"true", TokenType::TRUE},
+	{"false", TokenType::FALSE},
+	{"null", TokenType::NULL_LIT},
 };
 
-Lexer::Lexer(const std::string& source, const std::string& name) : source(source), fileName(name) {}
+Lexer::Lexer(std::string_view source, std::string_view name) : source(source), fileName(name) {}
 
 std::vector<Token> Lexer::tokenize() && {
 	while (!isAtEnd()) {
@@ -99,14 +110,14 @@ bool Lexer::match(char expected) {
 }
 
 void Lexer::addToken(TokenType type) {
-	std::string text = source.substr(start, current - start);
+	const auto text = source.substr(start, current - start);
 	size_t length = current - start;
 	tokens.emplace_back(type, text, ast::SourceLocation{
-			line,
-			startColumn,  // You'll need to track start column separately
-			length,
-			start,         // File offset (if needed)
-			fileName
+		line,
+		startColumn,  // You'll need to track start column separately
+		length,
+		start,         // File offset (if needed)
+		std::string(fileName)
 	});
 	tokenStart = current;  // Reset for next token
 }
@@ -237,7 +248,7 @@ void Lexer::string() {
 void Lexer::templateString() {
 	// Add opening backtick
 	tokens.emplace_back(TokenType::BACKTICK, "`",
-	                    ast::SourceLocation{line, column, 1, current, fileName});
+	                    ast::SourceLocation{line, column, 1, current, std::string(fileName)});
 	advance();  // Consume opening backtick
 	start = current;  // Start of actual template content
 	startColumn = column;  // Track starting column
@@ -249,13 +260,13 @@ void Lexer::templateString() {
 		else if (peek() == '$' && peekNext() == '{') {
 			// Handle interpolation
 			if (current > start) {
-				std::string text = source.substr(start, current - start);
+				const auto text = source.substr(start, current - start);
 				tokens.emplace_back(TokenType::TEMPLATE_PART, text,
-				                    ast::SourceLocation{line, startColumn, text.length(), start,fileName});
+				                    ast::SourceLocation{line, startColumn, text.length(), start,std::string(fileName)});
 			}
 			advance(); advance();
 			tokens.emplace_back(TokenType::DOLLAR_LBRACE, "${",
-			                    ast::SourceLocation{line, column - 2, 2, current - 2,fileName});
+			                    ast::SourceLocation{line, column - 2, 2, current - 2,std::string(fileName)});
 			start = current;
 			return;  // Return to let parser handle interpolation
 		}
@@ -271,14 +282,14 @@ void Lexer::templateString() {
 
 	// Add final template part (if any)
 	if (current > start) {
-		std::string text = source.substr(start, current - start);
+		const auto text = source.substr(start, current - start);
 		tokens.emplace_back(TokenType::TEMPLATE_PART, text,
-		                    ast::SourceLocation{line, startColumn, text.length(), start, fileName});
+		                    ast::SourceLocation{line, startColumn, text.length(), start, std::string(fileName)});
 	}
 
 	// Add closing backtick
 	tokens.emplace_back(TokenType::BACKTICK, "`",
-	                    ast::SourceLocation{line, column, 1, current, fileName});
+	                    ast::SourceLocation{line, column, 1, current, std::string(fileName)});
 	advance();  // Consume closing backtick
 }
 
@@ -324,7 +335,7 @@ void Lexer::number() {
 void Lexer::identifier() {
 	while (isalnum(peek()) || peek() == '_') advance();
 
-	std::string text = source.substr(start, current - start);
+	const auto text = source.substr(start, current - start);
 
 	// Check if it's a keyword
 	auto it = keywords.find(text);

@@ -29,7 +29,7 @@ private:
 	bool match(lexer::TokenType type) const;
 	bool match(std::initializer_list<lexer::TokenType> types) const;
 	lexer::Token advance();
-	lexer::Token consume(lexer::TokenType type, const std::string& errorMessage);
+	lexer::Token consume(lexer::TokenType type, std::string_view errorMessage);
 	lexer::Token consume(lexer::TokenType type);
 	lexer::Token peek(size_t offset = 1) const;
 	const lexer::Token& previousToken() const;

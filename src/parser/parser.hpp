@@ -10,7 +10,7 @@
 #include "../ast/Statements.hpp"
 #include "../utils/mainargs.hpp"
 #include "../ast/MainNodes.hpp"
-#include "../exceptions/ErrorReporter.hpp"
+#include "../ErrorReporter.hpp"
 
 namespace zenith {
 	class Parser {

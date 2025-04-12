@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <unordered_set>
 #include "../ast/Expressions.hpp"
-#include "../exceptions/ParseError.hpp"
+#include "ParseError.hpp"
 
 namespace zenith {
 	// Fixed parseVarDecl to return the node

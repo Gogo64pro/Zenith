@@ -8,7 +8,7 @@
 #include <memory>
 #include <vector>
 #include <sstream>
-#include "../core/ASTNode.hpp"
+#include "../ast/ASTNode.hpp"
 
 namespace zenith{
 	struct AnnotationNode : public ASTNode {

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "../core/ASTNode.hpp"
+#include "../ast/ASTNode.hpp"
 
 namespace zenith{
 	enum class TokenType {

@@ -6,7 +6,7 @@
 
 #include <memory>
 #include <vector>
-#include "../core/ASTNode.hpp"
+#include "../ast/ASTNode.hpp"
 
 namespace zenith {
 	// Block statements { ... }

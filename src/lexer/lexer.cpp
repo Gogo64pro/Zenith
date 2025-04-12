@@ -1,6 +1,6 @@
 #include "lexer.hpp"
-#include "../core/ASTNode.hpp"
-#include "../exceptions/LexError.hpp"
+#include "../ast/ASTNode.hpp"
+#include "LexError.hpp"
 #include <cctype>
 #include <stdexcept>
 

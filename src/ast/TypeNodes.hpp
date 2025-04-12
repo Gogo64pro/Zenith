@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "../core/ASTNode.hpp"
+#include "../ast/ASTNode.hpp"
 
 namespace zenith {
 	// Base type node

@@ -7,7 +7,7 @@
 #include <vector>
 #include <memory>
 #include <sstream>
-#include "../core/ASTNode.hpp"
+#include "../ast/ASTNode.hpp"
 
 namespace zenith {
 	struct ProgramNode : ASTNode {

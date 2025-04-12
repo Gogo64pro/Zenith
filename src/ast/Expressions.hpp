@@ -8,7 +8,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "../core/ASTNode.hpp"
+#include "../ast/ASTNode.hpp"
 #include "../lexer/lexer.hpp"
 
 namespace zenith{

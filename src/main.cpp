@@ -1,9 +1,9 @@
 #include <iostream>
-#include "src/lexer/lexer.hpp"
-#include "src/parser/parser.hpp"
-#include "src/utils/mainargs.hpp"
-#include "src/exceptions/ParseError.hpp"
-#include "src/utils/ReadFile.hpp"
+#include "lexer/lexer.hpp"
+#include "parser/parser.hpp"
+#include "utils/mainargs.hpp"
+#include "parser/ParseError.hpp"
+#include "utils/ReadFile.hpp"
 
 
 using namespace zenith;

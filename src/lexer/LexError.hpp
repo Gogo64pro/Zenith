@@ -5,7 +5,7 @@
 #pragma once
 
 #include <stdexcept>
-#include "../core/ASTNode.hpp"
+#include "../ast/ASTNode.hpp"
 
 namespace zenith {
 

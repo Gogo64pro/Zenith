@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 #include <sstream>
-#include "../core/ASTNode.hpp"
+#include "../ast/ASTNode.hpp"
 #include "TypeNodes.hpp"
 #include "Statements.hpp"
 #include "Other.hpp"

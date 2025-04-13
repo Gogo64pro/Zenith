@@ -1,10 +1,8 @@
 #pragma once
 
-#include <cassert>
+#include <cstdint>
 #include <string>
 #include <vector>
-
-#include "../ast/Node.hpp"
 
 namespace zenith {
 	class Module;
@@ -12,7 +10,7 @@ namespace zenith {
 
 namespace zenith::lexer {
 
-enum class TokenType {
+enum class TokenType : std::uint8_t {
 	// Keywords
 	LET, VAR, FUN, UNSAFE, CLASS, STRUCT, UNION,
 	PUBLIC, PRIVATE, PROTECTED, PRIVATEW, PROTECTEDW,CONST,
@@ -50,11 +48,22 @@ struct SourceSpan {
 };
 
 struct Token {
-	TokenType type;
-	SourceSpan loc;
+	std::uint32_t kin : 8 ;
+	std::uint32_t len : 24;
+	std::uint32_t beg : 32;
+
+	Token(TokenType type, SourceSpan span)
+		: kin(static_cast<std::uint32_t>(type))
+		, beg(span.beg)
+		, len(span.end - span.beg)
+	{}
+
+	TokenType type() const { return static_cast<TokenType>(kin); }
+	SourceSpan span() const { return {beg, beg + len}; }
 };
 static_assert(std::is_trivially_copyable_v<Token>);
 static_assert(std::is_trivially_destructible_v<Token>);
+static_assert(sizeof(Token) == 8);
 
 class Lexer {
 public:

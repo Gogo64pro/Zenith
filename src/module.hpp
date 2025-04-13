@@ -33,12 +33,14 @@ public:
 	std::string_view getSourceLine(const ast::SourceLocation& loc);
 
 	ast::SourceLocation getSourceLocation(size_t beg, size_t end) const;
-	ast::SourceLocation getSourceLocation(lexer::Token tok) const;
 	ast::SourceLocation getSourceLocation(lexer::SourceSpan loc) const { return getSourceLocation(loc.beg, loc.end); }
+	ast::SourceLocation getSourceLocation(lexer::Token      tok) const { return getSourceLocation(tok.span()      ); }
 
-	std::string_view getLexeme(size_t beg, size_t end) const;
-	std::string_view getLexeme(lexer::Token tok) const;
-	std::string_view getLexeme(lexer::SourceSpan s) const { return getLexeme(s.beg, s.end); }
+	std::string_view getLexeme(size_t beg, size_t end) const {
+		return std::string_view(source.begin() + beg, source.begin() + end);
+	}
+	std::string_view getLexeme(lexer::SourceSpan s  ) const { return getLexeme(s.beg, s.end); }
+	std::string_view getLexeme(lexer::Token      tok) const { return getLexeme(tok.span()  ); }
 };
 
 } // zenith

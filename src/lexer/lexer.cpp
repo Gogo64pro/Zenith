@@ -106,7 +106,7 @@ bool Lexer::match(char expected) {
 }
 
 void Lexer::addToken(TokenType type) {
-	tokens.push_back({type, start, current});
+	tokens.push_back({type, {start, current}});
 	start = current;
 }
 

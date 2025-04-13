@@ -35,7 +35,7 @@ void Module::lex() {
 		auto loc = getSourceLocation(token);
 		lexerOut << "Line " << loc.line
 			<< ":" << loc.column
-			<< " - " << lexer::Lexer::tokenToString(token.type)
+			<< " - " << lexer::Lexer::tokenToString(token.type())
 			<< " (" << getLexeme(token) << ")\n";
 	}
 }
@@ -128,18 +128,6 @@ ast::SourceLocation Module::getSourceLocation(size_t beg, size_t end) const {
 		.length = end - beg,
 		.fileOffset = beg
 	};
-}
-
-ast::SourceLocation Module::getSourceLocation(lexer::Token tok) const {
-	return getSourceLocation(tok.loc.beg, tok.loc.end);
-}
-
-std::string_view Module::getLexeme(size_t beg, size_t end) const {
-	return std::string_view(source.begin() + beg, source.begin() + end);
-}
-
-std::string_view Module::getLexeme(lexer::Token tok) const {
-	return getLexeme(tok.loc.beg, tok.loc.end);
 }
 
 } // zenith

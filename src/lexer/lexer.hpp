@@ -4,55 +4,55 @@
 #include <string>
 #include <vector>
 
-#define ZENITH_X_TOKENS(X)\
+#define ZENITH_X_TOKENS(X, X_KEYWORD)\
 /* Keywords */\
-	X(LET)\
-	X(VAR)\
-	X(FUN)\
-	X(UNSAFE)\
-	X(CLASS)\
-	X(STRUCT)\
-	X(UNION)\
-	X(PUBLIC)\
-	X(PRIVATE)\
-	X(PROTECTED)\
-	X(PRIVATEW)\
-	X(PROTECTEDW)\
-	X(CONST)\
-	X(IMPORT)\
-	X(PACKAGE)\
-	X(JAVA)\
-	X(EXTERN)\
-	X(NEW)\
-	X(HOIST)\
-	X(IF)\
-	X(FOR)\
-	X(WHILE)\
-	X(RETURN)\
-	X(ELSE)\
+	X_KEYWORD(LET, "let")\
+	X_KEYWORD(VAR, "var")\
+	X_KEYWORD(FUN, "fun")\
+	X_KEYWORD(UNSAFE, "unsafe")\
+	X_KEYWORD(CLASS, "class")\
+	X_KEYWORD(STRUCT, "struct")\
+	X_KEYWORD(UNION, "union")\
+	X_KEYWORD(PUBLIC, "public")\
+	X_KEYWORD(PRIVATE, "private")\
+	X_KEYWORD(PROTECTED, "protected")\
+	X_KEYWORD(PRIVATEW, "privatew")\
+	X_KEYWORD(PROTECTEDW, "protectedw")\
+	X_KEYWORD(CONST, "const")\
+	X_KEYWORD(IMPORT, "import")\
+	X_KEYWORD(PACKAGE, "package")\
+	X_KEYWORD(JAVA, "java")\
+	X_KEYWORD(EXTERN, "extern")\
+	X_KEYWORD(NEW, "new")\
+	X_KEYWORD(HOIST, "hoist")\
+	X_KEYWORD(IF, "if")\
+	X_KEYWORD(FOR, "for")\
+	X_KEYWORD(WHILE, "while")\
+	X_KEYWORD(RETURN, "return")\
+	X_KEYWORD(ELSE, "else")\
 	/*ELIF,*/\
-	X(DO)\
+	X_KEYWORD(DO, "do")\
 /* Types */\
-	X(INT)\
-	X(LONG)\
-	X(SHORT)\
-	X(BYTE)\
-	X(FLOAT)\
-	X(DOUBLE)\
-	X(STRING)\
-	X(DYNAMIC)\
-	X(FREEOBJ)\
-	X(NUMBER)\
-	X(BIGINT)\
-	X(BIGNUMBER)\
+	X_KEYWORD(INT, "int")\
+	X_KEYWORD(LONG, "long")\
+	X_KEYWORD(SHORT, "short")\
+	X_KEYWORD(BYTE, "byte")\
+	X_KEYWORD(FLOAT, "float")\
+	X_KEYWORD(DOUBLE, "double")\
+	X_KEYWORD(STRING, "string")\
+	X_KEYWORD(DYNAMIC, "dynamic")\
+	X_KEYWORD(FREEOBJ, "freeobj")\
+	X_KEYWORD(NUMBER, "Number")\
+	X_KEYWORD(BIGINT, "BigInt")\
+	X_KEYWORD(BIGNUMBER, "BigNumber")\
 /* Literals */\
 	X(IDENTIFIER)\
 	X(INTEGER)\
 	X(FLOAT_LIT)\
 	X(STRING_LIT)\
-	X(TRUE)\
-	X(FALSE)\
-	X(NULL_LIT)\
+	X_KEYWORD(TRUE, "true")\
+	X_KEYWORD(FALSE, "false")\
+	X_KEYWORD(NULL_LIT, "null")\
 	X(TEMPLATE_LIT)\
 	X(TEMPLATE_PART)\
 /* Operators */\
@@ -96,7 +96,7 @@
 /* Special */\
 	X(AT)\
 /* For annotations */\
-	X(THIS)\
+	X_KEYWORD(THIS, "this")\
 	X(EOF_TOKEN)
 
 namespace zenith {
@@ -107,14 +107,18 @@ namespace zenith::lexer {
 
 enum class TokenType : std::uint8_t {
 #define X(a) a,
-	ZENITH_X_TOKENS(X)
+#define X_KEYWORD(a, b) a,
+	ZENITH_X_TOKENS(X, X_KEYWORD)
+#undef X_KEYWORD
 #undef X
 };
 
 constexpr const char* toString(TokenType tok) noexcept {
 	switch (tok) {
 #define X(a) case TokenType::a: return #a;
-	ZENITH_X_TOKENS(X)
+#define X_KEYWORD(a, b) case TokenType::a: return #a;
+	ZENITH_X_TOKENS(X, X_KEYWORD)
+#undef X_KEYWORD
 #undef X
 	}
 	return "UNKNOWN";

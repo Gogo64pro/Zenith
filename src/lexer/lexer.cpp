@@ -9,57 +9,11 @@ namespace zenith::lexer {
 
 // Keyword map initialization
 static const StringHashMap<TokenType> keywords = {
-	// Keywords
-	{"let", TokenType::LET},
-	{"var", TokenType::VAR},
-	{"fun", TokenType::FUN},
-	{"unsafe", TokenType::UNSAFE},
-	{"class", TokenType::CLASS},
-	{"struct", TokenType::STRUCT},
-	{"union", TokenType::UNION},
-	{"new", TokenType::NEW},
-	{"hoist", TokenType::HOIST},
-
-	// Access modifiers
-	{"public", TokenType::PUBLIC},
-	{"private", TokenType::PRIVATE},
-	{"protected", TokenType::PROTECTED},
-	{"privatew", TokenType::PRIVATEW},
-	{"protectedw", TokenType::PROTECTEDW},
-
-	// Modules
-	{"import", TokenType::IMPORT},
-	{"package", TokenType::PACKAGE},
-	{"extern", TokenType::EXTERN},
-
-	// Types
-	{"int", TokenType::INT},
-	{"long", TokenType::LONG},
-	{"short", TokenType::SHORT},
-	{"byte", TokenType::BYTE},
-	{"float", TokenType::FLOAT},
-	{"double", TokenType::DOUBLE},
-	{"string", TokenType::STRING},
-	{"dynamic", TokenType::DYNAMIC},
-	{"freeobj", TokenType::FREEOBJ},
-	{"Number", TokenType::NUMBER},
-	{"BigInt", TokenType::BIGINT},
-	{"BigNumber", TokenType::BIGNUMBER},
-
-	{"const", TokenType::CONST},
-	{"java", TokenType::JAVA},
-	{"if", TokenType::IF},
-	{"for", TokenType::FOR},
-	{"while", TokenType::WHILE},
-	{"return", TokenType::RETURN},
-	{"else", TokenType::ELSE},
-	{"do", TokenType::DO},
-	{"this", TokenType::THIS},
-
-	// Literals
-	{"true", TokenType::TRUE},
-	{"false", TokenType::FALSE},
-	{"null", TokenType::NULL_LIT},
+#define X(a)
+#define X_KEYWORD(a, b) {b, TokenType::a},
+	ZENITH_X_TOKENS(X, X_KEYWORD)
+#undef X_KEYWORD
+#undef X
 };
 
 Lexer::Lexer(std::string_view source) : source(source) {}

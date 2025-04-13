@@ -7,12 +7,12 @@
 
 namespace zenith::utils {
 
-enum Target {
+enum class Target {
 	native,
 	jvm
 };
 
-enum GC {
+enum class GC {
 	generational,
 	refcounting,
 	none

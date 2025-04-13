@@ -17,12 +17,11 @@ public:
 	std::string name;
 	std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>> arguments;
 
-	AnnotationNode(SourceLocation loc,
-					std::string name,
-					std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>> args)
-	: name(std::move(name)), arguments(std::move(args)) {
-		this->loc = loc;
-	}
+	AnnotationNode(lexer::SourceSpan loc,
+		std::string name,
+		std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>> args)
+		: Node(loc), name(std::move(name)), arguments(std::move(args)) {}
+
 	std::string toString(int indent = 0) const override{
 		std::string pad(indent, ' ');
 		std::stringstream ss;
@@ -49,9 +48,8 @@ public:
 };
 struct ErrorNode : public Node {
 public:
-	ErrorNode(SourceLocation loc){
-		this->loc=loc;
-	}
+	ErrorNode(lexer::SourceSpan loc)
+		: Node(loc) {}
 
 	std::string toString(int indent = 0) const override {
 		return std::string(indent, ' ') + "<PARSE ERROR>";

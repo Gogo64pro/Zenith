@@ -1,6 +1,5 @@
 #include <cctype>
 
-#include "../ast/Node.hpp"
 #include "../module.hpp"
 #include "../utils/hash.hpp"
 #include "error.hpp"
@@ -68,11 +67,10 @@ Lexer::Lexer(std::string_view source) : source(source) {}
 std::vector<Token> Lexer::tokenize(Module& mod) && {
 	try {
 		while (!isAtEnd()) {
-			start = current;
 			scanToken();
 		}
 
-		tokens.emplace_back(TokenType::EOF_TOKEN, "", line, column, 0);
+		addToken(TokenType::EOF_TOKEN);
 		return std::move(tokens);
 	}
 	catch (const Error& e) {
@@ -85,15 +83,18 @@ bool Lexer::isAtEnd() const {
 	return current >= source.length();
 }
 
+char Lexer::peek() const {
+	if (isAtEnd()) return '\0';
+	return source[current];
+}
+
+char Lexer::peekNext() const {
+	if (current + 1 >= source.length()) return '\0';
+	return source[current + 1];
+}
+
 char Lexer::advance() {
-	char c = source[current++];
-	if (c == '\n') {
-		line++;
-		column = 1;
-	} else {
-		column++;
-	}
-	return c;
+	return source[current++];
 }
 
 bool Lexer::match(char expected) {
@@ -101,24 +102,19 @@ bool Lexer::match(char expected) {
 	if (source[current] != expected) return false;
 
 	current++;
-	column++;
 	return true;
 }
 
 void Lexer::addToken(TokenType type) {
-	const auto text = source.substr(start, current - start);
-	size_t length = current - start;
-	tokens.emplace_back(type, text, ast::SourceLocation{
-		line,
-		startColumn,  // You'll need to track start column separately
-		length,
-		start,         // File offset (if needed)
-	});
-	tokenStart = current;  // Reset for next token
+	tokens.push_back({type, start, current});
+	start = current;
+}
+
+void Lexer::error(const std::string& msg) {
+	throw Error({current, current}, msg);
 }
 
 void Lexer::scanToken() {
-	startColumn = column;
 	char c = advance();
 	switch (c) {
 		// Single-character tokens
@@ -158,7 +154,7 @@ void Lexer::scanToken() {
 					advance();
 				}
 				if (isAtEnd()) {
-					throw Error( {line,column,0,current} ,"Unterminated block comment");
+					error("Unterminated block comment");
 				}
 				// Consume the '*/'
 				advance();
@@ -181,11 +177,11 @@ void Lexer::scanToken() {
 			break;
 		case '&':
 			if (match('&')) addToken(TokenType::AND);
-			else throw Error( {line,column,0,current} ,"Unexpected character: &");
+			else error("Unexpected character: &");
 			break;
 		case '|':
 			if (match('|')) addToken(TokenType::OR);
-			else throw Error( {line,column,0,current} ,"Unexpected character: |");
+			else error("Unexpected character: |");
 			break;
 		case '<':
 			addToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS);
@@ -198,9 +194,7 @@ void Lexer::scanToken() {
 		case ' ':
 		case '\r':
 		case '\t':
-			break;
 		case '\n':
-			column = 1;
 			break;
 
 			// String literals
@@ -220,10 +214,11 @@ void Lexer::scanToken() {
 			} else if (isalpha(c) || c == '_') {
 				identifier();
 			} else {
-				throw Error( {line,column,0,current} ,"Unexpected character: " + std::string(1, c));
+				error("Unexpected character: " + std::string(1, c));
 			}
 			break;
 	}
+	start = current;
 }
 
 void Lexer::string() {
@@ -231,22 +226,18 @@ void Lexer::string() {
 		advance();
 	}
 
-	if (isAtEnd()) throw Error( {line,column,0,current} ,"Unterminated string");
+	if (isAtEnd()) error("Unterminated string");
 
 	advance();  // Consume closing "
-
-	// Calculate length including quotes
-	size_t length = current - start;
 	addToken(TokenType::STRING_LIT);
 }
 
+// todo: pretty sure I've screwed this up, but I don't know the spec
 void Lexer::templateString() {
 	// Add opening backtick
-	tokens.emplace_back(TokenType::BACKTICK, "`",
-	                    ast::SourceLocation{line, column, 1, current});
-	advance();  // Consume opening backtick
-	start = current;  // Start of actual template content
-	startColumn = column;  // Track starting column
+	addToken(TokenType::BACKTICK);
+	advance(); // Consume opening backtick
+	start = current; // Start of actual template content
 
 	while (peek() != '`' && !isAtEnd()) {
 		if (peek() == '\\') {
@@ -255,14 +246,10 @@ void Lexer::templateString() {
 		else if (peek() == '$' && peekNext() == '{') {
 			// Handle interpolation
 			if (current > start) {
-				const auto text = source.substr(start, current - start);
-				tokens.emplace_back(TokenType::TEMPLATE_PART, text,
-				                    ast::SourceLocation{line, startColumn, text.length(), start});
+				addToken(TokenType::TEMPLATE_PART);
 			}
 			advance(); advance();
-			tokens.emplace_back(TokenType::DOLLAR_LBRACE, "${",
-			                    ast::SourceLocation{line, column - 2, 2, current - 2});
-			start = current;
+			addToken(TokenType::DOLLAR_LBRACE);
 			return;  // Return to let parser handle interpolation
 		}
 		else {
@@ -272,22 +259,19 @@ void Lexer::templateString() {
 
 	// Handle closing
 	if (isAtEnd()) {
-		throw Error({line, column, 0, current}, "Unterminated template string");
+		error("Unterminated template string");
 	}
 
 	// Add final template part (if any)
 	if (current > start) {
-		const auto text = source.substr(start, current - start);
-		tokens.emplace_back(TokenType::TEMPLATE_PART, text,
-		                    ast::SourceLocation{line, startColumn, text.length(), start});
+		addToken(TokenType::TEMPLATE_PART);
 	}
 
 	// Add closing backtick
-	tokens.emplace_back(TokenType::BACKTICK, "`",
-	                    ast::SourceLocation{line, column, 1, current});
+	addToken(TokenType::BACKTICK);
 	advance();  // Consume closing backtick
+	start = current;
 }
-
 
 void Lexer::number() {
 	bool isFloat = false;
@@ -330,25 +314,14 @@ void Lexer::number() {
 void Lexer::identifier() {
 	while (isalnum(peek()) || peek() == '_') advance();
 
-	const auto text = source.substr(start, current - start);
-
 	// Check if it's a keyword
+	const auto text = std::string_view(source.begin() + start, source.begin() + current);
 	auto it = keywords.find(text);
 	if (it != keywords.end()) {
 		addToken(it->second);
 	} else {
 		addToken(TokenType::IDENTIFIER);
 	}
-}
-
-char Lexer::peek() const {
-	if (isAtEnd()) return '\0';
-	return source[current];
-}
-
-char Lexer::peekNext() const {
-	if (current + 1 >= source.length()) return '\0';
-	return source[current + 1];
 }
 
 std::string Lexer::tokenToString(TokenType type) {

@@ -44,52 +44,44 @@ enum class TokenType {
 	EOF_TOKEN
 };
 
+struct SourceSpan {
+	size_t beg;
+	size_t end;
+};
+
 struct Token {
 	TokenType type;
-	std::string lexeme;
-	ast::SourceLocation loc;
-
-	Token(TokenType type, std::string lexeme, size_t line, size_t column, size_t length) : Token(type, std::move(lexeme), {line, column, length, 0}) {}
-
-	Token(TokenType type, char const*      lexeme, ast::SourceLocation loc) : Token(type, std::string(lexeme), std::move(loc)) {}
-	Token(TokenType type, std::string_view lexeme, ast::SourceLocation loc) : Token(type, std::string(lexeme), std::move(loc)) {}
-	Token(TokenType type, std::string      lexeme, ast::SourceLocation loc) : type(type), lexeme(std::move(lexeme)), loc(std::move(loc))
-	{
-		assert(this->lexeme.size() == loc.length);
-	}
+	SourceSpan loc;
 };
-// todo: make these true
-// static_assert(std::is_trivially_copyable_v<Token>);
-// static_assert(std::is_trivially_destructible_v<Token>);
-// static_assert(sizeof(Token) <= 32); // or thereabouts. Token is too big
+static_assert(std::is_trivially_copyable_v<Token>);
+static_assert(std::is_trivially_destructible_v<Token>);
 
 class Lexer {
 public:
 	Lexer(std::string_view source);
 	std::vector<Token> tokenize(Module& mod) &&;
 	static std::string tokenToString(TokenType type);
-	size_t tokenStart = 0;
 	size_t startColumn = 1;
 private:
+	bool isAtEnd() const;
+	char peekNext() const;
+	char peek() const;
 	char advance();
 	bool match(char expected);
 	void addToken(TokenType type);
+	[[noreturn]] void error(const std::string& msg);
 	void scanToken();
+
 	void identifier();
 	void number();
 	void string();
 	void templateString();
-	bool isAtEnd() const;
-	char peekNext() const;
-	char peek() const;
 
 	std::string_view source;
 	std::string_view fileName;
 	std::vector<Token> tokens;
 	size_t start = 0;
 	size_t current = 0;
-	size_t line = 1;
-	size_t column = 1;
 };
 
 } // zenith::lexer

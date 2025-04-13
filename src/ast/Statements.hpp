@@ -14,11 +14,9 @@ namespace zenith::ast {
 struct BlockNode : StmtNode {
 	std::vector<std::unique_ptr<Node>> statements;
 
-	explicit BlockNode(SourceLocation loc,
-						std::vector<std::unique_ptr<Node>> stmts)
-			: statements(std::move(stmts)) {
-		this->loc = loc;
-	}
+	explicit BlockNode(lexer::SourceSpan loc,
+		std::vector<std::unique_ptr<Node>> stmts)
+		: StmtNode(loc), statements(std::move(stmts)) {}
 
 	std::string toString(int indent = 0) const {
 		std::string pad(indent, ' ');
@@ -38,14 +36,12 @@ struct IfNode : StmtNode {
 	std::unique_ptr<Node> thenBranch;
 	std::unique_ptr<Node> elseBranch;
 
-	IfNode(SourceLocation loc, std::unique_ptr<ExprNode> cond,
-			std::unique_ptr<Node> thenBr,
-			std::unique_ptr<Node> elseBr)
-			: condition(std::move(cond)),
-				thenBranch(std::move(thenBr)),
-				elseBranch(std::move(elseBr)) {
-		this->loc = loc;
-	}
+	IfNode(lexer::SourceSpan loc, std::unique_ptr<ExprNode> cond,
+		std::unique_ptr<Node> thenBr,
+		std::unique_ptr<Node> elseBr)
+		: StmtNode(loc), condition(std::move(cond)),
+			thenBranch(std::move(thenBr)),
+			elseBranch(std::move(elseBr)) {}
 
 	std::string toString(int indent = 0) const {
 		std::string pad(indent, ' ');
@@ -67,11 +63,9 @@ struct WhileNode : StmtNode {
 	std::unique_ptr<ExprNode> condition;
 	std::unique_ptr<Node> body;
 
-	WhileNode(SourceLocation loc, std::unique_ptr<ExprNode> cond,
-				std::unique_ptr<Node> b)
-			: condition(std::move(cond)), body(std::move(b)) {
-		this->loc = loc;
-	}
+	WhileNode(lexer::SourceSpan loc, std::unique_ptr<ExprNode> cond,
+		std::unique_ptr<Node> b)
+		: StmtNode(loc), condition(std::move(cond)), body(std::move(b)) {}
 
 	std::string toString(int indent = 0) const override {
 		std::string pad(indent, ' ');
@@ -86,11 +80,9 @@ struct DoWhileNode : StmtNode {
 	std::unique_ptr<ExprNode> condition;
 	std::unique_ptr<Node> body;
 
-	DoWhileNode(SourceLocation loc, std::unique_ptr<ExprNode> cond,
-				std::unique_ptr<Node> b)
-			: condition(std::move(cond)), body(std::move(b)) {
-		this->loc = loc;
-	}
+	DoWhileNode(lexer::SourceSpan loc, std::unique_ptr<ExprNode> cond,
+		std::unique_ptr<Node> b)
+		: StmtNode(loc), condition(std::move(cond)), body(std::move(b)) {}
 
 	std::string toString(int indent = 0) const {
 		std::string pad(indent, ' ');
@@ -107,16 +99,14 @@ struct ForNode : StmtNode {
 	std::unique_ptr<ExprNode> increment;
 	std::unique_ptr<Node> body;
 
-	ForNode(SourceLocation loc, std::unique_ptr<Node> init,
-			std::unique_ptr<ExprNode> cond,
-			std::unique_ptr<ExprNode> incr,
-			std::unique_ptr<Node> b)
-			: initializer(std::move(init)),
-				condition(std::move(cond)),
-				increment(std::move(incr)),
-				body(std::move(b)) {
-		this->loc = loc;
-	}
+	ForNode(lexer::SourceSpan loc, std::unique_ptr<Node> init,
+		std::unique_ptr<ExprNode> cond,
+		std::unique_ptr<ExprNode> incr,
+		std::unique_ptr<Node> b)
+		: StmtNode(loc), initializer(std::move(init)),
+			condition(std::move(cond)),
+			increment(std::move(incr)),
+			body(std::move(b)) {}
 
 	std::string toString(int indent = 0) const {
 		std::string pad(indent, ' ');
@@ -136,10 +126,8 @@ struct ForNode : StmtNode {
 struct UnsafeNode : Node {
 	std::unique_ptr<BlockNode> body;
 
-	explicit UnsafeNode(SourceLocation loc, std::unique_ptr<BlockNode> b)
-			: body(std::move(b)) {
-		this->loc = loc;
-	}
+	explicit UnsafeNode(lexer::SourceSpan loc, std::unique_ptr<BlockNode> b)
+		: Node(loc), body(std::move(b)) {}
 
 	std::string toString(int indent = 0) const {
 		std::string pad(indent, ' ');

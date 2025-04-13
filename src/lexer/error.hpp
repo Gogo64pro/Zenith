@@ -11,8 +11,8 @@ namespace zenith::lexer {
 
 class Error : public std::runtime_error {
 public:
-	ast::SourceLocation location;
-	[[nodiscard]] Error(ast::SourceLocation loc, const std::string& msg) : std::runtime_error(msg), location(std::move(loc)) {}
+	lexer::SourceSpan location;
+	[[nodiscard]] Error(lexer::SourceSpan loc, const std::string& msg) : std::runtime_error(msg), location(loc) {}
 };
 
 } // zenith::lexer

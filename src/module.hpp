@@ -20,8 +20,6 @@ private:
 
 	std::ostream& errStream;
 
-	std::string_view getSourceLine(const ast::SourceLocation& loc);
-
 public:
 	explicit Module(utils::Flags flags, std::ostream& errStream);
 
@@ -29,11 +27,18 @@ public:
 	void lex();
 	void parse();
 
-	void report(const ast::SourceLocation& loc, const char*      message, std::string_view errorType = "error") { return report(loc, std::string_view{message, strlen(message)}, errorType); }
-	void report(const ast::SourceLocation& loc, std::string_view message, std::string_view errorType = "error");
+	void report(lexer::SourceSpan srcSpan, const char*      message, std::string_view errorType = "error") { return report(srcSpan, std::string_view{message, strlen(message)}, errorType); }
+	void report(lexer::SourceSpan srcSpan, std::string_view message, std::string_view errorType = "error");
 
-	std::string_view contents();
-	void clear();
+	std::string_view getSourceLine(const ast::SourceLocation& loc);
+
+	ast::SourceLocation getSourceLocation(size_t beg, size_t end) const;
+	ast::SourceLocation getSourceLocation(lexer::Token tok) const;
+	ast::SourceLocation getSourceLocation(lexer::SourceSpan loc) const { return getSourceLocation(loc.beg, loc.end); }
+
+	std::string_view getLexeme(size_t beg, size_t end) const;
+	std::string_view getLexeme(lexer::Token tok) const;
+	std::string_view getLexeme(lexer::SourceSpan s) const { return getLexeme(s.beg, s.end); }
 };
 
 } // zenith

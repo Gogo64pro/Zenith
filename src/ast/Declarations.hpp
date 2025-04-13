@@ -22,13 +22,11 @@ struct VarDeclNode : StmtNode {
 	bool isHoisted : 1;
 	bool isConst : 1;
 
-	VarDeclNode(SourceLocation loc, Kind k, std::string n,
-				std::unique_ptr<TypeNode> t, std::unique_ptr<ExprNode> i,
-				bool hoisted = false, bool isConst = false)
-			: StmtNode(), kind(k), name(std::move(n)), type(std::move(t)),
-				initializer(std::move(i)), isHoisted(hoisted), isConst(isConst) {
-		this->loc = loc;
-	}
+	VarDeclNode(lexer::SourceSpan loc, Kind k, std::string n,
+		std::unique_ptr<TypeNode> t, std::unique_ptr<ExprNode> i,
+		bool hoisted = false, bool isConst = false)
+		: StmtNode(loc), kind(k), name(std::move(n)), type(std::move(t)),
+		initializer(std::move(i)), isHoisted(hoisted), isConst(isConst) {}
 
 	std::string toString(int indent = 0) const override {
 		std::string pad(indent, ' ');
@@ -53,13 +51,11 @@ struct FunctionDeclNode : Node {
 	bool isAsync;
 	bool usingStructSugar;
 
-	FunctionDeclNode(SourceLocation loc, std::string name,
-						std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> params,
-						std::unique_ptr<TypeNode> returnType, std::unique_ptr<BlockNode> body, bool async, bool structSugar = false)
-			: name(std::move(name)), params(std::move(params)), returnType(std::move(returnType)),
-				body(std::move(body)), isAsync(async), usingStructSugar(structSugar) {
-		this->loc = loc;
-	}
+	FunctionDeclNode(lexer::SourceSpan loc, std::string name,
+		std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> params,
+		std::unique_ptr<TypeNode> returnType, std::unique_ptr<BlockNode> body, bool async, bool structSugar = false)
+		: Node(loc), name(std::move(name)), params(std::move(params)), returnType(std::move(returnType)),
+		body(std::move(body)), isAsync(async), usingStructSugar(structSugar) {}
 
 	std::string toString(int indent = 0) const override {
 		std::string pad(indent, ' ');
@@ -105,23 +101,22 @@ struct MemberDeclNode : Node {
 	utils::small_vector<std::unique_ptr<AnnotationNode>, 2> annotations;
 
 	MemberDeclNode(
-			SourceLocation loc,
-			Kind kind,
-			Access access,
-			bool isConst,
-			std::string&& name,  // Take ownership of strings
-			std::unique_ptr<TypeNode> type,
-			std::unique_ptr<ExprNode> initializer = nullptr,  // Unified initializer
-			std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>> ctor_inits = {},
-			std::unique_ptr<BlockNode> body = nullptr,
-			std::vector<std::unique_ptr<AnnotationNode>> ann = {},
-			bool isStatic = false
-	) : Node(),
+		lexer::SourceSpan loc,
+		Kind kind,
+		Access access,
+		bool isConst,
+		std::string&& name,  // Take ownership of strings
+		std::unique_ptr<TypeNode> type,
+		std::unique_ptr<ExprNode> initializer = nullptr,  // Unified initializer
+		std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>> ctor_inits = {},
+		std::unique_ptr<BlockNode> body = nullptr,
+		std::vector<std::unique_ptr<AnnotationNode>> ann = {},
+		bool isStatic = false
+	) : Node(loc),
 		name(name),  // Implicitly converts to string_view (removed it anyway)
 		type(std::move(type)),
 		body(std::move(body))
 	{
-		this->loc = loc;
 		flags = {kind, access, isConst, isStatic, 0};
 
 		// Handle initializers
@@ -170,12 +165,12 @@ struct MemberDeclNode : Node {
 // Lambda
 struct LambdaNode : FunctionDeclNode{
 	bool isLambda() const override { return true; }
-	LambdaNode(SourceLocation loc,
-				std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> params,
-				std::unique_ptr<TypeNode> returnType = nullptr,
-				std::unique_ptr<BlockNode> body = nullptr,
-				bool async = false)
-			: FunctionDeclNode(std::move(loc), "", std::move(params), std::move(returnType), std::move(body), async, false) {
+	LambdaNode(lexer::SourceSpan loc,
+		std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> params,
+		std::unique_ptr<TypeNode> returnType = nullptr,
+		std::unique_ptr<BlockNode> body = nullptr,
+		bool async = false)
+	: FunctionDeclNode(std::move(loc), "", std::move(params), std::move(returnType), std::move(body), async, false) {
 		// Additional lambda-specific initialization
 	}
 };
@@ -186,11 +181,9 @@ struct ClassDeclNode : Node {
 	std::string base;
 	std::vector<std::unique_ptr<MemberDeclNode>> members;
 
-	ClassDeclNode(SourceLocation loc, std::string name, std::string base,
-					std::vector<std::unique_ptr<MemberDeclNode>> memb)
-			: name(std::move(name)), members(std::move(memb)), base(std::move(base)) {
-		this->loc = loc;
-	}
+	ClassDeclNode(lexer::SourceSpan loc, std::string name, std::string base,
+		std::vector<std::unique_ptr<MemberDeclNode>> memb)
+		: Node(loc), name(std::move(name)), members(std::move(memb)), base(std::move(base)) {}
 
 	std::string toString(int indent = 0) const override {
 		std::string pad(indent, ' ');
@@ -209,12 +202,10 @@ struct StructDeclNode : Node {
 	std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> fields;
 	bool isUnion;
 
-	StructDeclNode(SourceLocation loc, std::string n,
-					std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> f,
-					bool unionFlag)
-			: name(std::move(n)), fields(std::move(f)), isUnion(unionFlag) {
-		this->loc = loc;
-	}
+	StructDeclNode(lexer::SourceSpan loc, std::string n,
+		std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>> f,
+		bool unionFlag)
+		: Node(loc), name(std::move(n)), fields(std::move(f)), isUnion(unionFlag) {}
 
 	std::string toString(int indent = 0) const {
 		std::string pad(indent, ' ');

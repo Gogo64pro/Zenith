@@ -23,10 +23,8 @@ struct LiteralNode : ExprNode {
 	enum Type : uint8_t { NUMBER, STRING, BOOL, NIL } type;
 	std::string value;
 
-	LiteralNode(SourceLocation loc, Type t, std::string val)
-			: ExprNode(), type(t), value(std::move(val)) {
-		this->loc = loc;
-	}
+	LiteralNode(lexer::SourceSpan loc, Type t, std::string val)
+		: ExprNode(loc), type(t), value(std::move(val)) {}
 
 	std::string toString(int indent = 0) const override {
 		static const char* typeNames[] = {"NUMBER", "STRING", "BOOL", "NIL"};
@@ -38,10 +36,8 @@ struct LiteralNode : ExprNode {
 struct VarNode : ExprNode {
 	std::string name;
 
-	explicit VarNode(SourceLocation loc, std::string n)
-			: ExprNode(), name(n) {
-		this->loc = loc;
-	}
+	explicit VarNode(lexer::SourceSpan loc, std::string n)
+		: ExprNode(loc), name(n) {}
 
 	std::string toString(int indent = 0) const override {
 		return std::string(indent, ' ') + "Var(" + name + ")";
@@ -54,14 +50,12 @@ struct BinaryOpNode : ExprNode {
 	std::unique_ptr<ExprNode> left;
 	std::unique_ptr<ExprNode> right;
 
-	BinaryOpNode(SourceLocation loc, lexer::TokenType tokenType,
-					std::unique_ptr<ExprNode> leftExpr,
-					std::unique_ptr<ExprNode> rightExpr)
-			: ExprNode(), op(convertTokenType(tokenType)),
-				left(std::move(leftExpr)),
-				right(std::move(rightExpr)) {
-		this->loc = loc;
-	}
+	BinaryOpNode(lexer::SourceSpan loc, lexer::TokenType tokenType,
+		std::unique_ptr<ExprNode> leftExpr,
+		std::unique_ptr<ExprNode> rightExpr)
+	: ExprNode(loc), op(convertTokenType(tokenType)),
+		left(std::move(leftExpr)),
+		right(std::move(rightExpr)) {}
 
 	std::string toString(int indent = 0) const override {
 		static const char* opNames[] = {"+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">=", "=", "%", "+=", "-=", "*=", "/=", "%=", };
@@ -101,11 +95,9 @@ struct CallNode : ExprNode {
 	std::unique_ptr<ExprNode> callee;
 	utils::small_vector<std::unique_ptr<ExprNode>, 4> arguments;
 
-	CallNode(SourceLocation loc, std::unique_ptr<ExprNode> c,
-				utils::small_vector<std::unique_ptr<ExprNode>, 4> args)
-			: ExprNode(), callee(std::move(c)), arguments(std::move(args)) {
-		this->loc = loc;
-	}
+	CallNode(lexer::SourceSpan loc, std::unique_ptr<ExprNode> c,
+		utils::small_vector<std::unique_ptr<ExprNode>, 4> args)
+		: ExprNode(loc), callee(std::move(c)), arguments(std::move(args)) {}
 
 	std::string toString(int indent = 0) const override {
 		std::string pad(indent, ' ');
@@ -125,11 +117,9 @@ struct MemberAccessNode : ExprNode {
 	std::unique_ptr<ExprNode> object;
 	std::string member;
 
-	MemberAccessNode(SourceLocation loc, std::unique_ptr<ExprNode> obj,
-						std::string mem)
-			: ExprNode(), object(std::move(obj)), member(mem) {
-		this->loc = loc;
-	}
+	MemberAccessNode(lexer::SourceSpan loc, std::unique_ptr<ExprNode> obj,
+		std::string mem)
+		: ExprNode(loc), object(std::move(obj)), member(mem) {}
 
 	std::string toString(int indent = 0) const override {
 		std::string pad(indent, ' ');
@@ -143,17 +133,14 @@ struct MemberAccessNode : ExprNode {
 struct FreeObjectNode : ExprNode {
 	utils::small_vector<std::pair<std::string, std::unique_ptr<ExprNode>>, 4> properties;
 
-	FreeObjectNode(SourceLocation loc,
+	FreeObjectNode(lexer::SourceSpan loc,
 		utils::small_vector<std::pair<std::string, std::unique_ptr<ExprNode>>, 4> props)
-			: ExprNode(), properties(std::move(props)) {
-		this->loc = loc;
-	}
+		: ExprNode(loc), properties(std::move(props)) {}
 
 	// --- Conversion from std::string -> std::string (and also vector) ---
-	FreeObjectNode(SourceLocation loc,
-					std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>>&& props)
-			: ExprNode() {
-		this->loc = loc;
+	FreeObjectNode(lexer::SourceSpan loc,
+		std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>>&& props)
+		: ExprNode(loc) {
 		properties.reserve(props.size());
 		for (auto& p : props) {
 			properties.emplace_back(
@@ -181,11 +168,9 @@ struct ArrayAccessNode : ExprNode {
 	std::unique_ptr<ExprNode> array;
 	std::unique_ptr<ExprNode> index;
 
-	ArrayAccessNode(SourceLocation loc, std::unique_ptr<ExprNode> arr,
-					std::unique_ptr<ExprNode> idx)
-			: ExprNode(), array(std::move(arr)), index(std::move(idx)) {
-		this->loc = loc;
-	}
+	ArrayAccessNode(lexer::SourceSpan loc, std::unique_ptr<ExprNode> arr,
+		std::unique_ptr<ExprNode> idx)
+		: ExprNode(loc), array(std::move(arr)), index(std::move(idx)) {}
 
 	std::string toString(int indent = 0) const override {
 		std::string pad(indent, ' ');
@@ -200,11 +185,9 @@ struct NewExprNode : ExprNode {
 	std::string className;
 	utils::small_vector<std::unique_ptr<ExprNode>, 4> args;
 
-	NewExprNode(SourceLocation loc, std::string _class,
+	NewExprNode(lexer::SourceSpan loc, std::string _class,
 		utils::small_vector<std::unique_ptr<ExprNode>, 4> args)
-			: ExprNode(), className(_class), args(std::move(args)) {
-		this->loc = loc;
-	}
+			: ExprNode(loc), className(_class), args(std::move(args)) {}
 
 	std::string toString(int indent = 0) const override {
 		std::string pad(indent, ' ');
@@ -226,10 +209,8 @@ struct NewExprNode : ExprNode {
 struct ExprStmtNode : StmtNode {
 	std::unique_ptr<ExprNode> expr;
 
-	ExprStmtNode(SourceLocation loc, std::unique_ptr<ExprNode> e)
-			: expr(std::move(e)) {
-		this->loc = loc;
-	}
+	ExprStmtNode(lexer::SourceSpan loc, std::unique_ptr<ExprNode> e)
+		: StmtNode(loc), expr(std::move(e)) {}
 
 	std::string toString(int indent = 0) const override {
 		std::string pad(indent, ' ');
@@ -238,9 +219,7 @@ struct ExprStmtNode : StmtNode {
 };
 
 struct EmptyStmtNode : StmtNode {
-	explicit EmptyStmtNode(SourceLocation loc) {
-		this->loc = loc;
-	}
+	explicit EmptyStmtNode(lexer::SourceSpan loc) : StmtNode(loc) {}
 
 	std::string toString(int indent = 0) const override {
 		return std::string(indent, ' ') + "EmptyStmt";
@@ -251,8 +230,8 @@ struct EmptyStmtNode : StmtNode {
 struct ReturnStmtNode : StmtNode {
 	std::unique_ptr<ExprNode> value;
 
-	ReturnStmtNode(SourceLocation loc, std::unique_ptr<ExprNode> v = nullptr)
-			: value(std::move(v)) { this->loc = loc; }
+	ReturnStmtNode(lexer::SourceSpan loc, std::unique_ptr<ExprNode> v = nullptr)
+			: StmtNode(loc), value(std::move(v)) {}
 
 	std::string toString(int indent = 0) const override {
 		std::string pad(indent, ' ');
@@ -269,11 +248,9 @@ struct ReturnStmtNode : StmtNode {
 struct TemplateStringNode : ExprNode {
 	utils::small_vector<std::unique_ptr<ExprNode>, 4> parts;
 
-	TemplateStringNode(SourceLocation loc,
+	TemplateStringNode(lexer::SourceSpan loc,
 		utils::small_vector<std::unique_ptr<ExprNode>, 4> parts)
-			: ExprNode(), parts(std::move(parts)) {
-		this->loc = loc;
-	}
+		: ExprNode(loc), parts(std::move(parts)) {}
 
 	std::string toString(int indent = 0) const override {
 		std::string pad(indent, ' ');
@@ -286,9 +263,7 @@ struct TemplateStringNode : ExprNode {
 };
 // --- This Reference ---
 struct ThisNode : ExprNode {
-	explicit ThisNode(SourceLocation loc) : ExprNode() {
-		this->loc = loc;
-	}
+	explicit ThisNode(lexer::SourceSpan loc) : ExprNode(loc) {}
 
 	std::string toString(int indent = 0) const override {
 		return std::string(indent, ' ') + "This";
@@ -304,9 +279,8 @@ struct StructInitializerNode : ExprNode{
 	std::vector<StructFieldInitializer> fields;
 	bool isPositional; // true if all fields are positional
 
-	StructInitializerNode(SourceLocation loc, std::vector<StructFieldInitializer> fields)
-			: fields(std::move(fields)) {
-		this->loc = loc;
+	StructInitializerNode(lexer::SourceSpan loc, std::vector<StructFieldInitializer> fields)
+			: ExprNode(loc), fields(std::move(fields)) {
 		// Determine if this is purely positional
 		isPositional = true;
 		for (const auto& field : this->fields) {
@@ -334,10 +308,8 @@ struct StructInitializerNode : ExprNode{
 struct LambdaExprNode : ExprNode {
 	std::unique_ptr<LambdaNode> lambda;
 
-	LambdaExprNode(SourceLocation loc, std::unique_ptr<LambdaNode> l)
-			: lambda(std::move(l)) {
-		this->loc = std::move(loc);
-	}
+	LambdaExprNode(lexer::SourceSpan loc, std::unique_ptr<LambdaNode> l)
+			: ExprNode(loc), lambda(std::move(l)) {}
 
 	std::string toString(int indent = 0) const override {
 		return lambda->toString(indent);

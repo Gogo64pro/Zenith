@@ -12,7 +12,7 @@ namespace zenith::parser {
 
 // Fixed parseVarDecl to return the node
 std::unique_ptr<ast::VarDeclNode> Parser::parseVarDecl() {
-	ast::SourceLocation loc = currentToken.loc;
+	const auto loc = currentToken.loc;
 	bool isHoisted = match(lexer::TokenType::HOIST);
 	ast::VarDeclNode::Kind kind = ast::VarDeclNode::DYNAMIC; // Default to dynamic
 	std::unique_ptr<ast::TypeNode> typeNode;
@@ -28,7 +28,7 @@ std::unique_ptr<ast::VarDeclNode> Parser::parseVarDecl() {
 		advance();
 	}
 
-	std::string name = consume(lexer::TokenType::IDENTIFIER).lexeme;
+	std::string name(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER)));
 
 	// Handle type annotation for dynamic variables (let a: int = 10)
 	if (kind == ast::VarDeclNode::DYNAMIC && match(lexer::TokenType::COLON)) {
@@ -64,7 +64,7 @@ bool Parser::match(std::initializer_list<lexer::TokenType> types) const {
 	return std::find(types.begin(), types.end(), currentToken.type) != types.end();
 }
 
-lexer::Token Parser::consume(lexer::TokenType type, std::string_view errorMessage) {
+lexer::Token Parser::consume(lexer::TokenType type, const std::string& errorMessage) {
 	if (match(type)) {
 		return advance();
 	}
@@ -98,7 +98,7 @@ std::unique_ptr<ast::ExprNode> Parser::parseExpression(int precedence) { // Remo
 }
 
 std::unique_ptr<ast::ExprNode> Parser::parsePrimary() {
-	ast::SourceLocation startLoc = currentToken.loc;
+	const auto startLoc = currentToken.loc;
 
 	// Handle all the simple cases first
 	if (match(lexer::TokenType::NEW)) {
@@ -106,14 +106,14 @@ std::unique_ptr<ast::ExprNode> Parser::parsePrimary() {
 	}
 	else if (match({lexer::TokenType::NUMBER,lexer::TokenType::INTEGER,lexer::TokenType::FLOAT_LIT})) {
 		lexer::Token numToken = advance();
-		return std::make_unique<ast::LiteralNode>(startLoc, ast::LiteralNode::NUMBER, numToken.lexeme);
+		return std::make_unique<ast::LiteralNode>(startLoc, ast::LiteralNode::NUMBER, std::string(mod.getLexeme(numToken)));
 	}
 	else if (match(lexer::TokenType::STRING_LIT)) {
 		lexer::Token strToken = advance();
-		return std::make_unique<ast::LiteralNode>(startLoc, ast::LiteralNode::STRING, strToken.lexeme);
+		return std::make_unique<ast::LiteralNode>(startLoc, ast::LiteralNode::STRING, std::string(mod.getLexeme(strToken)));
 	} else if (match(lexer::TokenType::TRUE) || match(lexer::TokenType::FALSE)) {
 		lexer::Token boolToken = advance();
-		return std::make_unique<ast::LiteralNode>(startLoc, ast::LiteralNode::BOOL, boolToken.lexeme);
+		return std::make_unique<ast::LiteralNode>(startLoc, ast::LiteralNode::BOOL, std::string(mod.getLexeme(boolToken)));
 	}
 	else if (match(lexer::TokenType::NULL_LIT)) {
 		advance();
@@ -146,7 +146,7 @@ std::unique_ptr<ast::ExprNode> Parser::parsePrimary() {
 		if (identToken.type == lexer::TokenType::THIS) {
 			expr = std::make_unique<ast::ThisNode>(startLoc);
 		} else {
-			expr = std::make_unique<ast::VarNode>(startLoc, identToken.lexeme);
+			expr = std::make_unique<ast::VarNode>(startLoc, std::string(mod.getLexeme(identToken)));
 		}
 
 		// Handle chained operations
@@ -175,8 +175,7 @@ std::unique_ptr<ast::ExprNode> Parser::parsePrimary() {
 
 lexer::Token Parser::advance() {
 	if (isAtEnd()) {
-		return lexer::Token{lexer::TokenType::EOF_TOKEN, "",
-			tokens.empty() ? ast::SourceLocation{1,1,0, 0} : tokens.back().loc};
+		return lexer::Token{lexer::TokenType::EOF_TOKEN, tokens.empty() ? lexer::SourceSpan{0, 0} : tokens.back().loc};
 	}
 
 	lexer::Token result = tokens[current];  // 1. Get current token first
@@ -188,7 +187,7 @@ lexer::Token Parser::advance() {
 		currentToken = tokens[current];
 	} else {
 		current = tokens.size();  // Mark as ended
-		currentToken = lexer::Token{lexer::TokenType::EOF_TOKEN, "", result.loc};
+		currentToken = lexer::Token{lexer::TokenType::EOF_TOKEN, result.loc};
 	}
 
 	return result;  // Return what was current when we entered
@@ -197,7 +196,7 @@ lexer::Token Parser::advance() {
 Parser::Parser(Module& mod, std::vector<lexer::Token> tokens, const utils::Flags& flags, std::ostream& errStream)
 	: tokens(std::move(tokens)),
 		currentToken(this->tokens.empty() ?
-			lexer::Token{lexer::TokenType::EOF_TOKEN, "", {1, 1, 0}} :
+			lexer::Token{lexer::TokenType::EOF_TOKEN, {0, 0}} :
 			this->tokens[0]) , flags(flags), errStream(errStream), mod(mod) {
 	current = 0;
 }
@@ -207,7 +206,7 @@ bool Parser::isAtEnd() const {
 }
 
 std::unique_ptr<ast::TypeNode> Parser::parseType() {
-	ast::SourceLocation startLoc = currentToken.loc;
+	const auto startLoc = currentToken.loc;
 
 	// Handle built-in types (from lexer::TokenType)
 	if (match({lexer::TokenType::INT, lexer::TokenType::LONG, lexer::TokenType::SHORT,
@@ -245,7 +244,7 @@ std::unique_ptr<ast::TypeNode> Parser::parseType() {
 	else if (match(lexer::TokenType::IDENTIFIER)) {
 		// User-defined type (class/struct/type alias)
 		lexer::Token typeToken = advance();
-		return std::make_unique<ast::NamedTypeNode>(startLoc, typeToken.lexeme);
+		return std::make_unique<ast::NamedTypeNode>(startLoc, std::string(mod.getLexeme(typeToken)));
 	}
 
 	throw Error(
@@ -294,7 +293,7 @@ void Parser::synchronize() {
 
 const lexer::Token &Parser::previousToken() const {
 	if (previous >= tokens.size()) {
-		static lexer::Token eof{lexer::TokenType::EOF_TOKEN, "", {0,0,0}};
+		static lexer::Token eof{lexer::TokenType::EOF_TOKEN, {0,0}};
 		return eof;
 	}
 	return tokens[previous];
@@ -337,7 +336,7 @@ int Parser::getPrecedence(lexer::TokenType type) {
 }
 
 std::unique_ptr<ast::ProgramNode> Parser::parse() {
-	ast::SourceLocation startLoc = currentToken.loc;
+	const auto startLoc = currentToken.loc;
 	std::vector<std::unique_ptr<ast::Node>> declarations;
 	while (!isAtEnd()) {
 		try {
@@ -385,8 +384,8 @@ bool Parser::isBuiltInType(lexer::TokenType type) {
 }
 
 std::unique_ptr<ast::NewExprNode> Parser::parseNewExpression() {
-	ast::SourceLocation location = consume(lexer::TokenType::NEW).loc; // Eat 'new' keyword
-	std::string className = consume(lexer::TokenType::IDENTIFIER).lexeme;
+	const auto location = consume(lexer::TokenType::NEW).loc; // Eat 'new' keyword
+	std::string className(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER)));
 
 	consume(lexer::TokenType::LPAREN);
 	std::vector<std::unique_ptr<ast::ExprNode>> args;
@@ -401,13 +400,13 @@ std::unique_ptr<ast::NewExprNode> Parser::parseNewExpression() {
 }
 
 std::unique_ptr<ast::FunctionDeclNode> Parser::parseFunction() {
-	ast::SourceLocation loc = currentToken.loc;
+	const auto loc = currentToken.loc;
 	bool hasFunKeyword = false;
 
 	// Handle annotations
 	bool isAsync = false;
 	while (match(lexer::TokenType::AT)) {
-		if (peek().lexeme == "Async") {
+		if (mod.getLexeme(peek()) == "Async") {
 			isAsync = true;
 			advance(); // Skip @
 			advance(); // Skip Async
@@ -437,7 +436,7 @@ std::unique_ptr<ast::FunctionDeclNode> Parser::parseFunction() {
 	else if (isBuiltInType(currentToken.type) || currentToken.type == lexer::TokenType::IDENTIFIER) {
 		returnType = parseType();
 	}
-	std::string name = consume(lexer::TokenType::IDENTIFIER).lexeme;
+	std::string name(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER)));
 
 	// Get both params and structSugar flag
 	auto [params, structSugar] = parseParameters();
@@ -456,7 +455,7 @@ std::unique_ptr<ast::FunctionDeclNode> Parser::parseFunction() {
 }
 
 std::unique_ptr<ast::BlockNode> Parser::parseBlock() {
-	ast::SourceLocation startLoc = currentToken.loc;
+	const auto startLoc = currentToken.loc;
 	consume(lexer::TokenType::LBRACE);
 
 	std::vector<std::unique_ptr<ast::Node>> statements;
@@ -477,7 +476,7 @@ std::unique_ptr<ast::BlockNode> Parser::parseBlock() {
 }
 
 std::unique_ptr<ast::StmtNode> Parser::parseStatement() {
-	ast::SourceLocation loc = currentToken.loc;
+	const auto loc = currentToken.loc;
 
 	// Declaration statements
 	if (match({lexer::TokenType::LET, lexer::TokenType::VAR, lexer::TokenType::DYNAMIC})) {
@@ -534,7 +533,7 @@ std::unique_ptr<ast::StmtNode> Parser::parseStatement() {
 	}
 
 	// Error recovery
-	throw Error(currentToken.loc, "Unexpected token in statement: " + currentToken.lexeme);
+	throw Error(currentToken.loc, "Unexpected token in statement: " + std::string(mod.getLexeme(currentToken)));
 }
 
 bool Parser::peekIsExpressionStart() const {
@@ -560,15 +559,13 @@ bool Parser::peekIsExpressionStart() const {
 lexer::Token Parser::peek(size_t offset) const {
 	size_t idx = current + offset;
 	if (idx >= tokens.size()) {
-		return lexer::Token{lexer::TokenType::EOF_TOKEN, "",
-			tokens.empty() ? ast::SourceLocation{1,1,0} : tokens.back().loc};
+		return lexer::Token{lexer::TokenType::EOF_TOKEN, tokens.empty() ? lexer::SourceSpan{0,0} : tokens.back().loc};
 	}
 	return tokens[idx];
-
 }
 
 std::unique_ptr<ast::IfNode> Parser::parseIfStmt() {
-	ast::SourceLocation loc = consume(lexer::TokenType::IF).loc;
+	const auto loc = consume(lexer::TokenType::IF).loc;
 	consume(lexer::TokenType::LPAREN, "Expected '(' after 'if'");
 	auto condition = parseExpression();
 	consume(lexer::TokenType::RPAREN, "Expected ')' after if condition");
@@ -615,7 +612,7 @@ std::unique_ptr<ast::IfNode> Parser::parseIfStmt() {
 }
 
 std::unique_ptr<ast::ForNode> Parser::parseForStmt() {
-	ast::SourceLocation loc = consume(lexer::TokenType::FOR).loc;
+	const auto loc = consume(lexer::TokenType::FOR).loc;
 	consume(lexer::TokenType::LPAREN);
 
 	// Parse init/condition/increment (unchanged)
@@ -656,7 +653,7 @@ std::unique_ptr<ast::ForNode> Parser::parseForStmt() {
 }
 
 std::unique_ptr<ast::WhileNode> Parser::parseWhileStmt() {
-	ast::SourceLocation loc = consume(lexer::TokenType::WHILE).loc;
+	const auto loc = consume(lexer::TokenType::WHILE).loc;
 	consume(lexer::TokenType::LPAREN, "Expected '(' after 'while'");
 	auto condition = parseExpression();
 	consume(lexer::TokenType::RPAREN, "Expected ')' after while condition");
@@ -672,7 +669,7 @@ std::unique_ptr<ast::WhileNode> Parser::parseWhileStmt() {
 }
 
 std::unique_ptr<ast::DoWhileNode> Parser::parseDoWhileStmt() {
-	ast::SourceLocation loc = consume(lexer::TokenType::DO).loc;
+	const auto loc = consume(lexer::TokenType::DO).loc;
 
 	// Enforce braces if required
 	if (flags.bracesRequired && !match(lexer::TokenType::LBRACE)) {
@@ -696,7 +693,7 @@ std::unique_ptr<ast::DoWhileNode> Parser::parseDoWhileStmt() {
 }
 
 std::unique_ptr<ast::ReturnStmtNode> Parser::parseReturnStmt() {
-	ast::SourceLocation loc = consume(lexer::TokenType::RETURN).loc;
+	const auto loc = consume(lexer::TokenType::RETURN).loc;
 
 	// Handle empty return (no expression)
 	if (match(lexer::TokenType::SEMICOLON)) {
@@ -728,12 +725,12 @@ bool Parser::peekIsStatementTerminator() const {
 }
 
 std::unique_ptr<ast::FreeObjectNode> Parser::parseFreeObject() {
-	ast::SourceLocation loc = consume(lexer::TokenType::LBRACE).loc;
+	const auto loc = consume(lexer::TokenType::LBRACE).loc;
 	std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>> properties;
 
 	if (!match(lexer::TokenType::RBRACE)) {
 		do {
-			std::string name = consume(lexer::TokenType::IDENTIFIER).lexeme;
+			std::string name(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER)));
 			consume(lexer::TokenType::COLON);
 			auto value = parseExpression();
 			properties.emplace_back(name, std::move(value));
@@ -750,7 +747,7 @@ std::unique_ptr<ast::FreeObjectNode> Parser::parseFreeObject() {
 }
 
 std::unique_ptr<ast::CallNode> Parser::parseFunctionCall(std::unique_ptr<ast::ExprNode> callee) {
-	ast::SourceLocation loc = callee->loc;
+	const auto loc = callee->loc;
 	consume(lexer::TokenType::LPAREN);
 
 	std::vector<std::unique_ptr<ast::ExprNode>> args;
@@ -766,17 +763,17 @@ std::unique_ptr<ast::CallNode> Parser::parseFunctionCall(std::unique_ptr<ast::Ex
 
 std::unique_ptr<ast::MemberAccessNode> Parser::parseMemberAccess(std::unique_ptr<ast::ExprNode> object) {
 	// Horse guarantee: We only get called when we see a DOT, if not I'm a horse or tramvai
-	ast::SourceLocation loc = object->loc;
+	const auto loc = object->loc;
 
 	// First access (guaranteed to exist)
 	advance(); // Consume '.'
-	std::string member = consume(lexer::TokenType::IDENTIFIER).lexeme;
+	std::string member(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER)));
 	auto result = std::make_unique<ast::MemberAccessNode>(loc, std::move(object), member);
 
 	// Handle additional accesses or calls
 	while (match(lexer::TokenType::DOT)) {
 		advance();
-		member = consume(lexer::TokenType::IDENTIFIER).lexeme;
+		member = std::string(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER)));
 		result = std::make_unique<ast::MemberAccessNode>(loc, std::move(result), member);
 
 		if (match(lexer::TokenType::LPAREN)) {
@@ -792,7 +789,7 @@ std::unique_ptr<ast::MemberAccessNode> Parser::parseMemberAccess(std::unique_ptr
 }
 
 std::unique_ptr<ast::ExprNode> Parser::parseArrayAccess(std::unique_ptr<ast::ExprNode> arrayExpr) {
-	ast::SourceLocation loc = currentToken.loc;
+	const auto loc = currentToken.loc;
 
 	// Keep processing chained array accesses (e.g., arr[1][2][3])
 	while (match(lexer::TokenType::LBRACKET)) {
@@ -813,10 +810,10 @@ std::unique_ptr<ast::ExprNode> Parser::parseArrayAccess(std::unique_ptr<ast::Exp
 }
 
 std::unique_ptr<ast::AnnotationNode> Parser::parseAnnotation() {
-	ast::SourceLocation loc = consume(lexer::TokenType::AT).loc; // Eat '@' symbol
+	const auto loc = consume(lexer::TokenType::AT).loc; // Eat '@' symbol
 
 	// Parse annotation name
-	std::string name = consume(lexer::TokenType::IDENTIFIER).lexeme;
+	std::string name(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER)));
 
 	// Parse optional annotation arguments
 	std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>> arguments;
@@ -829,7 +826,7 @@ std::unique_ptr<ast::AnnotationNode> Parser::parseAnnotation() {
 				// Parse argument name (optional) or just value
 				std::string argName;
 				if (peek(1).type == lexer::TokenType::EQUAL) {
-					argName = consume(lexer::TokenType::IDENTIFIER).lexeme;
+					argName = std::string(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER)));
 					consume(lexer::TokenType::EQUAL);
 				}
 
@@ -851,7 +848,7 @@ std::unique_ptr<ast::ErrorNode> Parser::createErrorNode() {
 }
 
 std::unique_ptr<ast::ImportNode> Parser::parseImport() {
-	ast::SourceLocation loc = consume(lexer::TokenType::IMPORT).loc;
+	const auto loc = consume(lexer::TokenType::IMPORT).loc;
 	std::string importPath;
 	bool isJavaImport = false;
 
@@ -862,7 +859,7 @@ std::unique_ptr<ast::ImportNode> Parser::parseImport() {
 
 		// Now parse the package path (which may contain 'java' as identifier)
 		while (true) {
-			importPath += consume(lexer::TokenType::IDENTIFIER).lexeme;
+			importPath += mod.getLexeme(consume(lexer::TokenType::IDENTIFIER));
 			if (!match(lexer::TokenType::DOT)) break;
 			importPath += ".";
 			advance(); // Consume '.'
@@ -870,7 +867,7 @@ std::unique_ptr<ast::ImportNode> Parser::parseImport() {
 	}
 		// Handle quoted path imports
 	else if (match(lexer::TokenType::STRING_LIT)) {
-		importPath = consume(lexer::TokenType::STRING_LIT).lexeme;
+		importPath = mod.getLexeme(consume(lexer::TokenType::STRING_LIT));
 		// Remove surrounding quotes
 		if (importPath.size() >= 2 &&
 			importPath.front() == '"' &&
@@ -881,7 +878,7 @@ std::unique_ptr<ast::ImportNode> Parser::parseImport() {
 		// Handle normal imports
 	else {
 		while (true) {
-			importPath += consume(lexer::TokenType::IDENTIFIER).lexeme;
+			importPath += mod.getLexeme(consume(lexer::TokenType::IDENTIFIER));
 			if (!match(lexer::TokenType::DOT)) break;
 			importPath += ".";
 			advance(); // Consume '.'
@@ -897,14 +894,14 @@ std::unique_ptr<ast::ImportNode> Parser::parseImport() {
 }
 
 std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
-	ast::SourceLocation classLoc = consume(lexer::TokenType::CLASS).loc;
-	std::string className = consume(lexer::TokenType::IDENTIFIER, "Expected class name").lexeme;
+	const auto classLoc = consume(lexer::TokenType::CLASS).loc;
+	std::string className(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER, "Expected class name")));
 
 	// Parse inheritance
 	std::string baseClass;
 	if(match(lexer::TokenType::COLON)) {
 		consume(lexer::TokenType::COLON);
-		baseClass = consume(lexer::TokenType::IDENTIFIER, "Expected base class name").lexeme;
+		baseClass = std::string(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER, "Expected base class name")));
 	}
 
 	// Parse class body
@@ -943,16 +940,16 @@ std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
 			if (isConst) advance();
 
 			// Check if it's a constructor
-			if (match(lexer::TokenType::IDENTIFIER) && currentToken.lexeme == className) {
+			if (match(lexer::TokenType::IDENTIFIER) && mod.getLexeme(currentToken) == className) {
 				// Constructor
-				ast::SourceLocation loc = advance().loc;
+				const auto loc = advance().loc;
 				std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>> initializers;
 				auto params = parseParameters();
 				if (match(lexer::TokenType::COLON)) {
 					advance(); // Consume the ':'
 
 					do {
-						std::string memberName = consume(lexer::TokenType::IDENTIFIER, "Expected member name in initializer list").lexeme;
+						std::string memberName(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER, "Expected member name in initializer list")));
 						consume(lexer::TokenType::LPAREN, "Expected '(' after member name");
 						auto expr = parseExpression();
 						consume(lexer::TokenType::RPAREN, "Expected ')' after initializer expression");
@@ -981,16 +978,16 @@ std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
 				auto funcDecl = parseFunction();
 				// Convert FunctionDeclNode to MemberDeclNode
 				members.push_back(std::make_unique<ast::MemberDeclNode>(
-						funcDecl->loc,
-						ast::MemberDeclNode::METHOD,
-						access,
-						isConst,
-						std::move(funcDecl->name),    // std::string&&
-						std::move(funcDecl->returnType), // unique_ptr<TypeNode>
-						nullptr,                      // No field init
-						std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>>{},// Empty ctor inits
-						std::move(funcDecl->body),    // unique_ptr<BlockNode>
-						std::move(annotations)        // vector<unique_ptr<AnnotationNode>>
+					funcDecl->loc,
+					ast::MemberDeclNode::METHOD,
+					access,
+					isConst,
+					std::move(funcDecl->name),    // std::string&&
+					std::move(funcDecl->returnType), // unique_ptr<TypeNode>
+					nullptr,                      // No field init
+					std::vector<std::pair<std::string, std::unique_ptr<ast::ExprNode>>>{},// Empty ctor inits
+					std::move(funcDecl->body),    // unique_ptr<BlockNode>
+					std::move(annotations)        // vector<unique_ptr<AnnotationNode>>
 				));
 			}
 			else {
@@ -1000,7 +997,7 @@ std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
 					type = parseType();
 				}
 
-				std::string name = consume(lexer::TokenType::IDENTIFIER, "Expected type after declaration").lexeme;
+				std::string name(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER, "Expected type after declaration")));
 
 				std::unique_ptr<ast::ExprNode> initializer;
 				if (match(lexer::TokenType::EQUAL)) {
@@ -1071,7 +1068,7 @@ std::pair<std::vector<std::pair<std::string, std::unique_ptr<ast::TypeNode>>>, b
 		}*/else{
 			paramType = std::make_unique<ast::TypeNode>(currentToken.loc, ast::TypeNode::DYNAMIC);
 		}
-		std::string name = consume(lexer::TokenType::IDENTIFIER, "Expected parameter name").lexeme;
+		std::string name(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER, "Expected parameter name")));
 		params.emplace_back(name, std::move(paramType));
 
 	}
@@ -1128,7 +1125,7 @@ bool Parser::isInStructInitializerContext() const {
 }
 
 std::unique_ptr<ast::StructInitializerNode> Parser::parseStructInitializer() {
-	ast::SourceLocation loc = consume(lexer::TokenType::LBRACE).loc;
+	const auto loc = consume(lexer::TokenType::LBRACE).loc;
 	std::vector<ast::StructInitializerNode::StructFieldInitializer> fields;
 
 	if (!match(lexer::TokenType::RBRACE)) {
@@ -1136,14 +1133,14 @@ std::unique_ptr<ast::StructInitializerNode> Parser::parseStructInitializer() {
 			// Check for designated initializer (C-style .field = value)
 			if (match(lexer::TokenType::DOT)) {
 				advance(); // Consume '.'
-				std::string name = consume(lexer::TokenType::IDENTIFIER).lexeme;
+				std::string name(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER)));
 				consume(lexer::TokenType::EQUAL);
 				auto value = parseExpression();
 				fields.push_back({name, std::move(value)});
 			}
 				// Check for named field (field: value)
 			else if (peek(1).type == lexer::TokenType::COLON) {
-				std::string name = consume(lexer::TokenType::IDENTIFIER).lexeme;
+				std::string name(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER)));
 				consume(lexer::TokenType::COLON);
 				auto value = parseExpression();
 				fields.push_back({name, std::move(value)});
@@ -1166,7 +1163,7 @@ std::vector<std::string> Parser::parseArrowFunctionParams() {
 
 	if (!match(lexer::TokenType::RPAREN)) {
 		do {
-			params.push_back(consume(lexer::TokenType::IDENTIFIER, "Expected parameter name").lexeme);
+			params.push_back(std::string(mod.getLexeme(consume(lexer::TokenType::IDENTIFIER, "Expected parameter name"))));
 		} while (match(lexer::TokenType::COMMA) && (advance(), true));
 	}
 
@@ -1175,7 +1172,7 @@ std::vector<std::string> Parser::parseArrowFunctionParams() {
 }
 
 std::unique_ptr<ast::LambdaExprNode> Parser::parseArrowFunction(std::vector<std::string>&& params) {
-	ast::SourceLocation loc = consume(lexer::TokenType::LAMBARROW).loc;
+	const auto loc = consume(lexer::TokenType::LAMBARROW).loc;
 
 	// Convert string params to typed params (with null types for lambdas)
 	std::vector<std::pair<std::string, std::unique_ptr<ast::TypeNode>>> typedParams;

@@ -1,4 +1,5 @@
 #include <fstream>
+#include <functional>
 #include <string>
 
 #include "module.hpp"
@@ -15,6 +16,9 @@ Module::Module(utils::Flags flags, std::ostream& errStream)
 
 void Module::load() {
 	source = utils::readFile(flags.inputFile);
+	constexpr size_t heuristicAvgLineLength = 80;
+	lineIndex.reserve(source.size() / heuristicAvgLineLength);
+	lineIndex.push_back(0);
 	lineIndex.push_back(0);
 	for (size_t i = 0, size = source.size(); i < size; ++i) {
 		if (source[i] == '\n')
@@ -28,10 +32,11 @@ void Module::lex() {
 	lexer::Lexer lexer(source);
 	tokens = std::move(lexer).tokenize(*this);
 	for (const auto &token: tokens) {
-		lexerOut << "Line " << token.loc.line
-			<< ":" << token.loc.column
+		auto loc = getSourceLocation(token);
+		lexerOut << "Line " << loc.line
+			<< ":" << loc.column
 			<< " - " << lexer::Lexer::tokenToString(token.type)
-			<< " (" << token.lexeme << ")\n";
+			<< " (" << getLexeme(token) << ")\n";
 	}
 }
 
@@ -88,7 +93,8 @@ static constexpr T digit10count(T v) noexcept {
 	return 1;
 }
 
-void Module::report(const ast::SourceLocation &loc, std::string_view message, std::string_view errorType) {
+void Module::report(lexer::SourceSpan srcSpan, std::string_view message, std::string_view errorType) {
+	const auto loc = getSourceLocation(srcSpan);
 	const auto line = getSourceLine(loc);
 
 	// Format the error message
@@ -106,19 +112,34 @@ void Module::report(const ast::SourceLocation &loc, std::string_view message, st
 }
 
 std::string_view Module::getSourceLine(const ast::SourceLocation &loc) {
-	const auto a = lineIndex[loc.line - 1];
-	const auto b = lineIndex[loc.line] - 1;
+	const auto a = lineIndex[loc.line];
+	const auto b = lineIndex[std::min(lineIndex.size(), loc.line + 1)] - 1;
 	return std::string_view(source.begin() + a, source.begin() + b);
 }
 
-std::string_view Module::contents() {
-	return source;
+ast::SourceLocation Module::getSourceLocation(size_t beg, size_t end) const {
+	const auto e = std::prev(std::lower_bound(lineIndex.begin(), lineIndex.end(), beg, std::less_equal<>{}));
+	const auto line = static_cast<size_t>(e - lineIndex.begin());
+	assert(*e <= beg);
+	const auto column = (beg - *e) + 1;
+	return ast::SourceLocation {
+		.line = line,
+		.column = column,
+		.length = end - beg,
+		.fileOffset = beg
+	};
 }
 
-void Module::clear() {
-	tokens.clear();
-	lineIndex.clear();
-	source.clear();
+ast::SourceLocation Module::getSourceLocation(lexer::Token tok) const {
+	return getSourceLocation(tok.loc.beg, tok.loc.end);
+}
+
+std::string_view Module::getLexeme(size_t beg, size_t end) const {
+	return std::string_view(source.begin() + beg, source.begin() + end);
+}
+
+std::string_view Module::getLexeme(lexer::Token tok) const {
+	return getLexeme(tok.loc.beg, tok.loc.end);
 }
 
 } // zenith

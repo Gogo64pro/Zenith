@@ -9,9 +9,7 @@ namespace zenith::ast {
 struct TypeNode : Node {
 	enum Kind { PRIMITIVE, CLASS, STRUCT, ARRAY, FUNCTION, DYNAMIC } kind;
 
-	explicit TypeNode(SourceLocation loc, Kind k) : kind(k) {
-		this->loc = loc;
-	}
+	explicit TypeNode(lexer::SourceSpan loc, Kind k) : Node(loc), kind(k) {}
 
 	virtual std::string toString(int indent = 0) const {
 		std::string pad(indent, ' ');
@@ -24,7 +22,7 @@ struct TypeNode : Node {
 struct PrimitiveTypeNode : TypeNode {
 	enum Type { INT, FLOAT, DOUBLE, STRING, BOOL, NUMBER, BIGINT, BIGNUMBER, SHORT, LONG, BYTE } type;
 
-	PrimitiveTypeNode(SourceLocation loc, Type t)
+	PrimitiveTypeNode(lexer::SourceSpan loc, Type t)
 			: TypeNode(loc, PRIMITIVE), type(t) {}
 
 	std::string toString(int indent = 0) const override {
@@ -39,7 +37,7 @@ struct PrimitiveTypeNode : TypeNode {
 struct NamedTypeNode : TypeNode {
 	std::string name;
 
-	NamedTypeNode(SourceLocation loc, std::string n)
+	NamedTypeNode(lexer::SourceSpan loc, std::string n)
 			: TypeNode(loc, CLASS), name(std::move(n)) {}
 
 	std::string toString(int indent = 0) const override {
@@ -52,7 +50,7 @@ struct NamedTypeNode : TypeNode {
 struct ArrayTypeNode : TypeNode {
 	std::unique_ptr<TypeNode> elementType;
 
-	ArrayTypeNode(SourceLocation loc, std::unique_ptr<TypeNode> elemType)
+	ArrayTypeNode(lexer::SourceSpan loc, std::unique_ptr<TypeNode> elemType)
 			: TypeNode(loc, ARRAY), elementType(std::move(elemType)) {}
 
 	std::string toString(int indent = 0) const override {

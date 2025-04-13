@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <string>
 
+#include "../lexer/lexer.hpp"
+
 namespace zenith::ast {
 
 struct SourceLocation {
@@ -14,11 +16,16 @@ struct SourceLocation {
 
 struct Node {
 	virtual ~Node() = default;
-	SourceLocation loc;
+	lexer::SourceSpan loc;
+	Node(lexer::SourceSpan loc) : loc(loc) {}
 	virtual std::string toString(int indent = 0) const = 0;
 };
 
-struct ExprNode : Node {virtual bool isConstructorCall() const { return false; }};
-struct StmtNode : Node {};
+struct ExprNode : Node {
+	using Node::Node;
+	virtual bool isConstructorCall() const { return false; }
+};
+
+struct StmtNode : Node { using Node::Node; };
 
 } // zenith::ast

@@ -4,7 +4,7 @@ project(Zenith)
 set(CMAKE_CXX_STANDARD 23)
 
 add_executable(Zenith
-	src/ErrorReporter.cpp
+	src/module.cpp
 	src/lexer/lexer.cpp
 	src/main.cpp
 	src/parser/parser.cpp

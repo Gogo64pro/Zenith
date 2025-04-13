@@ -1,8 +1,10 @@
-#include "lexer.hpp"
+#include <cctype>
+
 #include "../ast/Node.hpp"
+#include "../module.hpp"
 #include "../utils/hash.hpp"
 #include "error.hpp"
-#include <cctype>
+#include "lexer.hpp"
 
 namespace zenith::lexer {
 
@@ -61,16 +63,22 @@ static const StringHashMap<TokenType> keywords = {
 	{"null", TokenType::NULL_LIT},
 };
 
-Lexer::Lexer(std::string_view source, std::string_view name) : source(source), fileName(name) {}
+Lexer::Lexer(std::string_view source) : source(source) {}
 
-std::vector<Token> Lexer::tokenize() && {
-	while (!isAtEnd()) {
-		start = current;
-		scanToken();
+std::vector<Token> Lexer::tokenize(Module& mod) && {
+	try {
+		while (!isAtEnd()) {
+			start = current;
+			scanToken();
+		}
+
+		tokens.emplace_back(TokenType::EOF_TOKEN, "", line, column, 0);
+		return std::move(tokens);
 	}
-
-	tokens.emplace_back(TokenType::EOF_TOKEN, "", line, column, 0);
-	return std::move(tokens);
+	catch (const Error& e) {
+		mod.report(e.location, e.what());
+	}
+	return {};
 }
 
 bool Lexer::isAtEnd() const {

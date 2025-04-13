@@ -1,10 +1,12 @@
-#include "parser.hpp"
-#include <memory>
-#include <iostream>
 #include <algorithm>
+#include <iostream>
+#include <memory>
+#include <unordered_map>
 #include <unordered_set>
+
 #include "../ast/Expressions.hpp"
 #include "error.hpp"
+#include "parser.hpp"
 
 namespace zenith::parser {
 
@@ -192,11 +194,11 @@ lexer::Token Parser::advance() {
 	return result;  // Return what was current when we entered
 }
 
-Parser::Parser(std::vector<lexer::Token> tokens, const utils::Flags& flags, std::ostream& errStream)
+Parser::Parser(Module& mod, std::vector<lexer::Token> tokens, const utils::Flags& flags, std::ostream& errStream)
 	: tokens(std::move(tokens)),
 		currentToken(this->tokens.empty() ?
 			lexer::Token{lexer::TokenType::EOF_TOKEN, "", {1, 1, 0}} :
-			this->tokens[0]) , flags(flags), errStream(errStream), errorReporter(std::cout) {
+			this->tokens[0]) , flags(flags), errStream(errStream), mod(mod) {
 	current = 0;
 }
 
@@ -365,7 +367,7 @@ std::unique_ptr<ast::ProgramNode> Parser::parse() {
 				advance();
 			}
 		} catch (const Error& e) {
-			errorReporter.report(flags.inputFile, e.location, e.what());
+			mod.report(e.location, e.what());
 			errStream << e.what() << std::endl;
 			synchronize();
 		}
@@ -579,7 +581,7 @@ std::unique_ptr<ast::IfNode> Parser::parseIfStmt() {
 		}
 		thenBranch = parseStatement();
 	} catch (const Error& e) {
-		errorReporter.report(flags.inputFile, e.location, "Error in if body " + std::string(e.what()));
+		mod.report(e.location, "Error in if body " + std::string(e.what()));
 		errStream << "Error in if body: " << e.what() << std::endl;
 		synchronize(); // Skip to next statement
 		auto errorNode = createErrorNode();
@@ -1022,7 +1024,7 @@ std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
 				));
 			}
 		} catch (const Error& e) {
-			errorReporter.report(flags.inputFile, e.location, e.what());
+			mod.report(e.location, e.what());
 			errStream << e.what() << std::endl;
 			synchronize();
 		}

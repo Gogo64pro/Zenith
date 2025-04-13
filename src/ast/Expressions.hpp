@@ -8,8 +8,13 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <sstream>
+
 #include "../ast/Node.hpp"
 #include "../lexer/lexer.hpp"
+#include "../utils/RemovePadding.hpp"
+#include "../utils/small_vector.hpp"
+#include "Declarations.hpp"
 
 namespace zenith::ast {
 

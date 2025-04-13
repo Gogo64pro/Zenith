@@ -1,9 +1,14 @@
 #pragma once
 
-#include "../ast/Node.hpp"
 #include <cassert>
 #include <string>
 #include <vector>
+
+#include "../ast/Node.hpp"
+
+namespace zenith {
+	class Module;
+}
 
 namespace zenith::lexer {
 
@@ -60,8 +65,8 @@ struct Token {
 
 class Lexer {
 public:
-	Lexer(std::string_view source, std::string_view name);
-	std::vector<Token> tokenize() && ;
+	Lexer(std::string_view source);
+	std::vector<Token> tokenize(Module& mod) &&;
 	static std::string tokenToString(TokenType type);
 	size_t tokenStart = 0;
 	size_t startColumn = 1;

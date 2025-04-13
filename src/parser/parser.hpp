@@ -1,16 +1,17 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-#include <string>
 #include <iostream>
-#include "../lexer/lexer.hpp"
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "../ast/Declarations.hpp"
 #include "../ast/Expressions.hpp"
-#include "../ast/Statements.hpp"
-#include "../utils/mainargs.hpp"
 #include "../ast/MainNodes.hpp"
-#include "../ErrorReporter.hpp"
+#include "../ast/Statements.hpp"
+#include "../lexer/lexer.hpp"
+#include "../module.hpp"
+#include "../utils/mainargs.hpp"
 
 namespace zenith::parser {
 
@@ -22,7 +23,7 @@ private:
 	lexer::Token currentToken;
 	const utils::Flags& flags;
 	std::ostream& errStream;
-	ErrorReporter errorReporter;
+	Module& mod;
 
 	// Helper methods
 	bool isAtEnd() const;
@@ -79,7 +80,7 @@ private:
 	std::unique_ptr<ast::ErrorNode> createErrorNode();
 
 public:
-	explicit Parser(std::vector<lexer::Token> tokens, const utils::Flags& flags, std::ostream& errStream = std::cerr);
+	explicit Parser(Module& mod, std::vector<lexer::Token> tokens, const utils::Flags& flags, std::ostream& errStream = std::cerr);
 	std::unique_ptr<ast::ProgramNode> parse();
 };
 

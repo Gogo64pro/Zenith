@@ -1,8 +1,46 @@
 #include <fstream>
 #include <string>
-#include "ErrorReporter.hpp"
+
+#include "module.hpp"
+#include "parser/parser.hpp"
+#include "utils/mainargs.hpp"
+#include "utils/ReadFile.hpp"
 
 namespace zenith {
+
+Module::Module(utils::Flags flags, std::ostream& errStream)
+	: flags(std::move(flags))
+	, errStream(errStream) 
+{}
+
+void Module::load() {
+	source = utils::readFile(flags.inputFile);
+	lineIndex.push_back(0);
+	for (size_t i = 0, size = source.size(); i < size; ++i) {
+		if (source[i] == '\n')
+			lineIndex.push_back(i+1);
+	}
+	lineIndex.push_back(source.size() + 1);
+}
+
+void Module::lex() {
+	std::ofstream lexerOut("lexerout.log");
+	lexer::Lexer lexer(source);
+	tokens = std::move(lexer).tokenize(*this);
+	for (const auto &token: tokens) {
+		lexerOut << "Line " << token.loc.line
+			<< ":" << token.loc.column
+			<< " - " << lexer::Lexer::tokenToString(token.type)
+			<< " (" << token.lexeme << ")\n";
+	}
+}
+
+void Module::parse() {
+	std::ofstream parserOut("parserout.log");
+	parser::Parser parser(*this, tokens, flags, parserOut);
+	root = parser.parse();
+	parserOut << root->toString() << std::endl;
+}
 
 struct Rep {
 	std::size_t n;
@@ -16,7 +54,7 @@ struct Rep {
 };
 
 template <std::unsigned_integral T>
-constexpr T digit10count(T v) noexcept {
+static constexpr T digit10count(T v) noexcept {
 	static_assert(sizeof(T) <= 8, "type not supported");
 
 	if constexpr (sizeof(T) >= 8) {
@@ -50,11 +88,11 @@ constexpr T digit10count(T v) noexcept {
 	return 1;
 }
 
-void ErrorReporter::report(std::string_view file, const ast::SourceLocation &loc, std::string_view message, std::string_view errorType) {
-	std::string line = getSourceLine(file, loc);
+void Module::report(const ast::SourceLocation &loc, std::string_view message, std::string_view errorType) {
+	const auto line = getSourceLine(loc);
 
 	// Format the error message
-	errStream << "\033[1m" << file << ":" << loc.line << ":" << loc.column << ": "
+	errStream << "\033[1m" << flags.inputFile << ":" << loc.line << ":" << loc.column << ": "
 	          << "\033[1;31m" << errorType << ": \033[0m"
 	          << message << "\n";
 
@@ -67,49 +105,20 @@ void ErrorReporter::report(std::string_view file, const ast::SourceLocation &loc
 		<< Rep(std::max(1uz, loc.column) - 1, ' ') << "\033[1;31m^" << Rep(std::max(1uz, loc.length) - 1, '~') << "\033[0m\n";
 }
 
-std::string ErrorReporter::getSourceLine(std::string_view filepath, const ast::SourceLocation &loc) {
-	// First check if we have this file in cache at all
-	auto fileIt = fileLineCache.find(filepath);
-	if (fileIt != fileLineCache.end()) {
-		// File is cached, check if we have this line
-		const auto& lineCache = fileIt->second;
-		if (loc.line > 0 && loc.line <= lineCache.size()) {
-			return lineCache[loc.line - 1]; // lines are 1-based
-		}
-	}
-
-	// todo: wtf -- don't scan the file again
-	// If not, read the file line by line
-	std::ifstream file{std::string(filepath)};
-	if (!file) {
-		return "[could not open file]";
-	}
-
-	std::vector<std::string> newLineCache;
-	std::string currentLine;
-	size_t currentLineNum = 0;
-
-	while (std::getline(file, currentLine)) {
-		newLineCache.push_back(currentLine);
-		currentLineNum++;
-
-		if (currentLineNum == loc.line) {
-			// Cache the lines we've read so far
-			fileLineCache.insert({std::string(filepath), std::move(newLineCache)});
-			return currentLine;
-		}
-	}
-
-	// If we get here, the line number was too large
-	// Cache whatever lines we did read
-	if (!newLineCache.empty()) {
-		fileLineCache.insert({std::string(filepath), std::move(newLineCache)});
-	}
-	return "[line number out of range]";
+std::string_view Module::getSourceLine(const ast::SourceLocation &loc) {
+	const auto a = lineIndex[loc.line - 1];
+	const auto b = lineIndex[loc.line] - 1;
+	return std::string_view(source.begin() + a, source.begin() + b);
 }
 
-void ErrorReporter::clearCache() {
-	fileCache.clear();
+std::string_view Module::contents() {
+	return source;
+}
+
+void Module::clear() {
+	tokens.clear();
+	lineIndex.clear();
+	source.clear();
 }
 
 } // zenith

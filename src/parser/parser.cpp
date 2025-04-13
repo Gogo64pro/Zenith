@@ -85,10 +85,10 @@ std::unique_ptr<ast::ExprNode> Parser::parseExpression(int precedence) { // Remo
 		advance();
 		auto right = parseExpression(opPrecedence);
 		expr = std::make_unique<ast::BinaryOpNode>(
-				op.loc, // Pass operator location
-				op.type,
-				std::move(expr),
-				std::move(right)
+			op.loc, // Pass operator location
+			op.type,
+			std::move(expr),
+			std::move(right)
 		);
 	}
 
@@ -122,7 +122,8 @@ std::unique_ptr<ast::ExprNode> Parser::parsePrimary() {
 			return parseStructInitializer();
 		}
 		return parseFreeObject();
-	} else if (match(lexer::TokenType::FREEOBJ)) {
+	}
+	else if (match(lexer::TokenType::FREEOBJ)) {
 		advance(); // consume 'freeobj'
 		if (match(lexer::TokenType::LBRACE)) {
 			return parseFreeObject();
@@ -280,6 +281,8 @@ void Parser::synchronize() {
 			case lexer::TokenType::WHILE:
 			case lexer::TokenType::RETURN:
 				return;
+			
+			default:
 		}
 
 		// 4. Skip all other tokens
@@ -362,7 +365,7 @@ std::unique_ptr<ast::ProgramNode> Parser::parse() {
 				advance();
 			}
 		} catch (const Error& e) {
-			errorReporter.report(flags.inputFile, e.location, e.format());
+			errorReporter.report(flags.inputFile, e.location, e.what());
 			errStream << e.what() << std::endl;
 			synchronize();
 		}
@@ -576,7 +579,7 @@ std::unique_ptr<ast::IfNode> Parser::parseIfStmt() {
 		}
 		thenBranch = parseStatement();
 	} catch (const Error& e) {
-		errorReporter.report(flags.inputFile, e.location, "Error in if body " + e.format());
+		errorReporter.report(flags.inputFile, e.location, "Error in if body " + std::string(e.what()));
 		errStream << "Error in if body: " << e.what() << std::endl;
 		synchronize(); // Skip to next statement
 		auto errorNode = createErrorNode();
@@ -1019,7 +1022,7 @@ std::unique_ptr<ast::ClassDeclNode> Parser::parseClass() {
 				));
 			}
 		} catch (const Error& e) {
-			errorReporter.report(flags.inputFile, e.location, e.format());
+			errorReporter.report(flags.inputFile, e.location, e.what());
 			errStream << e.what() << std::endl;
 			synchronize();
 		}

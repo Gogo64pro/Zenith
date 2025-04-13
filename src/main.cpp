@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include "lexer/lexer.hpp"
-#include "parser/error.hpp"
 #include "parser/parser.hpp"
 #include "utils/mainargs.hpp"
 #include "utils/ReadFile.hpp"
@@ -23,28 +22,15 @@ std::vector<lexer::Token> lex(utils::Flags &flags) {
 		}
 	} catch (const std::exception &e) {
 		lexerOut << "Lexer error: " << e.what() << std::endl;
-		throw e; // awkward
+		throw e; // todo: awkward
 	}
-	std::cout << "Done Lexing \n";
 	return tokens;
 }
 
 int parse(std::vector<lexer::Token> tokens, utils::Flags &flags) {
 	std::ofstream parserOut("parserout.log");
-	try {
-		parser::Parser parser(tokens,flags,parserOut);
-		parserOut << parser.parse()->toString() << std::endl;
-	} catch (const parser::Error &e) {
-		parserOut << "Parser error (Error): " << e.format() << std::endl;
-		return 1;
-	} catch (const std::exception &e) {
-		parserOut << "Parser error (std::exception): " << e.what() << std::endl;
-		return 1;
-	} catch (...) {
-		parserOut << "Parser error (unknown type)" << std::endl;
-		return 1;
-	}
-	std::cout << "Done Parsing \n";
+	parser::Parser parser(tokens, flags, parserOut);
+	parserOut << parser.parse()->toString() << std::endl;
 	return 0;
 }
 

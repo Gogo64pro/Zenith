@@ -35,7 +35,7 @@ void Module::lex() {
 		auto loc = getSourceLocation(token);
 		lexerOut << "Line " << loc.line
 			<< ":" << loc.column
-			<< " - " << lexer::Lexer::tokenToString(token.type())
+			<< " - " << toString(token.type())
 			<< " (" << getLexeme(token) << ")\n";
 	}
 }

@@ -72,7 +72,7 @@ lexer::Token Parser::consume(lexer::TokenType type, const std::string& errorMess
 }
 
 lexer::Token Parser::consume(lexer::TokenType type) {
-	return consume(type, "Expected " + lexer::Lexer::tokenToString(type));
+	return consume(type, std::string("Expected ") + toString(type));
 }
 
 std::unique_ptr<ast::ExprNode> Parser::parseExpression(int precedence) { // Remove default arg here
@@ -169,8 +169,8 @@ std::unique_ptr<ast::ExprNode> Parser::parsePrimary() {
 	}
 
 	throw Error(currentToken.span(),
-		"Expected primary expression, got " +
-		lexer::Lexer::tokenToString(currentToken.type()));
+		std::string("Expected primary expression, got ") +
+		toString(currentToken.type()));
 }
 
 lexer::Token Parser::advance() {
@@ -249,7 +249,7 @@ std::unique_ptr<ast::TypeNode> Parser::parseType() {
 
 	throw Error(
 		currentToken.span(),
-		"Expected type name, got " + lexer::Lexer::tokenToString(currentToken.type())
+		std::string("Expected type name, got ") + toString(currentToken.type())
 	);
 }
 

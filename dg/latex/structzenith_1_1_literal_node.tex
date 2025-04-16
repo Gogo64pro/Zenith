@@ -1,0 +1,63 @@
+\doxysection{zenith\+::Literal\+Node Struct Reference}
+\hypertarget{structzenith_1_1_literal_node}{}\label{structzenith_1_1_literal_node}\index{zenith::LiteralNode@{zenith::LiteralNode}}
+Inheritance diagram for zenith\+::Literal\+Node\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{structzenith_1_1_literal_node}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_literal_node_a2c411b49de16162b3593750cad9ed56a}\label{structzenith_1_1_literal_node_a2c411b49de16162b3593750cad9ed56a} 
+enum {\bfseries Type} \+: uint8\+\_\+t \{ {\bfseries NUMBER}
+, {\bfseries STRING}
+, {\bfseries BOOL}
+, {\bfseries NIL}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_literal_node_a29802bad5604bd62188f390c158f1e7e}\label{structzenith_1_1_literal_node_a29802bad5604bd62188f390c158f1e7e} 
+{\bfseries Literal\+Node} (\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} loc, Type t, std\+::string val)
+\item 
+std\+::string \mbox{\hyperlink{structzenith_1_1_literal_node_a7084ba703d135e38ab06843760c7f984}{to\+String}} (int indent=0) const override
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{structzenith_1_1_expr_node}{zenith\+::\+Expr\+Node}}}
+\begin{DoxyCompactItemize}
+\item 
+virtual bool {\bfseries is\+Constructor\+Call} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_literal_node_a10087e3db56464304df6ab7b60cc3f8c}\label{structzenith_1_1_literal_node_a10087e3db56464304df6ab7b60cc3f8c} 
+enum zenith\+::\+Literal\+Node\+::\+Type {\bfseries type}
+\item 
+\Hypertarget{structzenith_1_1_literal_node_ad216cf7e688047074f3648481925f064}\label{structzenith_1_1_literal_node_ad216cf7e688047074f3648481925f064} 
+std\+::string {\bfseries value}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{zenith\+::\+ASTNode}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} {\bfseries loc}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structzenith_1_1_literal_node_a7084ba703d135e38ab06843760c7f984}\index{zenith::LiteralNode@{zenith::LiteralNode}!toString@{toString}}
+\index{toString@{toString}!zenith::LiteralNode@{zenith::LiteralNode}}
+\doxysubsubsection{\texorpdfstring{toString()}{toString()}}
+{\footnotesize\ttfamily \label{structzenith_1_1_literal_node_a7084ba703d135e38ab06843760c7f984} 
+std\+::string zenith\+::\+Literal\+Node\+::to\+String (\begin{DoxyParamCaption}\item[{int}]{indent}{ = {\ttfamily 0}}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{zenith\+::\+ASTNode}}.
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Users/gogop/\+CLion\+Projects/\+Zenith/src/ast/Expressions.\+hpp\end{DoxyCompactItemize}

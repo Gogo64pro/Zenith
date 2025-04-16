@@ -1,0 +1,23 @@
+\doxysection{Parse\+Error.\+hpp}
+\hypertarget{_parse_error_8hpp_source}{}\label{_parse_error_8hpp_source}\index{C:/Users/gogop/CLionProjects/Zenith/src/exceptions/ParseError.hpp@{C:/Users/gogop/CLionProjects/Zenith/src/exceptions/ParseError.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ }
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <stdexcept>}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ "{}../core/ASTNode.hpp"{}}}
+\DoxyCodeLine{00005\ }
+\DoxyCodeLine{00006\ \textcolor{keyword}{namespace\ }zenith\ \{}
+\DoxyCodeLine{00007\ }
+\DoxyCodeLine{00008\ \ \ \ \ \textcolor{keyword}{class\ }ParseError\ :\ \textcolor{keyword}{public}\ std::runtime\_error\ \{}
+\DoxyCodeLine{00009\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00010\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structzenith_1_1_source_location}{SourceLocation}}\ location;}
+\DoxyCodeLine{00011\ \ \ \ \ \ \ \ \ ParseError(\mbox{\hyperlink{structzenith_1_1_source_location}{SourceLocation}}\ loc,\ \textcolor{keyword}{const}\ std::string\&\ msg)}
+\DoxyCodeLine{00012\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ :\ std::runtime\_error(msg),\ location(loc)\ \{\}}
+\DoxyCodeLine{00013\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ what()\ \textcolor{keyword}{const}\ \textcolor{keyword}{noexcept}\ \textcolor{keyword}{override};}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ std::string\ format()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00015\ \ \ \ \ \};}
+\DoxyCodeLine{00016\ }
+\DoxyCodeLine{00017\ \}\ \textcolor{comment}{//\ zenith}}
+
+\end{DoxyCode}

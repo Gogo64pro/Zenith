@@ -15,7 +15,7 @@ namespace zenith{
 		errStream << "  " << loc.line << " | " << line << "\n";
 
 		// Add the underline marker
-		errStream << "     | ";
+		errStream << "  " << std::string(std::to_string(loc.line).size(), ' ') << " | ";
 		for (size_t i = 0; i < loc.column + std::to_string(loc.line).size() + 3; ++i) {
 			errStream << " ";
 		}

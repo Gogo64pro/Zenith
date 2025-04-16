@@ -1,0 +1,12 @@
+digraph "C:/Users/gogop/CLionProjects/Zenith/cmake-build-debug/CMakeFiles/3.25.2/CompilerIdCXX"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  compound=true
+  subgraph clusterdir_de1d559ee29b9529c3eb971659538ce1 {
+    graph [ bgcolor="#edf0f7", pencolor="grey50", label="3.25.2", fontname=Helvetica,fontsize=10 style="filled,dashed", URL="dir_de1d559ee29b9529c3eb971659538ce1.html",tooltip=""]
+  dir_67a1ef42729cc10b4e506d0937c5be5e [label="CompilerIdCXX", fillcolor="#edf0f7", color="grey25", style="filled,bold", URL="dir_67a1ef42729cc10b4e506d0937c5be5e.html",tooltip=""];
+  }
+}

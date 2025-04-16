@@ -1,0 +1,74 @@
+\doxysection{zenith\+::Lambda\+Node Struct Reference}
+\hypertarget{structzenith_1_1_lambda_node}{}\label{structzenith_1_1_lambda_node}\index{zenith::LambdaNode@{zenith::LambdaNode}}
+Inheritance diagram for zenith\+::Lambda\+Node\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{structzenith_1_1_lambda_node}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{structzenith_1_1_lambda_node_a496d8701a2d5f9df65a48736ac6e6255}{is\+Lambda}} () const override
+\item 
+\Hypertarget{structzenith_1_1_lambda_node_af847b8bcf8e7e5ee60be030e66641706}\label{structzenith_1_1_lambda_node_af847b8bcf8e7e5ee60be030e66641706} 
+{\bfseries Lambda\+Node} (\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} loc, std\+::vector$<$ std\+::pair$<$ std\+::string, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_type_node}{Type\+Node}} $>$ $>$ $>$ params, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_type_node}{Type\+Node}} $>$ return\+Type=nullptr, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_block_node}{Block\+Node}} $>$ body=nullptr, bool async=false)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{structzenith_1_1_function_decl_node}{zenith\+::\+Function\+Decl\+Node}}}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Function\+Decl\+Node} (\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} loc, std\+::string name, std\+::vector$<$ std\+::pair$<$ std\+::string, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_type_node}{Type\+Node}} $>$ $>$ $>$ params, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_type_node}{Type\+Node}} $>$ return\+Type, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_block_node}{Block\+Node}} $>$ body, bool async, bool struct\+Sugar=false, std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_annotation_node}{Annotation\+Node}} $>$ $>$ ann=\{\})
+\item 
+std\+::string \mbox{\hyperlink{structzenith_1_1_function_decl_node_aef4408809cdd1b3a7e3b79e27b1ead1b}{to\+String}} (int indent=0) const override
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{structzenith_1_1_i_annotatable}{zenith\+::\+IAnnotatable}}}
+\begin{DoxyCompactItemize}
+\item 
+void {\bfseries set\+Annotations} (std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_annotation_node}{Annotation\+Node}} $>$ $>$ ann)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structzenith_1_1_function_decl_node}{zenith\+::\+Function\+Decl\+Node}}}
+\begin{DoxyCompactItemize}
+\item 
+std\+::string {\bfseries name}
+\item 
+std\+::vector$<$ std\+::pair$<$ std\+::string, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_type_node}{Type\+Node}} $>$ $>$ $>$ {\bfseries params}
+\item 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_type_node}{Type\+Node}} $>$ {\bfseries return\+Type}
+\item 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_block_node}{Block\+Node}} $>$ {\bfseries body}
+\item 
+std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_expr_node}{Expr\+Node}} $>$ $>$ {\bfseries default\+Values}
+\item 
+bool {\bfseries is\+Async}
+\item 
+bool {\bfseries using\+Struct\+Sugar}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{zenith\+::\+ASTNode}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} {\bfseries loc}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structzenith_1_1_i_annotatable}{zenith\+::\+IAnnotatable}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classsmall__vector}{small\+\_\+vector}}$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_annotation_node}{Annotation\+Node}} $>$, 2 $>$ {\bfseries annotations}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structzenith_1_1_lambda_node_a496d8701a2d5f9df65a48736ac6e6255}\index{zenith::LambdaNode@{zenith::LambdaNode}!isLambda@{isLambda}}
+\index{isLambda@{isLambda}!zenith::LambdaNode@{zenith::LambdaNode}}
+\doxysubsubsection{\texorpdfstring{isLambda()}{isLambda()}}
+{\footnotesize\ttfamily \label{structzenith_1_1_lambda_node_a496d8701a2d5f9df65a48736ac6e6255} 
+bool zenith\+::\+Lambda\+Node\+::is\+Lambda (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{structzenith_1_1_function_decl_node}{zenith\+::\+Function\+Decl\+Node}}.
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Users/gogop/\+CLion\+Projects/\+Zenith/src/ast/Declarations.\+hpp\end{DoxyCompactItemize}

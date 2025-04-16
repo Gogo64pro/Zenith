@@ -1,0 +1,75 @@
+\doxysection{zenith\+::Array\+Type\+Node Struct Reference}
+\hypertarget{structzenith_1_1_array_type_node}{}\label{structzenith_1_1_array_type_node}\index{zenith::ArrayTypeNode@{zenith::ArrayTypeNode}}
+Inheritance diagram for zenith\+::Array\+Type\+Node\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{structzenith_1_1_array_type_node}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_array_type_node_a284167d0a0bb7bf2594a13a28b776202}\label{structzenith_1_1_array_type_node_a284167d0a0bb7bf2594a13a28b776202} 
+{\bfseries Array\+Type\+Node} (\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} loc, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_type_node}{Type\+Node}} $>$ elem\+Type, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_expr_node}{Expr\+Node}} $>$ size\+Expr=nullptr)
+\item 
+std\+::string \mbox{\hyperlink{structzenith_1_1_array_type_node_a3f9a4466e894363431c17455d08bbff7}{to\+String}} (int indent=0) const override
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{structzenith_1_1_type_node}{zenith\+::\+Type\+Node}}}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Type\+Node} (\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} loc, Kind k)
+\item 
+virtual bool {\bfseries is\+Dynamic} () const
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_array_type_node_a5e228d272ba5df0484a020eabebe58cf}\label{structzenith_1_1_array_type_node_a5e228d272ba5df0484a020eabebe58cf} 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_type_node}{Type\+Node}} $>$ {\bfseries element\+Type}
+\item 
+\Hypertarget{structzenith_1_1_array_type_node_a99a231ca122be70211a7a5c7c8a34f23}\label{structzenith_1_1_array_type_node_a99a231ca122be70211a7a5c7c8a34f23} 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_expr_node}{Expr\+Node}} $>$ {\bfseries size\+Expr}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structzenith_1_1_type_node}{zenith\+::\+Type\+Node}}}
+\begin{DoxyCompactItemize}
+\item 
+enum zenith\+::\+Type\+Node\+::\+Kind {\bfseries kind}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{zenith\+::\+ASTNode}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} {\bfseries loc}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Public Types inherited from \mbox{\hyperlink{structzenith_1_1_type_node}{zenith\+::\+Type\+Node}}}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_type_node_a2467b78d78fd2a34f5e1a9bac3295630}\label{structzenith_1_1_type_node_a2467b78d78fd2a34f5e1a9bac3295630} 
+enum {\bfseries Kind} \{ \newline
+{\bfseries PRIMITIVE}
+, {\bfseries OBJECT}
+, {\bfseries ARRAY}
+, {\bfseries FUNCTION}
+, \newline
+{\bfseries DYNAMIC}
+, {\bfseries TEMPLATE}
+ \}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structzenith_1_1_array_type_node_a3f9a4466e894363431c17455d08bbff7}\index{zenith::ArrayTypeNode@{zenith::ArrayTypeNode}!toString@{toString}}
+\index{toString@{toString}!zenith::ArrayTypeNode@{zenith::ArrayTypeNode}}
+\doxysubsubsection{\texorpdfstring{toString()}{toString()}}
+{\footnotesize\ttfamily \label{structzenith_1_1_array_type_node_a3f9a4466e894363431c17455d08bbff7} 
+std\+::string zenith\+::\+Array\+Type\+Node\+::to\+String (\begin{DoxyParamCaption}\item[{int}]{indent}{ = {\ttfamily 0}}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{structzenith_1_1_type_node}{zenith\+::\+Type\+Node}}.
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Users/gogop/\+CLion\+Projects/\+Zenith/src/ast/Type\+Nodes.\+hpp\end{DoxyCompactItemize}

@@ -1,0 +1,51 @@
+template<typename T>
+class Box {
+    T contents;
+};
+template<typename T = int, int Size = 10>
+class Array {
+    T data[Size];
+};
+template<int N>
+class FixedArray {
+    int data[N];
+};
+template</*template<typename>*/ typename Container>
+class Adapter {
+    Container<int> storage;
+};
+template<typename... Ts>
+class Tuple {};
+template</*template<typename, int>*/ typename Outer, typename T, int N>
+class Wrapper {
+    Outer<T, N> instance;
+};
+template<typename T>
+T max(T a, T b) {
+//    return a > b ? a : b;
+}
+template<typename T, int N, /*template<typename>*/ typename Allocator = allocator>
+class Vector {
+    Allocator<T> alloc;
+    T data[N];
+};
+//template<typename T> requires Integral<T>
+class Numeric {
+    T value;
+};
+template<typename Message>
+class MessageHandler {
+    void handle(Message msg){
+
+    }
+};
+template<
+    typename T,
+    int Size = 100,
+    /*template<typename, int>*/ typename Container = Array,
+    typename... ExtraArgs
+>
+class StorageSystem {
+    Container<T, Size> primary;
+    Tuple<ExtraArgs, ExtraArg> metadata;
+};

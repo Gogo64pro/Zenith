@@ -1,0 +1,101 @@
+\doxysection{zenith\+::Primitive\+Type\+Node Struct Reference}
+\hypertarget{structzenith_1_1_primitive_type_node}{}\label{structzenith_1_1_primitive_type_node}\index{zenith::PrimitiveTypeNode@{zenith::PrimitiveTypeNode}}
+Inheritance diagram for zenith\+::Primitive\+Type\+Node\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{structzenith_1_1_primitive_type_node}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_primitive_type_node_a0c0193588a00cf2e44c1f4beba1eac34}\label{structzenith_1_1_primitive_type_node_a0c0193588a00cf2e44c1f4beba1eac34} 
+enum {\bfseries Type} \{ \newline
+{\bfseries INT}
+, {\bfseries FLOAT}
+, {\bfseries DOUBLE}
+, {\bfseries STRING}
+, \newline
+{\bfseries BOOL}
+, {\bfseries NUMBER}
+, {\bfseries BIGINT}
+, {\bfseries BIGNUMBER}
+, \newline
+{\bfseries SHORT}
+, {\bfseries LONG}
+, {\bfseries BYTE}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Types inherited from \mbox{\hyperlink{structzenith_1_1_type_node}{zenith\+::\+Type\+Node}}}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_type_node_a2467b78d78fd2a34f5e1a9bac3295630}\label{structzenith_1_1_type_node_a2467b78d78fd2a34f5e1a9bac3295630} 
+enum {\bfseries Kind} \{ \newline
+{\bfseries PRIMITIVE}
+, {\bfseries OBJECT}
+, {\bfseries ARRAY}
+, {\bfseries FUNCTION}
+, \newline
+{\bfseries DYNAMIC}
+, {\bfseries TEMPLATE}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_primitive_type_node_a9e27b631d0008877d0be22687287b06e}\label{structzenith_1_1_primitive_type_node_a9e27b631d0008877d0be22687287b06e} 
+{\bfseries Primitive\+Type\+Node} (\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} loc, Type t)
+\item 
+std\+::string \mbox{\hyperlink{structzenith_1_1_primitive_type_node_a5aee1e17e945976585c206daac4e90c8}{to\+String}} (int indent=0) const override
+\item 
+bool \mbox{\hyperlink{structzenith_1_1_primitive_type_node_acd7f62ef510456ca2aea3ac94282faec}{is\+Dynamic}} () const override
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{structzenith_1_1_type_node}{zenith\+::\+Type\+Node}}}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Type\+Node} (\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} loc, Kind k)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_primitive_type_node_aa41e8fca4004c77e558ad546e3abade2}\label{structzenith_1_1_primitive_type_node_aa41e8fca4004c77e558ad546e3abade2} 
+enum zenith\+::\+Primitive\+Type\+Node\+::\+Type {\bfseries type}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structzenith_1_1_type_node}{zenith\+::\+Type\+Node}}}
+\begin{DoxyCompactItemize}
+\item 
+enum zenith\+::\+Type\+Node\+::\+Kind {\bfseries kind}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{zenith\+::\+ASTNode}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} {\bfseries loc}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structzenith_1_1_primitive_type_node_acd7f62ef510456ca2aea3ac94282faec}\index{zenith::PrimitiveTypeNode@{zenith::PrimitiveTypeNode}!isDynamic@{isDynamic}}
+\index{isDynamic@{isDynamic}!zenith::PrimitiveTypeNode@{zenith::PrimitiveTypeNode}}
+\doxysubsubsection{\texorpdfstring{isDynamic()}{isDynamic()}}
+{\footnotesize\ttfamily \label{structzenith_1_1_primitive_type_node_acd7f62ef510456ca2aea3ac94282faec} 
+bool zenith\+::\+Primitive\+Type\+Node\+::is\+Dynamic (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{structzenith_1_1_type_node}{zenith\+::\+Type\+Node}}.
+
+\Hypertarget{structzenith_1_1_primitive_type_node_a5aee1e17e945976585c206daac4e90c8}\index{zenith::PrimitiveTypeNode@{zenith::PrimitiveTypeNode}!toString@{toString}}
+\index{toString@{toString}!zenith::PrimitiveTypeNode@{zenith::PrimitiveTypeNode}}
+\doxysubsubsection{\texorpdfstring{toString()}{toString()}}
+{\footnotesize\ttfamily \label{structzenith_1_1_primitive_type_node_a5aee1e17e945976585c206daac4e90c8} 
+std\+::string zenith\+::\+Primitive\+Type\+Node\+::to\+String (\begin{DoxyParamCaption}\item[{int}]{indent}{ = {\ttfamily 0}}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{structzenith_1_1_type_node}{zenith\+::\+Type\+Node}}.
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Users/gogop/\+CLion\+Projects/\+Zenith/src/ast/Type\+Nodes.\+hpp\end{DoxyCompactItemize}

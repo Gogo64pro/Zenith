@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 #include "../core/ASTNode.hpp"
+#include "Declarations.hpp"
 
 namespace zenith {
 	// Block statements { ... }
@@ -64,7 +65,7 @@ namespace zenith {
 			this->loc = loc;
 		}
 
-		std::string toString(int indent = 0) const {
+		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "If\n"
@@ -109,7 +110,7 @@ namespace zenith {
 			this->loc = loc;
 		}
 
-		std::string toString(int indent = 0) const {
+		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			return pad + "DoWhile\n" +
 			       condition->toString(indent + 2) + "\n" +
@@ -135,7 +136,7 @@ namespace zenith {
 			this->loc = loc;
 		}
 
-		std::string toString(int indent = 0) const {
+		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "For\n";
@@ -158,9 +159,25 @@ namespace zenith {
 			this->loc = loc;
 		}
 
-		std::string toString(int indent = 0) const {
+		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			return pad + "Unsafe\n" + body->toString(indent + 2);
+		}
+	};
+	//Multi-statements
+	struct CompoundStmtNode : StmtNode {
+		std::vector<std::unique_ptr<StmtNode>> stmts;
+
+		explicit CompoundStmtNode(SourceLocation loc, std::vector<std::unique_ptr<StmtNode>>&& statements ) : stmts(std::move(statements)){
+			loc = std::move(loc);
+		}
+		std::string toString(int indent = 0) const override {
+			std::string pad(indent, ' ');
+			std::stringstream ss;
+			ss << pad << "Compound statements\n";
+			for(auto &x : stmts)
+				ss << x->toString(indent + 2);
+			return ss.str();
 		}
 	};
 }

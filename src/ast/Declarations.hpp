@@ -318,5 +318,21 @@ namespace zenith {
 //		}
 //	};
 
+	//Multi-variables
+	struct MultiVarDeclNode : StmtNode {
+		std::vector<std::unique_ptr<VarDeclNode>> vars;
+
+		explicit MultiVarDeclNode(SourceLocation loc, std::vector<std::unique_ptr<VarDeclNode>>&& vars ) : vars(std::move(vars)){
+			loc = std::move(loc);
+		}
+		std::string toString(int indent = 0) const override {
+			std::string pad(indent, ' ');
+			std::stringstream ss;
+			ss << pad << "Multi-vars\n";
+			for(auto &x : vars)
+				ss << x->toString(indent + 2);
+			return ss.str();
+		}
+	};
 
 }

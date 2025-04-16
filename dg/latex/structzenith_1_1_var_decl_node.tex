@@ -1,0 +1,69 @@
+\doxysection{zenith\+::Var\+Decl\+Node Struct Reference}
+\hypertarget{structzenith_1_1_var_decl_node}{}\label{structzenith_1_1_var_decl_node}\index{zenith::VarDeclNode@{zenith::VarDeclNode}}
+Inheritance diagram for zenith\+::Var\+Decl\+Node\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{structzenith_1_1_var_decl_node}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_var_decl_node_af663baa28b7a3b2c8ff8cdab6eae8005}\label{structzenith_1_1_var_decl_node_af663baa28b7a3b2c8ff8cdab6eae8005} 
+enum {\bfseries Kind} \{ {\bfseries STATIC}
+, {\bfseries DYNAMIC}
+, {\bfseries CLASS\+\_\+\+INIT}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_var_decl_node_a8f714a55f27aff3865ee7256c2578302}\label{structzenith_1_1_var_decl_node_a8f714a55f27aff3865ee7256c2578302} 
+{\bfseries Var\+Decl\+Node} (\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} loc, Kind k, std\+::string n, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_type_node}{Type\+Node}} $>$ t, std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_expr_node}{Expr\+Node}} $>$ i, bool hoisted=false, bool is\+Const=false)
+\item 
+std\+::string \mbox{\hyperlink{structzenith_1_1_var_decl_node_af71b13202cf11150f84b1eeb4cddcf61}{to\+String}} (int indent=0) const override
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_var_decl_node_a0533a380ed09e0a30316e7236576202a}\label{structzenith_1_1_var_decl_node_a0533a380ed09e0a30316e7236576202a} 
+enum zenith\+::\+Var\+Decl\+Node\+::\+Kind {\bfseries kind}
+\item 
+\Hypertarget{structzenith_1_1_var_decl_node_a5338addce9db156aac449c7a0f706d9e}\label{structzenith_1_1_var_decl_node_a5338addce9db156aac449c7a0f706d9e} 
+std\+::string {\bfseries name}
+\item 
+\Hypertarget{structzenith_1_1_var_decl_node_aefbcfe3be26c3f56ea888d1409f4ba85}\label{structzenith_1_1_var_decl_node_aefbcfe3be26c3f56ea888d1409f4ba85} 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_type_node}{Type\+Node}} $>$ {\bfseries type}
+\item 
+\Hypertarget{structzenith_1_1_var_decl_node_a190e805ad2607b3e7b4c8bc1dc0c2790}\label{structzenith_1_1_var_decl_node_a190e805ad2607b3e7b4c8bc1dc0c2790} 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_expr_node}{Expr\+Node}} $>$ {\bfseries initializer}
+\item 
+\Hypertarget{structzenith_1_1_var_decl_node_adaaed07ffc53547a92ee83fd5441f64c}\label{structzenith_1_1_var_decl_node_adaaed07ffc53547a92ee83fd5441f64c} 
+bool {\bfseries is\+Hoisted}\+: 1
+\item 
+\Hypertarget{structzenith_1_1_var_decl_node_a1587878ca0bb59be44bd7b7843a66b04}\label{structzenith_1_1_var_decl_node_a1587878ca0bb59be44bd7b7843a66b04} 
+bool {\bfseries is\+Const}\+: 1
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{zenith\+::\+ASTNode}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} {\bfseries loc}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structzenith_1_1_var_decl_node_af71b13202cf11150f84b1eeb4cddcf61}\index{zenith::VarDeclNode@{zenith::VarDeclNode}!toString@{toString}}
+\index{toString@{toString}!zenith::VarDeclNode@{zenith::VarDeclNode}}
+\doxysubsubsection{\texorpdfstring{toString()}{toString()}}
+{\footnotesize\ttfamily \label{structzenith_1_1_var_decl_node_af71b13202cf11150f84b1eeb4cddcf61} 
+std\+::string zenith\+::\+Var\+Decl\+Node\+::to\+String (\begin{DoxyParamCaption}\item[{int}]{indent}{ = {\ttfamily 0}}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{zenith\+::\+ASTNode}}.
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Users/gogop/\+CLion\+Projects/\+Zenith/src/ast/Declarations.\+hpp\end{DoxyCompactItemize}

@@ -5,9 +5,9 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions")
 #set(LLVM_INCLUDE_DIRS "C:\\Program Files\\LLVM\\include")
 #set(LLVM_DIR "C:\\Program Files\\LLVM\\lib\\cmake\\llvm")
-#find_package(LLVM 18.1.7 REQUIRED CONFIG)
+#find_package(LLVM 19.1.5 REQUIRED CONFIG)
 #include_directories(${LLVM_INCLUDE_DIRS})
-
+#
 #target_link_libraries(PRIVATE
 #        LLVMCore
 #        LLVMSupport)

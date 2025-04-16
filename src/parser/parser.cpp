@@ -18,14 +18,33 @@ namespace zenith {
 		if (isBuiltInType(currentToken.type) || currentToken.type == TokenType::IDENTIFIER) {
 			kind = VarDeclNode::STATIC;
 			typeNode = parseType();
+
 		}
-		// Case 2: Dynamic declaration (let/var/dynamic)
+			// Case 2: Dynamic declaration (let/var/dynamic)
 		else if (match(TokenType::LET) || match(TokenType::VAR) || match(TokenType::DYNAMIC)) {
 			kind = VarDeclNode::DYNAMIC;
 			advance();
 		}
 
 		std::string name = consume(TokenType::IDENTIFIER).lexeme;
+
+		// Handle array size specification (e.g., int arr[10])
+		if (match(TokenType::LBRACKET)) {
+			advance(); // Consume '['
+
+			// Parse the array size expression
+			auto sizeExpr = parseExpression();
+
+			// Create a new ArrayTypeNode with the size expression
+			auto arrayType = std::make_unique<ArrayTypeNode>(
+					loc,
+					std::move(typeNode),
+					std::move(sizeExpr)
+			);
+			typeNode = std::move(arrayType);
+
+			consume(TokenType::RBRACKET, "Expected ']' after array size");
+		}
 
 		// Handle type annotation for dynamic variables (let a: int = 10)
 		if (kind == VarDeclNode::DYNAMIC && match(TokenType::COLON)) {
@@ -243,6 +262,12 @@ namespace zenith {
 			Token typeToken = advance();
 			std::string baseName = typeToken.lexeme;
 
+			if(baseName == "Function")
+				return std::make_unique<TypeNode>(
+						startLoc,
+						TypeNode::FUNCTION
+						);
+
 			// Check for template arguments
 			if (peekIsTemplateStart()) {
 				consume(TokenType::LESS); // Eat '<'
@@ -367,6 +392,9 @@ namespace zenith {
 				if (match(TokenType::IMPORT)) {
 					declarations.push_back(parseImport());
 				}
+				if (match(TokenType::TEMPLATE)) {
+					declarations.push_back(parseTemplate());
+				}
 				else if (match({TokenType::CLASS,TokenType::STRUCT})) {
 					declarations.push_back(parseObject());
 				}
@@ -427,7 +455,7 @@ namespace zenith {
 	}
 
 	std::unique_ptr<NewExprNode> Parser::parseNewExpression() {
-		SourceLocation location = consume(TokenType::NEW).loc; // Eat 'new' keyword
+		SourceLocation location = consume(TokenType::NEW).loc; // Eat 'new' keyword, nom nom nom
 		std::string className = consume(TokenType::IDENTIFIER).lexeme;
 
 		consume(TokenType::LPAREN);
@@ -519,6 +547,7 @@ namespace zenith {
 	std::unique_ptr<StmtNode> Parser::parseStatement() {
 		SourceLocation loc = currentToken.loc;
 
+		//Maybe ex
 		// Declaration statements
 		if (match({TokenType::LET, TokenType::VAR, TokenType::DYNAMIC})) {
 			return parseVarDecl();
@@ -1045,18 +1074,7 @@ namespace zenith {
 	}
 
 	std::unique_ptr<MemberDeclNode> Parser::parseField(std::vector<std::unique_ptr<AnnotationNode>> &annotations, const MemberDeclNode::Access &access, bool isConst) {
-		std::unique_ptr<TypeNode> type;
-		if (isBuiltInType(currentToken.type) || currentToken.type == TokenType::IDENTIFIER) {
-			type = parseType();
-		}
-
-		std::string name = consume(TokenType::IDENTIFIER, "Expected type after declaration").lexeme;
-
-		std::unique_ptr<ExprNode> initializer;
-		if (match(TokenType::EQUAL)) {
-			advance();
-			initializer = parseExpression();
-		}
+		auto varDecl = parseVarDecl();
 
 		consume(TokenType::SEMICOLON, "Expected ';' after field declaration");
 
@@ -1065,9 +1083,9 @@ namespace zenith {
 				MemberDeclNode::FIELD,
 				access,
 				isConst,
-				std::move(name),
-				std::move(type),
-				std::move(initializer),
+				std::move(varDecl->name),
+				std::move(varDecl->type),
+				std::move(varDecl->initializer),
 				std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>>{},
 				nullptr,
 				std::move(annotations)
@@ -1447,5 +1465,179 @@ namespace zenith {
 		return annotations;
 	}
 
+	std::unique_ptr<TemplateDeclNode> Parser::parseTemplate() {
+		SourceLocation loc = consume(TokenType::TEMPLATE).loc;
+		consume(TokenType::LESS, "Expected '<' after 'template'");
+
+		auto params = parseTemplateParameters();
+
+		consume(TokenType::GREATER, "Expected '>' after template parameters");
+
+		// Parse the templated declaration
+		std::unique_ptr<ASTNode> declaration;
+		if (match(TokenType::CLASS) || match(TokenType::STRUCT)) {
+			declaration = parseObject();
+		}
+		else if (match(TokenType::FUN) || isPotentialMethod()) {
+			declaration = parseFunction();
+		}
+		else if (match(TokenType::UNION)) {
+			declaration = parseUnion();
+		}
+		else if (match(TokenType::ACTOR)) {
+			declaration = parseActorDecl();
+		}
+		else {
+			throw ParseError(currentToken.loc,
+			                 "Expected class, struct, function, union or actor after template declaration");
+		}
+
+		return std::make_unique<TemplateDeclNode>(
+				loc,
+				std::move(params),
+				std::move(declaration)
+		);
+	}
+
+// Helper function to parse template parameters (used for template template parameters)
+	std::vector<TemplateParameter> Parser::parseTemplateParameters() {
+		std::vector<TemplateParameter> params;
+		bool hasVariadic = false;
+
+		do {
+			// Handle variadic parameter
+			if (match(TokenType::ELLIPSIS)) {
+				advance();
+				hasVariadic = true;
+			}
+
+			if (match(TokenType::TYPENAME)) {
+				// TYPE parameter
+				advance(); // Consume 'typename'
+				if (match(TokenType::ELLIPSIS)) { hasVariadic = true; advance(); }
+				std::string name = consume(TokenType::IDENTIFIER,
+				                           "Expected template parameter name").lexeme;
+
+				// Parse optional default type
+				std::unique_ptr<TypeNode> defaultType;
+				if (match(TokenType::EQUAL)) {
+					advance();
+					defaultType = parseType();
+				}
+
+				params.emplace_back(
+						TemplateParameter::TYPE,
+						std::move(name),
+						hasVariadic,
+						std::move(defaultType)
+				);
+			}
+			else if (isBuiltInType(currentToken.type) || currentToken.type == TokenType::IDENTIFIER) {
+				// NON_TYPE parameter
+				auto type = parseType();
+				std::string name = consume(TokenType::IDENTIFIER,
+				                           "Expected template parameter name").lexeme;
+
+				// Parse optional default value
+				std::unique_ptr<ExprNode> defaultValue;
+				if (match(TokenType::EQUAL)) {
+					advance();
+					defaultValue = parsePrimary();
+				}
+
+				params.emplace_back(
+						TemplateParameter::NON_TYPE,
+						std::move(name),
+						hasVariadic,
+						std::make_pair(std::move(type), std::move(defaultValue))
+				);
+			}
+			/*else if (match(TokenType::TEMPLATE)) {
+				// TEMPLATE parameter
+				SourceLocation templateLoc = advance().loc;
+
+				// Parse template parameter list
+				consume(TokenType::LESS, "Expected '<' after 'template'");
+				auto innerParams = parseTemplateParameters(true);
+				consume(TokenType::GREATER, "Expected '>' after template parameters");
+
+				std::string name = consume(TokenType::IDENTIFIER,
+				                           "Expected template parameter name").lexeme;
+
+				params.emplace_back(
+						TemplateParameter::TEMPLATE,
+						std::move(name),
+						hasVariadic,
+						std::move(innerParams)
+				);
+			}*/
+			else {
+				throw ParseError(currentToken.loc,
+				                 "Expected 'typename', type, or 'template' in template parameter");
+			}
+
+			hasVariadic = false;
+
+		} while (match(TokenType::COMMA) && (advance(), true));
+
+		return params;
+	}
+
+//	std::unique_ptr<MultiVarDeclNode> Parser::parseVarDecls() {
+//		std::vector<std::unique_ptr<VarDeclNode>> declarations;
+//
+//		// First parse the common declaration parts
+//		SourceLocation loc = currentToken.loc;
+//		bool isHoisted = match(TokenType::HOIST);
+//		VarDeclNode::Kind kind = VarDeclNode::DYNAMIC;
+//		std::unique_ptr<TypeNode> commonType;
+//
+//		if (isBuiltInType(currentToken.type) || currentToken.type == TokenType::IDENTIFIER) {
+//			kind = VarDeclNode::STATIC;
+//			commonType = parseType();
+//		} else if (match({TokenType::LET, TokenType::VAR, TokenType::DYNAMIC})) {
+//			kind = VarDeclNode::DYNAMIC;
+//			advance();
+//		}
+//		do {
+//			if (!declarations.empty()) {
+//				advance();
+//			}
+//			std::string name = consume(TokenType::IDENTIFIER).lexeme;
+//
+//			std::unique_ptr<TypeNode> actualType;
+//			if (commonType) {
+//				if (match(TokenType::LBRACKET)) {
+//					advance();
+//					auto sizeExpr = parseExpression();
+//					consume(TokenType::RBRACKET);
+//					actualType = std::make_unique<ArrayTypeNode>(
+//							loc,
+//							commonType->clone(),
+//							std::move(sizeExpr)
+//					);
+//				} else {
+//					actualType = commonType->clone();
+//				}
+//			}
+//
+//			std::unique_ptr<ExprNode> initializer;
+//			if (match(TokenType::EQUAL)) {
+//				advance();
+//				initializer = parseExpression();
+//			}
+//
+//			declarations.push_back(std::make_unique<VarDeclNode>(
+//					loc, kind, std::move(name),
+//					actualType ? std::move(actualType) : commonType->clone(),
+//					std::move(initializer),
+//					isHoisted
+//			));
+//		} while (match(TokenType::COMMA));
+//
+//		consume(TokenType::SEMICOLON);
+//		return std::make_unique<MultiVarDeclNode>(loc,std::move(declarations));
+//	}
+//
 
 }

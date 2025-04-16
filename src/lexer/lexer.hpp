@@ -2,6 +2,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 #include <unordered_map>
 #include "../core/ASTNode.hpp"
@@ -12,7 +13,7 @@ namespace zenith{
 		LET, VAR, FUN, UNSAFE, CLASS, STRUCT, UNION, ACTOR,
 		PUBLIC, PRIVATE, PROTECTED, PRIVATEW, PROTECTEDW, CONST,
 		IMPORT, PACKAGE, JAVA, EXTERN, NEW, HOIST,IF,FOR,WHILE,RETURN,ELSE,/*ELIF,*/DO,
-		SCOPE,
+		SCOPE, TEMPLATE, TYPENAME,
 
 		// Types
 		INT, LONG, SHORT, BYTE, FLOAT, DOUBLE, BOOL,
@@ -26,6 +27,7 @@ namespace zenith{
 		EQUAL, EQUAL_EQUAL, BANG_EQUAL,
 		LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,BANG,
 		PLUS_EQUALS, MINUS_EQUALS, STAR_EQUALS, SLASH_EQUALS, PERCENT_EQUALS,
+		ELLIPSIS,
 
 		//Logical
 		AND,OR,
@@ -44,7 +46,7 @@ namespace zenith{
 		TokenType type;
 		std::string lexeme;
 		SourceLocation loc;
-		Token(TokenType type, std::string lexeme, SourceLocation loc): type(type), lexeme(std::move(lexeme)), loc(loc) {}
+		Token(TokenType type, std::string lexeme, SourceLocation loc): type(type), lexeme(std::move(lexeme)), loc(std::move(loc)) {}
 		Token(TokenType type, std::string lexeme, size_t line, size_t column, size_t length)
 				: type(type), lexeme(std::move(lexeme)),
 				  loc{line, column, length, 0} {}  // fileOffset=0

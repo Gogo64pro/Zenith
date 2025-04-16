@@ -46,17 +46,19 @@ namespace zenith {
 		bool isInStructInitializerContext() const;
 
 		//std::vector<std::unique_ptr<MemberDeclNode>> parseActorMembers(std::string& actorName);
+		//std::unique_ptr<MultiVarDeclNode> parseVarDecls();
 		// Parsing methods
-		std::unique_ptr<ExprNode> parseExpression(int precedence = 0);
-		std::unique_ptr<ExprNode> parsePrimary();
-		std::unique_ptr<StructInitializerNode> parseStructInitializer();
 		std::unique_ptr<TypeNode> parseType();
+		std::unique_ptr<ExprNode> parsePrimary();
 		std::unique_ptr<StmtNode> parseStatement();
-		std::pair<std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>>, bool> parseParameters();
 		std::vector<std::string> parseArrowFunctionParams();
-		std::unique_ptr<MemberDeclNode> parseConstructor(const MemberDeclNode::Access &access, bool isConst, std::string &className, std::vector<std::unique_ptr<AnnotationNode>> &annotations);
-		std::unique_ptr<MemberDeclNode> parseField(std::vector<std::unique_ptr<AnnotationNode>> &annotations, const MemberDeclNode::Access &access, bool isConst);
+		std::vector<TemplateParameter> parseTemplateParameters();
+		std::unique_ptr<ExprNode> parseExpression(int precedence = 0);
+		std::unique_ptr<StructInitializerNode> parseStructInitializer();
+		std::pair<std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>>, bool> parseParameters();
 		std::unique_ptr<MemberDeclNode> parseMessageHandler(std::vector<std::unique_ptr<AnnotationNode>> annotations);
+		std::unique_ptr<MemberDeclNode> parseField(std::vector<std::unique_ptr<AnnotationNode>> &annotations, const MemberDeclNode::Access &access, bool isConst);
+		std::unique_ptr<MemberDeclNode> parseConstructor(const MemberDeclNode::Access &access, bool isConst, std::string &className, std::vector<std::unique_ptr<AnnotationNode>> &annotations);
 		std::unique_ptr<MemberDeclNode> parseObjectPrimary(std::string &name, std::vector<std::unique_ptr<AnnotationNode>> &annotations, MemberDeclNode::Access defaultLevel = MemberDeclNode::PUBLIC);
 
 		// Declaration parsers
@@ -76,15 +78,16 @@ namespace zenith {
 		std::unique_ptr<DoWhileNode> parseDoWhileStmt();
 		std::unique_ptr<ReturnStmtNode> parseReturnStmt();
 		std::unique_ptr<ScopeBlockNode> parseScopeBlock();
+		std::unique_ptr<TemplateDeclNode> parseTemplate();
 		std::unique_ptr<BlockNode> parseBlock();
 
 		// Expression parsers
 		std::unique_ptr<NewExprNode> parseNewExpression();
 		std::unique_ptr<FreeObjectNode> parseFreeObject();
 		std::unique_ptr<CallNode> parseFunctionCall(std::unique_ptr<ExprNode> callee);
-		std::unique_ptr<MemberAccessNode> parseMemberAccess(std::unique_ptr<ExprNode> object);
 		std::unique_ptr<ExprNode> parseArrayAccess(std::unique_ptr<ExprNode> arrayExpr);
 		std::unique_ptr<LambdaExprNode> parseArrowFunction(std::vector<std::string>&& params);
+		std::unique_ptr<MemberAccessNode> parseMemberAccess(std::unique_ptr<ExprNode> object);
 		// Error handling
 		std::unique_ptr<ErrorNode> createErrorNode();
 		std::unique_ptr<MemberDeclNode> createErrorNodeAsMember();

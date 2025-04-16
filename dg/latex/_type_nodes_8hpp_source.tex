@@ -1,0 +1,112 @@
+\doxysection{Type\+Nodes.\+hpp}
+\hypertarget{_type_nodes_8hpp_source}{}\label{_type_nodes_8hpp_source}\index{C:/Users/gogop/CLionProjects/Zenith/src/ast/TypeNodes.hpp@{C:/Users/gogop/CLionProjects/Zenith/src/ast/TypeNodes.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00002\ }
+\DoxyCodeLine{00003\ \textcolor{preprocessor}{\#include\ <memory>}}
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <unordered\_set>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ "{}../core/ASTNode.hpp"{}}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{keyword}{namespace\ }zenith\ \{}
+\DoxyCodeLine{00008\ \ \ \ \ \textcolor{comment}{//\ Base\ type\ node}}
+\DoxyCodeLine{00009\ \ \ \ \ \textcolor{keyword}{struct\ }TypeNode\ :\ \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{ASTNode}}\ \{}
+\DoxyCodeLine{00010\ \ \ \ \ \ \ \ \ \textcolor{keyword}{enum}\ Kind\ \{\ PRIMITIVE,\ OBJECT,\ ARRAY,\ FUNCTION,\ DYNAMIC,\ TEMPLATE\ \}\ kind;}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ TypeNode(\mbox{\hyperlink{structzenith_1_1_source_location}{SourceLocation}}\ loc,\ Kind\ k)\ :\ kind(k)\ \{}
+\DoxyCodeLine{00013\ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>loc\ =\ loc;}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ std::string\ toString(\textcolor{keywordtype}{int}\ indent\ =\ 0)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ pad(indent,\ \textcolor{charliteral}{'\ '});}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ kindNames[]\ =\ \{\textcolor{stringliteral}{"{}PRIMITIVE"{}},\ \textcolor{stringliteral}{"{}CLASS"{}},\ \textcolor{stringliteral}{"{}Object"{}},\ \textcolor{stringliteral}{"{}FUNCTION"{}},\ \textcolor{stringliteral}{"{}DYNAMIC"{}},\ \textcolor{stringliteral}{"{}TEMPLATE"{}}\};}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ pad\ +\ \textcolor{stringliteral}{"{}Type("{}}\ +\ kindNames[kind]\ +\ \textcolor{stringliteral}{"{})"{}};}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00021\ \ \ \ \ \ \ \ \ \textcolor{keyword}{virtual}\ \textcolor{keywordtype}{bool}\ isDynamic()\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ kind==DYNAMIC;}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00024\ \ \ \ \ \};}
+\DoxyCodeLine{00025\ }
+\DoxyCodeLine{00026\ \ \ \ \ \textcolor{comment}{//\ Primitive\ types\ (int,\ float,\ etc.)}}
+\DoxyCodeLine{00027\ \ \ \ \ \textcolor{keyword}{struct\ }PrimitiveTypeNode\ :\ TypeNode\ \{}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \textcolor{keyword}{enum}\ Type\ \{\ INT,\ FLOAT,\ DOUBLE,\ STRING,\ BOOL,\ NUMBER,\ BIGINT,\ BIGNUMBER,\ SHORT,\ LONG,\ BYTE\ \}\ type;}
+\DoxyCodeLine{00029\ }
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ PrimitiveTypeNode(\mbox{\hyperlink{structzenith_1_1_source_location}{SourceLocation}}\ loc,\ Type\ t)}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ :\ TypeNode(loc,\ PRIMITIVE),\ type(t)\ \{\}}
+\DoxyCodeLine{00032\ }
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ std::string\ toString(\textcolor{keywordtype}{int}\ indent\ =\ 0)\textcolor{keyword}{\ const\ override\ }\{}
+\DoxyCodeLine{00034\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ pad(indent,\ \textcolor{charliteral}{'\ '});}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ \textcolor{keywordtype}{char}*\ typeNames[]\ =\ \{\textcolor{stringliteral}{"{}INT"{}},\ \textcolor{stringliteral}{"{}FLOAT"{}},\ \textcolor{stringliteral}{"{}DOUBLE"{}},\ \textcolor{stringliteral}{"{}STRING"{}},}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}BOOL"{}},\ \textcolor{stringliteral}{"{}NUMBER"{}},\ \textcolor{stringliteral}{"{}BIGINT"{}},\ \textcolor{stringliteral}{"{}BIGNUMBER"{}},\ \textcolor{stringliteral}{"{}SHORT"{}},\ \textcolor{stringliteral}{"{}LONG"{}},\ \textcolor{stringliteral}{"{}BYTE"{}}\};}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ pad\ +\ \textcolor{stringliteral}{"{}PrimitiveType("{}}\ +\ typeNames[type]\ +\ \textcolor{stringliteral}{"{})"{}};}
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ isDynamic()\textcolor{keyword}{\ const\ override\ }\{}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ std::unordered\_set<Type>\ basic\_types\ =\ \{}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ STRING,\ NUMBER,\ BIGNUMBER,\ BIGINT}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ \ \ \ \ \};}
+\DoxyCodeLine{00043\ }
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ !basic\_types.contains(type);}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00046\ \ \ \ \ \};}
+\DoxyCodeLine{00047\ }
+\DoxyCodeLine{00048\ \ \ \ \ \textcolor{comment}{//\ Class/struct\ types}}
+\DoxyCodeLine{00049\ \ \ \ \ \textcolor{keyword}{struct\ }NamedTypeNode\ :\ TypeNode\ \{}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ std::string\ name;}
+\DoxyCodeLine{00051\ }
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ NamedTypeNode(\mbox{\hyperlink{structzenith_1_1_source_location}{SourceLocation}}\ loc,\ std::string\ n)}
+\DoxyCodeLine{00053\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ :\ TypeNode(loc,\ OBJECT),\ name(std::move(n))\ \{\}}
+\DoxyCodeLine{00054\ }
+\DoxyCodeLine{00055\ \ \ \ \ \ \ \ \ std::string\ toString(\textcolor{keywordtype}{int}\ indent\ =\ 0)\textcolor{keyword}{\ const\ override\ }\{}
+\DoxyCodeLine{00056\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ pad(indent,\ \textcolor{charliteral}{'\ '});}
+\DoxyCodeLine{00057\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ pad\ +\ \textcolor{stringliteral}{"{}NamedType("{}}\ +\ name\ +\ \textcolor{stringliteral}{"{})"{}};}
+\DoxyCodeLine{00058\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00059\ \ \ \ \ \};}
+\DoxyCodeLine{00060\ }
+\DoxyCodeLine{00061\ \ \ \ \ \textcolor{comment}{//\ Array\ types}}
+\DoxyCodeLine{00062\ \ \ \ \ \textcolor{keyword}{struct\ }ArrayTypeNode\ :\ TypeNode\ \{}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ std::unique\_ptr<TypeNode>\ elementType;}
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \ \ std::unique\_ptr<ExprNode>\ sizeExpr;}
+\DoxyCodeLine{00065\ }
+\DoxyCodeLine{00066\ \ \ \ \ \ \ \ \ ArrayTypeNode(\mbox{\hyperlink{structzenith_1_1_source_location}{SourceLocation}}\ loc,\ std::unique\_ptr<TypeNode>\ elemType,\ std::unique\_ptr<ExprNode>\ sizeExpr\ =\ \textcolor{keyword}{nullptr})}
+\DoxyCodeLine{00067\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ :\ TypeNode(loc,\ ARRAY),\ elementType(std::move(elemType)),\ sizeExpr(std::move(sizeExpr))\ \{\}}
+\DoxyCodeLine{00068\ }
+\DoxyCodeLine{00069\ \ \ \ \ \ \ \ \ std::string\ toString(\textcolor{keywordtype}{int}\ indent\ =\ 0)\textcolor{keyword}{\ const\ override\ }\{}
+\DoxyCodeLine{00070\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ pad(indent,\ \textcolor{charliteral}{'\ '});}
+\DoxyCodeLine{00071\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ pad\ +\ \textcolor{stringliteral}{"{}ArrayType\(\backslash\)n"{}}\ +}
+\DoxyCodeLine{00072\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ elementType-\/>toString(indent\ +\ 2);}
+\DoxyCodeLine{00073\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00074\ \ \ \ \ \};}
+\DoxyCodeLine{00075\ \ \ \ \ \textcolor{keyword}{struct\ }TemplateTypeNode\ :\ TypeNode\ \{}
+\DoxyCodeLine{00076\ \ \ \ \ \ \ \ \ std::string\ baseName;}
+\DoxyCodeLine{00077\ \ \ \ \ \ \ \ \ std::vector<std::unique\_ptr<TypeNode>>\ templateArgs;}
+\DoxyCodeLine{00078\ }
+\DoxyCodeLine{00079\ \ \ \ \ \ \ \ \ TemplateTypeNode(\mbox{\hyperlink{structzenith_1_1_source_location}{SourceLocation}}\ loc,}
+\DoxyCodeLine{00080\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ baseName,}
+\DoxyCodeLine{00081\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::vector<std::unique\_ptr<TypeNode>>\ templateArgs)}
+\DoxyCodeLine{00082\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ :\ TypeNode(loc,\ TEMPLATE),}
+\DoxyCodeLine{00083\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ baseName(std::move(baseName)),}
+\DoxyCodeLine{00084\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ templateArgs(std::move(templateArgs))\ \{\}}
+\DoxyCodeLine{00085\ }
+\DoxyCodeLine{00086\ \ \ \ \ \ \ \ \ std::string\ toString(\textcolor{keywordtype}{int}\ indent\ =\ 0)\textcolor{keyword}{\ const\ override\ }\{}
+\DoxyCodeLine{00087\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ pad(indent,\ \textcolor{charliteral}{'\ '});}
+\DoxyCodeLine{00088\ \ \ \ \ \ \ \ \ \ \ \ \ std::stringstream\ ss;}
+\DoxyCodeLine{00089\ \ \ \ \ \ \ \ \ \ \ \ \ ss\ <<\ pad\ <<\ \textcolor{stringliteral}{"{}TemplateType("{}}\ <<\ baseName\ <<\ \textcolor{stringliteral}{"{}<"{}};}
+\DoxyCodeLine{00090\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keywordtype}{size\_t}\ i\ =\ 0;\ i\ <\ templateArgs.size();\ ++i)\ \{}
+\DoxyCodeLine{00091\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (i\ >\ 0)\ ss\ <<\ \textcolor{stringliteral}{"{},\ "{}};}
+\DoxyCodeLine{00092\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ss\ <<\ templateArgs[i]-\/>toString();}
+\DoxyCodeLine{00093\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00094\ \ \ \ \ \ \ \ \ \ \ \ \ ss\ <<\ \textcolor{stringliteral}{"{}>)"{}};}
+\DoxyCodeLine{00095\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ ss.str();}
+\DoxyCodeLine{00096\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00097\ }
+\DoxyCodeLine{00098\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ isDynamic()\textcolor{keyword}{\ const\ override\ }\{}
+\DoxyCodeLine{00099\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ A\ template\ type\ is\ dynamic\ if\ any\ of\ its\ arguments\ are\ dynamic}}
+\DoxyCodeLine{00100\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{const}\ \textcolor{keyword}{auto}\&\ arg\ :\ templateArgs)\ \{}
+\DoxyCodeLine{00101\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{if}\ (arg-\/>isDynamic())\ \textcolor{keywordflow}{return}\ \textcolor{keyword}{true};}
+\DoxyCodeLine{00102\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00103\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ \textcolor{keyword}{false};}
+\DoxyCodeLine{00104\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00105\ \ \ \ \ \};}
+\DoxyCodeLine{00106\ \}}
+
+\end{DoxyCode}

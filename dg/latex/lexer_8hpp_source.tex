@@ -1,0 +1,92 @@
+\doxysection{lexer.\+hpp}
+\hypertarget{lexer_8hpp_source}{}\label{lexer_8hpp_source}\index{C:/Users/gogop/CLionProjects/Zenith/src/lexer/lexer.hpp@{C:/Users/gogop/CLionProjects/Zenith/src/lexer/lexer.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//\ src/lexer/lexer.hpp}}
+\DoxyCodeLine{00002\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00003\ }
+\DoxyCodeLine{00004\ \textcolor{preprocessor}{\#include\ <string>}}
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#include\ <utility>}}
+\DoxyCodeLine{00006\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <unordered\_map>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ "{}../core/ASTNode.hpp"{}}}
+\DoxyCodeLine{00009\ }
+\DoxyCodeLine{00010\ \textcolor{keyword}{namespace\ }zenith\{}
+\DoxyCodeLine{00011\ \ \ \ \ \textcolor{keyword}{enum\ class}\ TokenType\ \{}
+\DoxyCodeLine{00012\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Keywords}}
+\DoxyCodeLine{00013\ \ \ \ \ \ \ \ \ LET,\ VAR,\ FUN,\ UNSAFE,\ CLASS,\ STRUCT,\ UNION,\ ACTOR,}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ PUBLIC,\ PRIVATE,\ PROTECTED,\ PRIVATEW,\ PROTECTEDW,\ CONST,}
+\DoxyCodeLine{00015\ \ \ \ \ \ \ \ \ IMPORT,\ PACKAGE,\ JAVA,\ EXTERN,\ NEW,\ HOIST,IF,FOR,WHILE,RETURN,ELSE,\textcolor{comment}{/*ELIF,*/}DO,}
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ SCOPE,\ TEMPLATE,\ TYPENAME,}
+\DoxyCodeLine{00017\ }
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Types}}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ INT,\ LONG,\ SHORT,\ BYTE,\ FLOAT,\ DOUBLE,\ BOOL,}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ STRING,\ DYNAMIC,\ FREEOBJ,\ NUMBER,\ BIGINT,\ BIGNUMBER,}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Literals}}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ IDENTIFIER,\ INTEGER,\ FLOAT\_LIT,\ STRING\_LIT,TRUE,FALSE,NULL\_LIT,TEMPLATE\_LIT,TEMPLATE\_PART,}
+\DoxyCodeLine{00024\ }
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Operators}}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ PLUS,\ MINUS,\ STAR,\ SLASH,\ PERCENT,}
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ EQUAL,\ EQUAL\_EQUAL,\ BANG\_EQUAL,}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ LESS,\ LESS\_EQUAL,\ GREATER,\ GREATER\_EQUAL,BANG,}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ PLUS\_EQUALS,\ MINUS\_EQUALS,\ STAR\_EQUALS,\ SLASH\_EQUALS,\ PERCENT\_EQUALS,}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ ELLIPSIS,}
+\DoxyCodeLine{00031\ }
+\DoxyCodeLine{00032\ \ \ \ \ \ \ \ \ \textcolor{comment}{//Logical}}
+\DoxyCodeLine{00033\ \ \ \ \ \ \ \ \ AND,OR,}
+\DoxyCodeLine{00034\ }
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Punctuation}}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ LBRACE,\ RBRACE,\ LPAREN,\ RPAREN,\ LBRACKET,\ RBRACKET,\ DOLLAR\_LBRACE,\ \textcolor{comment}{//paren\ skobi,\ brace\ kudravi\ skobi,\ brackets\ kvadratni\ skobi}}
+\DoxyCodeLine{00037\ \ \ \ \ \ \ \ \ COMMA,\ DOT,\ SEMICOLON,\ COLON,\ ARROW,\ LAMBARROW,\ BACKTICK,\ ON,}
+\DoxyCodeLine{00038\ }
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \textcolor{comment}{//\ Special}}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ AT,\ \textcolor{comment}{//\ For\ annotations}}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ THIS,}
+\DoxyCodeLine{00042\ \ \ \ \ \ \ \ \ EOF\_TOKEN}
+\DoxyCodeLine{00043\ \ \ \ \ \};}
+\DoxyCodeLine{00044\ }
+\DoxyCodeLine{00045\ \ \ \ \ \textcolor{keyword}{struct\ }Token\ \{}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ TokenType\ type;}
+\DoxyCodeLine{00047\ \ \ \ \ \ \ \ \ std::string\ lexeme;}
+\DoxyCodeLine{00048\ \ \ \ \ \ \ \ \ \mbox{\hyperlink{structzenith_1_1_source_location}{SourceLocation}}\ loc;}
+\DoxyCodeLine{00049\ \ \ \ \ \ \ \ \ Token(TokenType\ type,\ std::string\ lexeme,\ \mbox{\hyperlink{structzenith_1_1_source_location}{SourceLocation}}\ loc):\ type(type),\ lexeme(std::move(lexeme)),\ loc(std::move(loc))\ \{\}}
+\DoxyCodeLine{00050\ \ \ \ \ \ \ \ \ Token(TokenType\ type,\ std::string\ lexeme,\ \textcolor{keywordtype}{size\_t}\ line,\ \textcolor{keywordtype}{size\_t}\ column,\ \textcolor{keywordtype}{size\_t}\ length)}
+\DoxyCodeLine{00051\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ :\ type(type),\ lexeme(std::move(lexeme)),}
+\DoxyCodeLine{00052\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ loc\{line,\ column,\ length,\ 0\}\ \{\}\ \ \textcolor{comment}{//\ fileOffset=0}}
+\DoxyCodeLine{00053\ \ \ \ \ \};}
+\DoxyCodeLine{00054\ }
+\DoxyCodeLine{00055\ \ \ \ \ \textcolor{keyword}{class\ }Lexer\ \{}
+\DoxyCodeLine{00056\ \ \ \ \ \textcolor{keyword}{public}:}
+\DoxyCodeLine{00057\ \ \ \ \ \ \ \ \ Lexer(\textcolor{keyword}{const}\ std::string\&\ source,\ \textcolor{keyword}{const}\ std::string\&\ name);}
+\DoxyCodeLine{00058\ \ \ \ \ \ \ \ \ std::vector<Token>\ tokenize()\ \&\&\ ;}
+\DoxyCodeLine{00059\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ std::string\ tokenToString(TokenType\ type);}
+\DoxyCodeLine{00060\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ tokenStart\ =\ 0;}
+\DoxyCodeLine{00061\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ startColumn\ =\ 1;}
+\DoxyCodeLine{00062\ \ \ \ \ \textcolor{keyword}{private}:}
+\DoxyCodeLine{00063\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{char}\ advance();}
+\DoxyCodeLine{00064\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ match(\textcolor{keywordtype}{char}\ expected);}
+\DoxyCodeLine{00065\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ addToken(TokenType\ type);}
+\DoxyCodeLine{00066\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ scanToken();}
+\DoxyCodeLine{00067\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ identifier();}
+\DoxyCodeLine{00068\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ number();}
+\DoxyCodeLine{00069\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ string();}
+\DoxyCodeLine{00070\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{void}\ templateString();}
+\DoxyCodeLine{00071\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ isAtEnd()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00072\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{char}\ peekNext()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00073\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{char}\ peek()\ \textcolor{keyword}{const};}
+\DoxyCodeLine{00074\ }
+\DoxyCodeLine{00075\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\&\ source;}
+\DoxyCodeLine{00076\ \ \ \ \ \ \ \ \ \textcolor{keyword}{const}\ std::string\&\ fileName;}
+\DoxyCodeLine{00077\ \ \ \ \ \ \ \ \ std::vector<Token>\ tokens;}
+\DoxyCodeLine{00078\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ start\ =\ 0;}
+\DoxyCodeLine{00079\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ current\ =\ 0;}
+\DoxyCodeLine{00080\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ line\ =\ 1;}
+\DoxyCodeLine{00081\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{size\_t}\ column\ =\ 1;}
+\DoxyCodeLine{00082\ }
+\DoxyCodeLine{00083\ \ \ \ \ \ \ \ \ \textcolor{keyword}{static}\ \textcolor{keyword}{const}\ std::unordered\_map<std::string,\ TokenType>\ keywords;}
+\DoxyCodeLine{00084\ }
+\DoxyCodeLine{00085\ \ \ \ \ \};}
+\DoxyCodeLine{00086\ \}}
+
+\end{DoxyCode}

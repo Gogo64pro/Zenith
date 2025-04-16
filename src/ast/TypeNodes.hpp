@@ -21,6 +21,10 @@ namespace zenith {
 		virtual bool isDynamic() const {
 			return kind==DYNAMIC;
 		}
+
+		virtual std::unique_ptr<TypeNode> clone() const{
+			return std::make_unique<TypeNode>(*this);
+		}
 	};
 
 	// Primitive types (int, float, etc.)
@@ -61,9 +65,10 @@ namespace zenith {
 	// Array types
 	struct ArrayTypeNode : TypeNode {
 		std::unique_ptr<TypeNode> elementType;
+		std::unique_ptr<ExprNode> sizeExpr;
 
-		ArrayTypeNode(SourceLocation loc, std::unique_ptr<TypeNode> elemType)
-				: TypeNode(loc, ARRAY), elementType(std::move(elemType)) {}
+		ArrayTypeNode(SourceLocation loc, std::unique_ptr<TypeNode> elemType, std::unique_ptr<ExprNode> sizeExpr = nullptr)
+				: TypeNode(loc, ARRAY), elementType(std::move(elemType)), sizeExpr(std::move(sizeExpr)) {}
 
 		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
@@ -100,6 +105,14 @@ namespace zenith {
 				if (arg->isDynamic()) return true;
 			}
 			return false;
+		}
+		std::unique_ptr<TypeNode> clone() const override {
+			std::vector<std::unique_ptr<TypeNode>> clonedArgs;
+			clonedArgs.reserve(templateArgs.size());
+			for (const auto& arg : templateArgs) {
+				clonedArgs.push_back(arg->clone());  // Recursively clone each argument
+			}
+			return std::make_unique<TemplateTypeNode>(loc, baseName, std::move(clonedArgs));
 		}
 	};
 }

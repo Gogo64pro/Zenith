@@ -19,6 +19,8 @@ const std::unordered_map<std::string, TokenType> Lexer::keywords = {
 		{"new", TokenType::NEW},
 		{"hoist", TokenType::HOIST},
 		{"scope", TokenType::SCOPE},
+		{"template", TokenType::TEMPLATE},
+		{"typename", TokenType::TYPENAME},
 
 		// Access modifiers
 		{"public", TokenType::PUBLIC},
@@ -126,10 +128,21 @@ void Lexer::scanToken() {
 		case '[': addToken(TokenType::LBRACKET); break;
 		case ']': addToken(TokenType::RBRACKET); break;
 		case ',': addToken(TokenType::COMMA); break;
-		case '.': addToken(TokenType::DOT); break;
 		case ';': addToken(TokenType::SEMICOLON); break;
 		case ':': addToken(TokenType::COLON); break;
 		case '@': addToken(TokenType::AT); break;
+		case '.':
+			if (match('.') && match('.')) {
+				addToken(TokenType::ELLIPSIS);
+			} else {
+				// We need to backtrack if the first two dots were matched but not the third
+				if (current == start + 2) { // We matched two dots but not the third
+					current--; // backtrack
+					column--;
+				}
+				addToken(TokenType::DOT);
+			}
+			break;
 
 			// Operators
 		case '+':

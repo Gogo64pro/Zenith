@@ -1,3 +1,4 @@
+import "templateTest.zn"
 class EmptyClass {}
 class Person {
     privatew string name;
@@ -109,7 +110,7 @@ scope {
 
 // Static types
 int x = 10;
-struct Point { int x, y; }
+struct Point { int x; int y; }
 Point p = {1, 2};
 
 // Dynamic types

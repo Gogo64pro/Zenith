@@ -1,0 +1,54 @@
+\doxysection{Main\+Nodes.\+hpp}
+\hypertarget{_main_nodes_8hpp_source}{}\label{_main_nodes_8hpp_source}\index{C:/Users/gogop/CLionProjects/Zenith/src/ast/MainNodes.hpp@{C:/Users/gogop/CLionProjects/Zenith/src/ast/MainNodes.hpp}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00001\ \textcolor{comment}{//}}
+\DoxyCodeLine{00002\ \textcolor{comment}{//\ Created\ by\ gogop\ on\ 3/28/2025.}}
+\DoxyCodeLine{00003\ \textcolor{comment}{//}}
+\DoxyCodeLine{00004\ }
+\DoxyCodeLine{00005\ \textcolor{preprocessor}{\#pragma\ once}}
+\DoxyCodeLine{00006\ }
+\DoxyCodeLine{00007\ \textcolor{preprocessor}{\#include\ <vector>}}
+\DoxyCodeLine{00008\ \textcolor{preprocessor}{\#include\ <memory>}}
+\DoxyCodeLine{00009\ \textcolor{preprocessor}{\#include\ <sstream>}}
+\DoxyCodeLine{00010\ \textcolor{preprocessor}{\#include\ "{}../core/ASTNode.hpp"{}}}
+\DoxyCodeLine{00011\ }
+\DoxyCodeLine{00012\ \textcolor{keyword}{namespace\ }zenith\ \{}
+\DoxyCodeLine{00013\ \ \ \ \ \textcolor{keyword}{struct\ }ProgramNode\ :\ \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{ASTNode}}\ \{}
+\DoxyCodeLine{00014\ \ \ \ \ \ \ \ \ std::vector<std::unique\_ptr<ASTNode>>\ declarations;}
+\DoxyCodeLine{00015\ }
+\DoxyCodeLine{00016\ \ \ \ \ \ \ \ \ \textcolor{keyword}{explicit}\ ProgramNode(\mbox{\hyperlink{structzenith_1_1_source_location}{SourceLocation}}\ loc,}
+\DoxyCodeLine{00017\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ std::vector<std::unique\_ptr<ASTNode>>\ decls)}
+\DoxyCodeLine{00018\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ :\ declarations(std::move(decls))\ \{}
+\DoxyCodeLine{00019\ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>loc\ =\ loc;}
+\DoxyCodeLine{00020\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00021\ }
+\DoxyCodeLine{00022\ \ \ \ \ \ \ \ \ std::string\ toString(\textcolor{keywordtype}{int}\ indent\ =\ 0)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00023\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ pad(indent,\ \textcolor{charliteral}{'\ '});}
+\DoxyCodeLine{00024\ \ \ \ \ \ \ \ \ \ \ \ \ std::stringstream\ ss;}
+\DoxyCodeLine{00025\ \ \ \ \ \ \ \ \ \ \ \ \ ss\ <<\ pad\ <<\ \textcolor{stringliteral}{"{}Program\ \{\(\backslash\)n"{}};}
+\DoxyCodeLine{00026\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{for}\ (\textcolor{keyword}{const}\ \textcolor{keyword}{auto}\&\ decl\ :\ declarations)\ \{}
+\DoxyCodeLine{00027\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ss\ <<\ decl-\/>toString(indent\ +\ 2)\ <<\ \textcolor{stringliteral}{"{}\(\backslash\)n"{}};}
+\DoxyCodeLine{00028\ \ \ \ \ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00029\ \ \ \ \ \ \ \ \ \ \ \ \ ss\ <<\ pad\ <<\ \textcolor{stringliteral}{"{}\}"{}};}
+\DoxyCodeLine{00030\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ ss.str();}
+\DoxyCodeLine{00031\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00032\ \ \ \ \ \};}
+\DoxyCodeLine{00033\ }
+\DoxyCodeLine{00034\ \ \ \ \ \textcolor{keyword}{struct\ }ImportNode\ :\ \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{ASTNode}}\ \{}
+\DoxyCodeLine{00035\ \ \ \ \ \ \ \ \ std::string\ path;}
+\DoxyCodeLine{00036\ \ \ \ \ \ \ \ \ \textcolor{keywordtype}{bool}\ isJavaImport;}
+\DoxyCodeLine{00037\ }
+\DoxyCodeLine{00038\ \ \ \ \ \ \ \ \ ImportNode(\mbox{\hyperlink{structzenith_1_1_source_location}{SourceLocation}}\ loc,\ std::string\ p,\ \textcolor{keywordtype}{bool}\ java)}
+\DoxyCodeLine{00039\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ :\ path(std::move(p)),\ isJavaImport(java)\ \{}
+\DoxyCodeLine{00040\ \ \ \ \ \ \ \ \ \ \ \ \ this-\/>loc\ =\ loc;}
+\DoxyCodeLine{00041\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00042\ }
+\DoxyCodeLine{00043\ \ \ \ \ \ \ \ \ std::string\ toString(\textcolor{keywordtype}{int}\ indent\ =\ 0)\textcolor{keyword}{\ const\ }\{}
+\DoxyCodeLine{00044\ \ \ \ \ \ \ \ \ \ \ \ \ std::string\ pad(indent,\ \textcolor{charliteral}{'\ '});}
+\DoxyCodeLine{00045\ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{keywordflow}{return}\ pad\ +\ \textcolor{stringliteral}{"{}Import\ "{}}\ +\ (isJavaImport\ ?\ \textcolor{stringliteral}{"{}Java:\ "{}}\ :\ \textcolor{stringliteral}{"{}"{}})\ +\ \textcolor{stringliteral}{"{}\(\backslash\)"{}"{}}\ +\ path\ +\ \textcolor{stringliteral}{"{}\(\backslash\)"{}"{}};}
+\DoxyCodeLine{00046\ \ \ \ \ \ \ \ \ \}}
+\DoxyCodeLine{00047\ \ \ \ \ \};}
+\DoxyCodeLine{00048\ \}}
+
+\end{DoxyCode}

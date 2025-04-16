@@ -1,0 +1,69 @@
+\doxysection{zenith\+::Object\+Decl\+Node Struct Reference}
+\hypertarget{structzenith_1_1_object_decl_node}{}\label{structzenith_1_1_object_decl_node}\index{zenith::ObjectDeclNode@{zenith::ObjectDeclNode}}
+Inheritance diagram for zenith\+::Object\+Decl\+Node\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{structzenith_1_1_object_decl_node}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_object_decl_node_aaa00583dc1168f04f066efa7522200f9}\label{structzenith_1_1_object_decl_node_aaa00583dc1168f04f066efa7522200f9} 
+enum class {\bfseries Kind} \{ {\bfseries CLASS}
+, {\bfseries STRUCT}
+, {\bfseries ACTOR}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_object_decl_node_aa06111b140c50dfd2b2fe0c8a3daa27f}\label{structzenith_1_1_object_decl_node_aa06111b140c50dfd2b2fe0c8a3daa27f} 
+{\bfseries Object\+Decl\+Node} (\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} loc, Kind kind, std\+::string name, std\+::string base, std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_member_decl_node}{Member\+Decl\+Node}} $>$ $>$ memb, std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_operator_overload_node}{Operator\+Overload\+Node}} $>$ $>$ ops=\{\}, bool auto\+GS=true)
+\item 
+std\+::string \mbox{\hyperlink{structzenith_1_1_object_decl_node_a0a70cef819d95f1e8d4764cedc3c91f4}{to\+String}} (int indent=0) const override
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{structzenith_1_1_object_decl_node_a96980ebd90ec31726df1e9c46ff833ee}\label{structzenith_1_1_object_decl_node_a96980ebd90ec31726df1e9c46ff833ee} 
+enum zenith\+::\+Object\+Decl\+Node\+::\+Kind {\bfseries kind}
+\item 
+\Hypertarget{structzenith_1_1_object_decl_node_a9f43884fc7b0592831b1e7614f16c5fe}\label{structzenith_1_1_object_decl_node_a9f43884fc7b0592831b1e7614f16c5fe} 
+std\+::string {\bfseries name}
+\item 
+\Hypertarget{structzenith_1_1_object_decl_node_a4e73128b893c68d19955e20f66872628}\label{structzenith_1_1_object_decl_node_a4e73128b893c68d19955e20f66872628} 
+std\+::string {\bfseries base}
+\item 
+\Hypertarget{structzenith_1_1_object_decl_node_a4db5a37521690235e2e90c9b29a340d8}\label{structzenith_1_1_object_decl_node_a4db5a37521690235e2e90c9b29a340d8} 
+std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_member_decl_node}{Member\+Decl\+Node}} $>$ $>$ {\bfseries members}
+\item 
+\Hypertarget{structzenith_1_1_object_decl_node_a169c9cb12bdd0238e93260cb22cd9689}\label{structzenith_1_1_object_decl_node_a169c9cb12bdd0238e93260cb22cd9689} 
+std\+::vector$<$ std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{structzenith_1_1_operator_overload_node}{Operator\+Overload\+Node}} $>$ $>$ {\bfseries operators}
+\item 
+\Hypertarget{structzenith_1_1_object_decl_node_a91088faeb597851bd3a8c66c1a117c22}\label{structzenith_1_1_object_decl_node_a91088faeb597851bd3a8c66c1a117c22} 
+bool {\bfseries auto\+Getters\+Setters}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{zenith\+::\+ASTNode}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{structzenith_1_1_source_location}{Source\+Location}} {\bfseries loc}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{structzenith_1_1_object_decl_node_a0a70cef819d95f1e8d4764cedc3c91f4}\index{zenith::ObjectDeclNode@{zenith::ObjectDeclNode}!toString@{toString}}
+\index{toString@{toString}!zenith::ObjectDeclNode@{zenith::ObjectDeclNode}}
+\doxysubsubsection{\texorpdfstring{toString()}{toString()}}
+{\footnotesize\ttfamily \label{structzenith_1_1_object_decl_node_a0a70cef819d95f1e8d4764cedc3c91f4} 
+std\+::string zenith\+::\+Object\+Decl\+Node\+::to\+String (\begin{DoxyParamCaption}\item[{int}]{indent}{ = {\ttfamily 0}}\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+
+Implements \mbox{\hyperlink{structzenith_1_1_a_s_t_node}{zenith\+::\+ASTNode}}.
+
+
+
+The documentation for this struct was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+C\+:/\+Users/gogop/\+CLion\+Projects/\+Zenith/src/ast/Declarations.\+hpp\end{DoxyCompactItemize}

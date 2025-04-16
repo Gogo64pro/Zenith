@@ -1,24 +1,23 @@
 #pragma once
-
-#include <stdexcept>
-#include <string_view>
-#include <string>
+//Definitions and declarations
+//This file is a mess
 #include <vector>
+#include <string>
 
-namespace zenith::utils {
+using namespace zenith;
 
-enum class Target {
+enum Target{
 	native,
 	jvm
 };
 
-enum class GC {
+enum GC{
 	generational,
 	refcounting,
 	none
 };
 
-struct Flags {
+struct Flags{
 	bool bracesRequired = true;
 	Target target = Target::native;
 	GC gc = GC::generational;
@@ -36,7 +35,7 @@ public:
 		bool foundInputFile = false;
 
 		for (size_t i = 1; i < args.size(); ++i) {
-			const std::string_view arg = args[i];
+			const std::string &arg = args[i];
 
 			try {
 				if (arg == "--braces=optional") {
@@ -46,13 +45,13 @@ public:
 					flags.bracesRequired = true;
 				}
 				else if (arg.starts_with("--target=")) {
-					const auto value = arg.substr(9);
+					std::string value = arg.substr(9);
 					if (value == "native") flags.target = Target::native;
 					else if (value == "jvm") flags.target = Target::jvm;
 					else throw std::runtime_error("Invalid target");
 				}
 				else if (arg.starts_with("--gc=")) {
-					const auto value = arg.substr(5);
+					std::string value = arg.substr(5);
 					if (value == "generational") flags.gc = GC::generational;
 					else if (value == "refcounting") flags.gc = GC::refcounting;
 					else if (value == "none") flags.gc = GC::none;
@@ -68,18 +67,30 @@ public:
 					}
 				}
 				else {
-					throw std::runtime_error("Unknown option: " + std::string(arg));
+					throw std::runtime_error("Unknown option: " + arg);
 				}
 			} catch (const std::exception &e) {
-				throw std::runtime_error("Error processing argument '" + std::string(arg) + "': " + e.what());
+				throw std::runtime_error("Error processing argument '" + arg + "': " + e.what());
 			}
 		}
 
 		if (!foundInputFile) {
 			throw std::runtime_error("No input file specified");
-		}
+		};
 		return flags;
 	}
 };
 
-} // zenith::utils
+
+//std::vector<std::string> args_to_vector(int argc, char* argv[]) {
+//	std::vector<std::string> args;
+//	args.reserve(argc);
+//
+//	for (int i = 0; i < argc; ++i) {
+//		args.emplace_back(argv[i]);
+//	}
+//	return args;
+//}
+//Flags processArguments(const std::vector<std::string>& args){
+//	return ArgumentParser::parse(args);
+//}

@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <fstream>
 
-namespace zenith{
-	std::string readFile(const std::string& filePath);
-}
+namespace zenith::utils {
+
+std::string readFile(std::string_view filePath);
+
+} // zenith::utils

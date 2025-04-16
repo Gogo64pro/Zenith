@@ -10,8 +10,6 @@
 #include <memory>
 #include <type_traits>
 
-namespace zenith::utils {
-
 template <typename T, size_t N>
 class small_vector {
 	static_assert(N > 0, "small_vector requires a positive inline capacity");
@@ -549,5 +547,3 @@ template <typename... Args>
 void small_vector<T, N>::emplace_back_bulk(Args&&... args) {
 	(emplace_back(std::forward<Args>(args)), ...);
 }
-
-} // zenith::utils

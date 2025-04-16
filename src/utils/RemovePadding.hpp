@@ -7,8 +7,6 @@
 
 #include <string>
 
-namespace zenith::utils {
-
-std::string removePadUntilNewLine(std::string bef);
-
-} // zenith::utils
+namespace zenith{
+	std::string removePadUntilNewLine(std::string bef);
+}

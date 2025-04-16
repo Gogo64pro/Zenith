@@ -4,21 +4,19 @@
 
 #include "ReadFile.hpp"
 
-namespace zenith::utils {
+namespace zenith{
+	std::string readFile(const std::string& filePath){
+		std::ifstream file(filePath);
+		if (!file.is_open()) {
+			throw std::runtime_error("Failed to open file: " + filePath);
+		}
 
-std::string readFile(std::string_view filePath){
-	std::ifstream file{std::string(filePath)};
-	if (!file.is_open()) {
-		throw std::runtime_error("Failed to open file: " + std::string(filePath));
+		// Read the entire file into a string
+		std::string content(
+				(std::istreambuf_iterator<char>(file)),
+				(std::istreambuf_iterator<char>())
+		);
+
+		return content;
 	}
-
-	// Read the entire file into a string
-	std::string content(
-		(std::istreambuf_iterator<char>(file)),
-		(std::istreambuf_iterator<char>())
-	);
-
-	return content;
 }
-
-} // zenith::utils

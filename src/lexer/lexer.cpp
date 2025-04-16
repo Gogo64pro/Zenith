@@ -1,54 +1,92 @@
-#include <cctype>
-
-#include "../module.hpp"
-#include "../utils/hash.hpp"
-#include "error.hpp"
 #include "lexer.hpp"
+#include "../core/ASTNode.hpp"
+#include "../exceptions/LexError.hpp"
+#include <cctype>
+#include <stdexcept>
 
-namespace zenith::lexer {
+using namespace zenith;
 
 // Keyword map initialization
-static const StringHashMap<TokenType> keywords = {
-#define X(a)
-#define X_KEYWORD(a, b) {b, TokenType::a},
-	ZENITH_X_TOKENS(X, X_KEYWORD)
-#undef X_KEYWORD
-#undef X
+const std::unordered_map<std::string, TokenType> Lexer::keywords = {
+		// Keywords
+		{"let", TokenType::LET},
+		{"var", TokenType::VAR},
+		{"fun", TokenType::FUN},
+		{"unsafe", TokenType::UNSAFE},
+		{"class", TokenType::CLASS},
+		{"struct", TokenType::STRUCT},
+		{"union", TokenType::UNION},
+		{"new", TokenType::NEW},
+		{"hoist", TokenType::HOIST},
+
+		// Access modifiers
+		{"public", TokenType::PUBLIC},
+		{"private", TokenType::PRIVATE},
+		{"protected", TokenType::PROTECTED},
+		{"privatew", TokenType::PRIVATEW},
+		{"protectedw", TokenType::PROTECTEDW},
+
+		// Modules
+		{"import", TokenType::IMPORT},
+		{"package", TokenType::PACKAGE},
+		{"extern", TokenType::EXTERN},
+
+		// Types
+		{"int", TokenType::INT},
+		{"long", TokenType::LONG},
+		{"short", TokenType::SHORT},
+		{"byte", TokenType::BYTE},
+		{"float", TokenType::FLOAT},
+		{"double", TokenType::DOUBLE},
+		{"string", TokenType::STRING},
+		{"dynamic", TokenType::DYNAMIC},
+		{"freeobj", TokenType::FREEOBJ},
+		{"Number", TokenType::NUMBER},
+		{"BigInt", TokenType::BIGINT},
+		{"BigNumber", TokenType::BIGNUMBER},
+
+		{"const", TokenType::CONST},
+		{"java", TokenType::JAVA},
+		{"if", TokenType::IF},
+		{"for", TokenType::FOR},
+		{"while", TokenType::WHILE},
+		{"return", TokenType::RETURN},
+		{"else", TokenType::ELSE},
+		{"do", TokenType::DO},
+		{"this", TokenType::THIS},
+
+		// Literals
+		{"true", TokenType::TRUE},
+		{"false", TokenType::FALSE},
+		{"null", TokenType::NULL_LIT},
+
 };
 
-Lexer::Lexer(std::string_view source) : source(source) {}
+Lexer::Lexer(const std::string& source, const std::string& name) : source(source), fileName(name) {}
 
-std::vector<Token> Lexer::tokenize(Module& mod) && {
-	try {
-		while (!isAtEnd()) {
-			scanToken();
-		}
+std::vector<Token> Lexer::tokenize() && {
+	while (!isAtEnd()) {
+		start = current;
+		scanToken();
+	}
 
-		addToken(TokenType::EOF_TOKEN);
-		return std::move(tokens);
-	}
-	catch (const Error& e) {
-		mod.report(e.location, e.what());
-	}
-	return {};
+	tokens.emplace_back(TokenType::EOF_TOKEN, "", line, column, 0);
+	return std::move(tokens);
 }
 
 bool Lexer::isAtEnd() const {
 	return current >= source.length();
 }
 
-char Lexer::peek() const {
-	if (isAtEnd()) return '\0';
-	return source[current];
-}
-
-char Lexer::peekNext() const {
-	if (current + 1 >= source.length()) return '\0';
-	return source[current + 1];
-}
-
 char Lexer::advance() {
-	return source[current++];
+	char c = source[current++];
+	if (c == '\n') {
+		line++;
+		column = 1;
+	} else {
+		column++;
+	}
+	return c;
 }
 
 bool Lexer::match(char expected) {
@@ -56,19 +94,25 @@ bool Lexer::match(char expected) {
 	if (source[current] != expected) return false;
 
 	current++;
+	column++;
 	return true;
 }
 
 void Lexer::addToken(TokenType type) {
-	tokens.push_back({type, {start, current}});
-	start = current;
-}
-
-void Lexer::error(const std::string& msg) {
-	throw Error({current, current}, msg);
+	std::string text = source.substr(start, current - start);
+	size_t length = current - start;
+	tokens.emplace_back(type, text, SourceLocation{
+			line,
+			startColumn,  // You'll need to track start column separately
+			length,
+			start,         // File offset (if needed)
+			fileName
+	});
+	tokenStart = current;  // Reset for next token
 }
 
 void Lexer::scanToken() {
+	startColumn = column;
 	char c = advance();
 	switch (c) {
 		// Single-character tokens
@@ -108,7 +152,7 @@ void Lexer::scanToken() {
 					advance();
 				}
 				if (isAtEnd()) {
-					error("Unterminated block comment");
+					throw LexError( {line,column,0,current} ,"Unterminated block comment");
 				}
 				// Consume the '*/'
 				advance();
@@ -131,11 +175,11 @@ void Lexer::scanToken() {
 			break;
 		case '&':
 			if (match('&')) addToken(TokenType::AND);
-			else error("Unexpected character: &");
+			else throw LexError( {line,column,0,current} ,"Unexpected character: &");
 			break;
 		case '|':
 			if (match('|')) addToken(TokenType::OR);
-			else error("Unexpected character: |");
+			else throw LexError( {line,column,0,current} ,"Unexpected character: |");
 			break;
 		case '<':
 			addToken(match('=') ? TokenType::LESS_EQUAL : TokenType::LESS);
@@ -148,7 +192,9 @@ void Lexer::scanToken() {
 		case ' ':
 		case '\r':
 		case '\t':
+			break;
 		case '\n':
+			column = 1;
 			break;
 
 			// String literals
@@ -168,11 +214,10 @@ void Lexer::scanToken() {
 			} else if (isalpha(c) || c == '_') {
 				identifier();
 			} else {
-				error("Unexpected character: " + std::string(1, c));
+				throw LexError( {line,column,0,current} ,"Unexpected character: " + std::string(1, c));
 			}
 			break;
 	}
-	start = current;
 }
 
 void Lexer::string() {
@@ -180,18 +225,22 @@ void Lexer::string() {
 		advance();
 	}
 
-	if (isAtEnd()) error("Unterminated string");
+	if (isAtEnd()) LexError( {line,column,0,current} ,"Unterminated string");
 
 	advance();  // Consume closing "
+
+	// Calculate length including quotes
+	size_t length = current - start;
 	addToken(TokenType::STRING_LIT);
 }
 
-// todo: pretty sure I've screwed this up, but I don't know the spec
 void Lexer::templateString() {
 	// Add opening backtick
-	addToken(TokenType::BACKTICK);
-	advance(); // Consume opening backtick
-	start = current; // Start of actual template content
+	tokens.emplace_back(TokenType::BACKTICK, "`",
+	                    SourceLocation{line, column, 1, current, fileName});
+	advance();  // Consume opening backtick
+	start = current;  // Start of actual template content
+	startColumn = column;  // Track starting column
 
 	while (peek() != '`' && !isAtEnd()) {
 		if (peek() == '\\') {
@@ -200,10 +249,14 @@ void Lexer::templateString() {
 		else if (peek() == '$' && peekNext() == '{') {
 			// Handle interpolation
 			if (current > start) {
-				addToken(TokenType::TEMPLATE_PART);
+				std::string text = source.substr(start, current - start);
+				tokens.emplace_back(TokenType::TEMPLATE_PART, text,
+				                    SourceLocation{line, startColumn, text.length(), start,fileName});
 			}
 			advance(); advance();
-			addToken(TokenType::DOLLAR_LBRACE);
+			tokens.emplace_back(TokenType::DOLLAR_LBRACE, "${",
+			                    SourceLocation{line, column - 2, 2, current - 2,fileName});
+			start = current;
 			return;  // Return to let parser handle interpolation
 		}
 		else {
@@ -213,19 +266,22 @@ void Lexer::templateString() {
 
 	// Handle closing
 	if (isAtEnd()) {
-		error("Unterminated template string");
+		throw LexError({line, column, 0, current}, "Unterminated template string");
 	}
 
 	// Add final template part (if any)
 	if (current > start) {
-		addToken(TokenType::TEMPLATE_PART);
+		std::string text = source.substr(start, current - start);
+		tokens.emplace_back(TokenType::TEMPLATE_PART, text,
+		                    SourceLocation{line, startColumn, text.length(), start, fileName});
 	}
 
 	// Add closing backtick
-	addToken(TokenType::BACKTICK);
+	tokens.emplace_back(TokenType::BACKTICK, "`",
+	                    SourceLocation{line, column, 1, current, fileName});
 	advance();  // Consume closing backtick
-	start = current;
 }
+
 
 void Lexer::number() {
 	bool isFloat = false;
@@ -268,8 +324,9 @@ void Lexer::number() {
 void Lexer::identifier() {
 	while (isalnum(peek()) || peek() == '_') advance();
 
+	std::string text = source.substr(start, current - start);
+
 	// Check if it's a keyword
-	const auto text = std::string_view(source.begin() + start, source.begin() + current);
 	auto it = keywords.find(text);
 	if (it != keywords.end()) {
 		addToken(it->second);
@@ -278,4 +335,113 @@ void Lexer::identifier() {
 	}
 }
 
-} // zenith::lexer
+char Lexer::peek() const {
+	if (isAtEnd()) return '\0';
+	return source[current];
+}
+
+char Lexer::peekNext() const {
+	if (current + 1 >= source.length()) return '\0';
+	return source[current + 1];
+}
+
+std::string Lexer::tokenToString(TokenType type) {
+	switch (type) {
+		// Keywords
+		case TokenType::LET: return "LET";
+		case TokenType::VAR: return "VAR";
+		case TokenType::FUN: return "FUN";
+		case TokenType::UNSAFE: return "UNSAFE";
+		case TokenType::CLASS: return "CLASS";
+		case TokenType::STRUCT: return "STRUCT";
+		case TokenType::UNION: return "UNION";
+		case TokenType::NEW: return "NEW";
+		case TokenType::HOIST: return "HOIST";
+
+			// Access modifiers
+		case TokenType::PUBLIC: return "PUBLIC";
+		case TokenType::PRIVATE: return "PRIVATE";
+		case TokenType::PROTECTED: return "PROTECTED";
+		case TokenType::PRIVATEW: return "PRIVATEW";
+		case TokenType::PROTECTEDW: return "PROTECTEDW";
+
+			// Modules
+		case TokenType::IMPORT: return "IMPORT";
+		case TokenType::PACKAGE: return "PACKAGE";
+		case TokenType::EXTERN: return "EXTERN";
+
+			// Types
+		case TokenType::INT: return "INT";
+		case TokenType::LONG: return "LONG";
+		case TokenType::SHORT: return "SHORT";
+		case TokenType::BYTE: return "BYTE";
+		case TokenType::FLOAT: return "FLOAT";
+		case TokenType::DOUBLE: return "DOUBLE";
+		case TokenType::STRING: return "STRING";
+		case TokenType::DYNAMIC: return "DYNAMIC";
+		case TokenType::FREEOBJ: return "FREEOBJ";
+		case TokenType::NUMBER: return "NUMBER";
+		case TokenType::BIGINT: return "BIGINT";
+		case TokenType::BIGNUMBER: return "BIGNUMBER";
+
+			// Literals
+		case TokenType::IDENTIFIER: return "IDENTIFIER";
+		case TokenType::INTEGER: return "INTEGER";
+		case TokenType::FLOAT_LIT: return "FLOAT_LIT";
+		case TokenType::STRING_LIT: return "STRING_LIT";
+		case TokenType::TRUE: return "TRUE";
+		case TokenType::FALSE: return "FALSE";
+		case TokenType::NULL_LIT: return "NULL_LIT";
+
+			// Operators
+		case TokenType::PLUS: return "PLUS";
+		case TokenType::MINUS: return "MINUS";
+		case TokenType::STAR: return "STAR";
+		case TokenType::SLASH: return "SLASH";
+		case TokenType::PERCENT: return "PERCENT";
+		case TokenType::EQUAL: return "EQUAL";
+		case TokenType::EQUAL_EQUAL: return "EQUAL_EQUAL";
+		case TokenType::BANG_EQUAL: return "BANG_EQUAL";
+		case TokenType::LESS: return "LESS";
+		case TokenType::LESS_EQUAL: return "LESS_EQUAL";
+		case TokenType::GREATER: return "GREATER";
+		case TokenType::GREATER_EQUAL: return "GREATER_EQUAL";
+
+			// Punctuation
+		case TokenType::LBRACE: return "LBRACE";
+		case TokenType::RBRACE: return "RBRACE";
+		case TokenType::LPAREN: return "LPAREN";
+		case TokenType::RPAREN: return "RPAREN";
+		case TokenType::LBRACKET: return "LBRACKET";
+		case TokenType::RBRACKET: return "RBRACKET";
+		case TokenType::DOLLAR_LBRACE: return "DOLLAR_LBRACE";
+		case TokenType::COMMA: return "COMMA";
+		case TokenType::DOT: return "DOT";
+		case TokenType::SEMICOLON: return "SEMICOLON";
+		case TokenType::COLON: return "COLON";
+		case TokenType::ARROW: return "ARROW";
+		case TokenType::LAMBARROW: return "LAMBARROW";
+
+			// Special
+		case TokenType::AT: return "AT";
+		case TokenType::EOF_TOKEN: return "EOF";
+		case TokenType::THIS: return "THIS";
+
+		case TokenType::CONST: return "CONST";
+		case TokenType::JAVA: return "JAVA";
+		case TokenType::IF: return "IF";
+		case TokenType::FOR: return "FOR";
+		case TokenType::WHILE: return "WHILE";
+		case TokenType::RETURN: return "RETURN";
+		case TokenType::ELSE: return "ELSE";
+		case TokenType::DO: return "DO";
+		case TokenType::TEMPLATE_LIT: return "TEMPLATE_LIT";
+		case TokenType::BANG: return "BANG";
+		case TokenType::AND: return "AND";
+		case TokenType::OR: return "OR";
+		case TokenType::BACKTICK: return "BACKTICK";
+		case TokenType::TEMPLATE_PART: return "TEMPLATE_PART";
+
+		default: return "UNKNOWN";
+	}
+}

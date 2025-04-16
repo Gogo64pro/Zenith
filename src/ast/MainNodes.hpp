@@ -7,39 +7,42 @@
 #include <vector>
 #include <memory>
 #include <sstream>
-#include "Node.hpp"
+#include "../core/ASTNode.hpp"
 
-namespace zenith::ast {
+namespace zenith {
+	struct ProgramNode : ASTNode {
+		std::vector<std::unique_ptr<ASTNode>> declarations;
 
-struct ProgramNode : Node {
-	std::vector<std::unique_ptr<Node>> declarations;
-
-	explicit ProgramNode(lexer::SourceSpan loc, std::vector<std::unique_ptr<Node>> decls)
-			: Node(loc), declarations(std::move(decls)) {}
-
-	std::string toString(int indent = 0) const {
-		std::string pad(indent, ' ');
-		std::stringstream ss;
-		ss << pad << "Program {\n";
-		for (const auto& decl : declarations) {
-			ss << decl->toString(indent + 2) << "\n";
+		explicit ProgramNode(SourceLocation loc,
+		                     std::vector<std::unique_ptr<ASTNode>> decls)
+				: declarations(std::move(decls)) {
+			this->loc = loc;
 		}
-		ss << pad << "}";
-		return ss.str();
-	}
-};
 
-struct ImportNode : Node {
-	std::string path;
-	bool isJavaImport;
+		std::string toString(int indent = 0) const {
+			std::string pad(indent, ' ');
+			std::stringstream ss;
+			ss << pad << "Program {\n";
+			for (const auto& decl : declarations) {
+				ss << decl->toString(indent + 2) << "\n";
+			}
+			ss << pad << "}";
+			return ss.str();
+		}
+	};
 
-	ImportNode(lexer::SourceSpan loc, std::string p, bool java)
-		: Node(loc), path(std::move(p)), isJavaImport(java) {}
+	struct ImportNode : ASTNode {
+		std::string path;
+		bool isJavaImport;
 
-	std::string toString(int indent = 0) const {
-		std::string pad(indent, ' ');
-		return pad + "Import " + (isJavaImport ? "Java: " : "") + "\"" + path + "\"";
-	}
-};
+		ImportNode(SourceLocation loc, std::string p, bool java)
+				: path(std::move(p)), isJavaImport(java) {
+			this->loc = loc;
+		}
 
-} // zenith::ast
+		std::string toString(int indent = 0) const {
+			std::string pad(indent, ' ');
+			return pad + "Import " + (isJavaImport ? "Java: " : "") + "\"" + path + "\"";
+		}
+	};
+}

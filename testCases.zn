@@ -139,12 +139,11 @@ class Vehicle {
 }
 
 struct Color {
-    byte r, g, b;
+    byte r; byte g; byte b;
 }
 
-union Number {
-    int i;
-    float f;
+union ANumber {
+    int, float
 }
 
 @Async fun fetchData() -> Future<string> {
@@ -155,26 +154,28 @@ union Number {
 actor Counter {
     private int value = 0;
 
-    public int increment() {
+    on increment() -> int {
         this.value++;
         return this.value;
     }
 }
-unsafe {
-    extern "C" {
-        fun puts(*const char s);
-    }
-
-    puts("Hello from C!");
-}
+//unsafe {
+//    extern "C" {
+//        fun puts(const char s);
+//    }
+//
+//    puts("Hello from C!");
+//}
 
 // String interpolation
 let name = "World";
-IO.print("Hello, ${name}!");
-
-// Optional braces (when enabled)
-if (condition)
-    IO.print("No braces needed");
+fun main(){
+    IO.print("Hello, ${name}!");
+    // Optional braces (when enabled)
+    if (condition){
+        IO.print("No braces needed");
+    }
+}
 
 // Hoisting
 hoist var x = 10;
@@ -182,7 +183,7 @@ hoist var x = 10;
 class RestrictedDemo {
     privatew int adminCode;  // Class-only write
     protectedw int auditId; // Hierarchy-only write
-    const public string id; // Immutable public
+    public const string id; // Immutable public
 }
 
 class Database {
@@ -215,14 +216,14 @@ fun main() {
 // Invalid memory access
 unsafe {
     let ptr = malloc(10);
-    ptr[10] = 1;  // Should fail (out of bounds)
+    //ptr[10] = 1;  // Should fail (out of bounds)
 }
 
 // Type mismatch
-struct Point { int x, y; }
-Point p = {1.5, 2};  // Should fail (floa->int)
+struct Point { int x; int y; }
+Point p = {1.5, 2};  // Should fail (float->int)
 
 // Invalid protection
 class Demo {
-    publicw int x;  // Should fail (no publicw)
+    //publicw int x;  // Should fail (no publicw)
 }

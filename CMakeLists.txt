@@ -26,6 +26,6 @@ add_executable(Zenith
         src/ast/TypeNodes.hpp
         src/ast/Other.hpp src/utils/ReadFile.cpp src/utils/ReadFile.hpp
         src/utils/RemovePadding.cpp src/utils/RemovePadding.hpp
-        src/exceptions/LexError.cpp src/exceptions/LexError.hpp src/utils/small_vector.cpp src/utils/small_vector.hpp src/exceptions/ErrorReporter.cpp src/exceptions/ErrorReporter.hpp src/core/IAnnotatable.hpp)
+        src/exceptions/LexError.cpp src/exceptions/LexError.hpp src/utils/small_vector.cpp src/utils/small_vector.hpp src/exceptions/ErrorReporter.cpp src/exceptions/ErrorReporter.hpp src/core/IAnnotatable.hpp src/SemanticAnalysis/SemanticAnalyzer.cpp src/SemanticAnalysis/SemanticAnalyzer.hpp)
 
 #add_compile_options(-fsanitize=address)

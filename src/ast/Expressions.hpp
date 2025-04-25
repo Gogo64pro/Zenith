@@ -44,7 +44,7 @@ namespace zenith{
 
 	// --- Binary Operations ---
 	struct BinaryOpNode : ExprNode {
-		enum Op : uint8_t { ADD, SUB, MUL, DIV, EQ, NEQ, LT, GT, LTE, GTE, ASN, MOD, ADD_ASN, SUB_ASN, MUL_ASN, DIV_ASN, MOD_ASN  } op;
+		enum Op : uint8_t { ADD, SUB, MUL, DIV, EQ, NEQ, LT, GT, LTE, GTE, ASN, MOD, ADD_ASN, SUB_ASN, MUL_ASN, DIV_ASN, MOD_ASN} op;
 		std::unique_ptr<ExprNode> left;
 		std::unique_ptr<ExprNode> right;
 
@@ -58,7 +58,7 @@ namespace zenith{
 		}
 
 		std::string toString(int indent = 0) const override {
-			static const char* opNames[] = {"+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">=", "=", "%", "+=", "-=", "*=", "/=", "%=", };
+			static const char* opNames[] = {"+", "-", "*", "/", "==", "!=", "<", ">", "<=", ">=", "=", "%", "+=", "-=", "*=", "/=", "%="};
 			std::string pad(indent, ' ');
 			return pad + "BinaryOp(" + opNames[op] + ")\n" +
 			       left->toString(indent + 2) + "\n" +
@@ -85,6 +85,35 @@ namespace zenith{
 				case TokenType::STAR_EQUALS: return MUL_ASN;
 				case TokenType::SLASH_EQUALS: return DIV_ASN;
 				case TokenType::PERCENT_EQUALS: return MOD_ASN;
+				default: throw std::invalid_argument("Invalid binary operator");
+			}
+		}
+	};
+
+	// --- Unary Operations ---
+	struct UnaryOpNode : ExprNode{
+		enum Op : uint8_t {INC, DEC } op;
+		std::unique_ptr<ExprNode> right;
+		bool prefix = false;
+		UnaryOpNode(SourceLocation loc, TokenType tokenType,
+				std::unique_ptr<ExprNode> rightExpr, bool prefix)
+		: ExprNode(), op(convertTokenType(tokenType)),
+		  right(std::move(rightExpr)), prefix(prefix) {
+			this->loc = std::move(loc);
+		}
+
+		std::string toString(int indent = 0) const override {
+			static const char* opNames[] = {"++", "--"};
+			std::string pad(indent, ' ');
+			return pad + "UnaryOp(" + opNames[op] + ")\n" +
+					right->toString(indent + 2) + "\n";
+		}
+
+	private:
+		static Op convertTokenType(TokenType type) {
+			switch(type) {
+				case TokenType::INCREASE: return INC;
+				case TokenType::DECREASE: return DEC;
 				default: throw std::invalid_argument("Invalid binary operator");
 			}
 		}

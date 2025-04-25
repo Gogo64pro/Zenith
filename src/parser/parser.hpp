@@ -80,6 +80,7 @@ namespace zenith {
 		std::unique_ptr<ScopeBlockNode> parseScopeBlock();
 		std::unique_ptr<TemplateDeclNode> parseTemplate();
 		std::unique_ptr<BlockNode> parseBlock();
+		std::unique_ptr<UnsafeNode> parseUnsafeBlock();
 
 		// Expression parsers
 		std::unique_ptr<NewExprNode> parseNewExpression();

@@ -151,17 +151,20 @@ namespace zenith {
 	};
 
 	// Unsafe blocks
-	struct UnsafeNode : ASTNode {
-		std::unique_ptr<BlockNode> body;
+	struct UnsafeNode : BlockNode {
 
-		explicit UnsafeNode(SourceLocation loc, std::unique_ptr<BlockNode> b)
-				: body(std::move(b)) {
-			this->loc = loc;
-		}
+		explicit UnsafeNode(SourceLocation loc, std::vector<std::unique_ptr<ASTNode>> stmts)
+				: BlockNode(std::move(loc), std::move(stmts)) {}
 
 		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
-			return pad + "Unsafe\n" + body->toString(indent + 2);
+			std::stringstream ss;
+			ss << pad << "Unsafe {\n";
+			for (const auto& stmt : statements) {
+				ss << stmt->toString(indent + 2) << "\n";
+			}
+			ss << pad << "}";
+			return ss.str();
 		}
 	};
 	//Multi-statements

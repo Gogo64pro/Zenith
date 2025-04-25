@@ -21,12 +21,12 @@ namespace zenith {
 
 		}
 			// Case 2: Dynamic declaration (let/var/dynamic)
-		else if (match(TokenType::LET) || match(TokenType::VAR) || match(TokenType::DYNAMIC)) {
+		else if (match({TokenType::LET, TokenType::VAR, TokenType::DYNAMIC})) {
 			kind = VarDeclNode::DYNAMIC;
 			advance();
 		}
 
-		std::string name = consume(TokenType::IDENTIFIER).lexeme;
+		std::string name = consume(TokenType::IDENTIFIER, "Expected name").lexeme;
 
 		// Handle array size specification (e.g., int arr[10])
 		if (match(TokenType::LBRACKET)) {
@@ -91,10 +91,32 @@ namespace zenith {
 		return consume(type, "Expected " + Lexer::tokenToString(type));
 	}
 
-	std::unique_ptr<ExprNode> Parser::parseExpression(int precedence) { // Remove default arg here
+	std::unique_ptr<ExprNode> Parser::parseExpression(int precedence) {
+
+		if (match({TokenType::INCREASE, TokenType::DECREASE})) {
+			Token op = advance();
+			auto right = parseExpression(getPrecedence(op.type));
+			return std::make_unique<UnaryOpNode>(
+					op.loc,
+					op.type,
+					std::move(right),
+					true
+			);
+		}
+
 		auto expr = parsePrimary();
 
 		while (true) {
+			if (match({TokenType::INCREASE, TokenType::DECREASE})) {
+				Token op = advance();
+				return std::make_unique<UnaryOpNode>(
+						op.loc,
+						op.type,
+						std::move(expr),
+						false
+				);
+			}
+
 			Token op = currentToken;
 			int opPrecedence = getPrecedence(op.type);
 
@@ -116,7 +138,6 @@ namespace zenith {
 	std::unique_ptr<ExprNode> Parser::parsePrimary() {
 		SourceLocation startLoc = currentToken.loc;
 
-		// Handle all the simple cases first
 		if (match(TokenType::NEW)) {
 			return parseNewExpression();
 		}
@@ -141,7 +162,7 @@ namespace zenith {
 			}
 			return parseFreeObject();
 		} else if (match(TokenType::FREEOBJ)) {
-			advance(); // consume 'freeobj'
+			advance();
 			if (match(TokenType::LBRACE)) {
 				return parseFreeObject();
 			}
@@ -373,7 +394,11 @@ namespace zenith {
 				{TokenType::MINUS, 6},
 				{TokenType::STAR, 7},
 				{TokenType::SLASH, 7},
-				{TokenType::PERCENT, 7}
+				{TokenType::PERCENT, 7},
+
+				// Unary operator
+				{TokenType::INCREASE, 9},
+				{TokenType::DECREASE, 9},
 
 		};
 
@@ -578,7 +603,7 @@ namespace zenith {
 		// Unsafe blocks
 		if (match(TokenType::UNSAFE)) {
 			advance(); // Consume 'unsafe'
-			return parseBlock();
+			return parseUnsafeBlock();
 		}
 		if (match(TokenType::SCOPE)) {
 			return parseScopeBlock();
@@ -1219,7 +1244,7 @@ namespace zenith {
 
 		if (!match(TokenType::RBRACE)) {
 			do {
-				// Check for designated initializer (C-style .field = value)
+				// (C-style .field = value)
 				if (match(TokenType::DOT)) {
 					advance(); // Consume '.'
 					std::string name = consume(TokenType::IDENTIFIER).lexeme;
@@ -1227,17 +1252,17 @@ namespace zenith {
 					auto value = parseExpression();
 					fields.push_back({name, std::move(value)});
 				}
-					// Check for named field (field: value)
+				// JS-Style (field: value)
 				else if (peek(1).type == TokenType::COLON) {
 					std::string name = consume(TokenType::IDENTIFIER).lexeme;
 					consume(TokenType::COLON);
 					auto value = parseExpression();
 					fields.push_back({name, std::move(value)});
 				}
-					// Positional initialization (just value)
+				// Positional initialization (just value) (value)
 				else {
 					auto value = parseExpression();
-					fields.push_back({"", std::move(value)}); // Empty name indicates positional
+					fields.push_back({"", std::move(value)});
 				}
 			} while (match(TokenType::COMMA) && (advance(), true));
 		}
@@ -1333,18 +1358,12 @@ namespace zenith {
 		std::vector<std::unique_ptr<MemberDeclNode>> members;
 		while (!match(TokenType::RBRACE) && !isAtEnd()) {
 			try {
-				// Parse annotations
-				std::vector<std::unique_ptr<AnnotationNode>> annotations;
-				while (match(TokenType::AT)) {
-					annotations.push_back(parseAnnotation());
-				}
-
 				// Parse message handlers (start with "on") or regular members
 				if (match(TokenType::ON)) {
-					members.push_back(parseMessageHandler(std::move(annotations)));
+					members.push_back(parseMessageHandler(std::move(pendingAnnotations)));
 				} else {
 					// Parse regular members (fields, etc.)
-					members.push_back(parseObjectPrimary(name, annotations));
+					members.push_back(parseObjectPrimary(name, pendingAnnotations));
 				}
 			} catch (const ParseError& e) {
 				errorReporter.report(e.location, e.format());
@@ -1384,9 +1403,7 @@ namespace zenith {
 	//	return members;
 	//}
 //
-	std::unique_ptr<MemberDeclNode> Parser::parseMessageHandler(
-			std::vector<std::unique_ptr<AnnotationNode>> annotations
-	) {
+	std::unique_ptr<MemberDeclNode> Parser::parseMessageHandler(std::vector<std::unique_ptr<AnnotationNode>> annotations) {
 		SourceLocation loc = consume(TokenType::ON).loc;
 		std::string messageType = consume(TokenType::IDENTIFIER, "Expected message type").lexeme;
 
@@ -1582,6 +1599,27 @@ namespace zenith {
 
 		return params;
 	}
+
+	std::unique_ptr<UnsafeNode> Parser::parseUnsafeBlock() {
+		SourceLocation startLoc = currentToken.loc;
+		consume(TokenType::LBRACE);
+
+		std::vector<std::unique_ptr<ASTNode>> statements;
+		try {
+			while (!match(TokenType::RBRACE) && !isAtEnd()) {
+				statements.push_back(parseStatement());
+			}
+			consume(TokenType::RBRACE,"Expected '}' after block");
+		} catch (const ParseError&) {
+			synchronize(); // Your error recovery method
+			if (!match(TokenType::RBRACE)) {
+				// Insert synthetic '}' if missing
+				statements.push_back(createErrorNode());
+			}
+		}
+		return std::make_unique<UnsafeNode>(startLoc,  std::move(statements));
+	}
+
 
 //	std::unique_ptr<MultiVarDeclNode> Parser::parseVarDecls() {
 //		std::vector<std::unique_ptr<VarDeclNode>> declarations;

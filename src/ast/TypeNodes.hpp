@@ -42,7 +42,7 @@ namespace zenith {
 		}
 		bool isDynamic() const override {
 			static const std::unordered_set<Type> basic_types = {
-					STRING, NUMBER, BIGNUMBER, BIGINT
+					INT, FLOAT, DOUBLE, BOOL, SHORT, LONG, BYTE
 			};
 
 			return !basic_types.contains(type);

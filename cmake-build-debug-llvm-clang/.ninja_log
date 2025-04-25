@@ -1,0 +1,8 @@
+# ninja log v5
+18	47	7668814550874731	CMakeFiles/Zenith.dir/src/utils/small_vector.cpp.obj	bff2af1e1bfd72ab
+13	253	7668814552904723	CMakeFiles/Zenith.dir/src/utils/RemovePadding.cpp.obj	52c2228610c7bbab
+9	337	7668814553744733	CMakeFiles/Zenith.dir/src/core/MainNodes.cpp.obj	9be8a4972ba0042c
+16	370	7668814554064728	CMakeFiles/Zenith.dir/src/utils/ReadFile.cpp.obj	f0a34c1e6e07b2c8
+4	410	7668814554454729	CMakeFiles/Zenith.dir/src/lexer/lexer.cpp.obj	4f776a9475c98d71
+1	753	7668814557864731	CMakeFiles/Zenith.dir/main.cpp.obj	cc46987327423cb3
+11	1248	7668814562764737	CMakeFiles/Zenith.dir/src/parser/parser.cpp.obj	b4963be9473b2b7f

@@ -35,6 +35,7 @@ namespace zenith {
 			std::string pad(indent, ' ');
 			static const char* kindNames[] = {"STATIC", "DYNAMIC", "CLASS_INIT"};
 			std::stringstream ss;
+			ss << pad;
 			if (isConst) ss << "CONST ";
 			if (isHoisted) ss << "HOIST ";
 			ss << kindNames[kind] << " " << name;
@@ -243,8 +244,10 @@ namespace zenith {
 			std::stringstream ss;
 			ss << pad << (kind == Kind::CLASS ? "CLASS " :
 			              kind == Kind::STRUCT ? "STRUCT " : "ACTOR ")
-			   << name << " {\n";
-
+			   << name;
+			if(!base.empty())
+				ss << " : " << base;
+			ss << " {\n";
 			if (autoGettersSetters) {
 				ss << pad << "  // Auto-generated getters/setters enabled\n";
 			}
@@ -272,7 +275,7 @@ namespace zenith {
 		std::string toString(int indent = 0) const override{
 			std::string pad(indent,' ');
 			std::stringstream ss;
-			ss << pad << "UNION {\n";
+			ss << pad << "UNION" << name << "{\n";
 			for(size_t i = 0;i<types.size();++i){
 				if(i>0) ss << ", ";
 				ss << types[i]->toString(indent+2) << '\n';

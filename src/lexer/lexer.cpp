@@ -147,11 +147,13 @@ void Lexer::scanToken() {
 			// Operators
 		case '+':
 			if (match('=')) addToken(TokenType::PLUS_EQUALS);
+			else if (match('+')) addToken(TokenType::INCREASE);
 			else addToken(TokenType::PLUS);
 			break;
 		case '-':
 			if (match('>')) addToken(TokenType::ARROW);
 			else if(match('=')) addToken(TokenType::MINUS_EQUALS);
+			else if (match('-')) addToken(TokenType::DECREASE);
 			else addToken(TokenType::MINUS);
 			break;
 		case '*':

@@ -2,6 +2,8 @@
 
 #include <cstdlib>
 #include <memory>
+#include "../visitor/Visitor.hpp"
+#include "polymorphic.hpp"
 
 namespace zenith {
 	struct SourceLocation {
@@ -16,6 +18,7 @@ namespace zenith {
 		virtual ~ASTNode() = default;
 		SourceLocation loc;
 		virtual std::string toString(int indent = 0) const = 0;
+		virtual void accept(Visitor& visitor) = 0;
 	};
 
 	struct ExprNode : ASTNode {virtual bool isConstructorCall() const { return false; }};

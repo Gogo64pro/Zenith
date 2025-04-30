@@ -82,7 +82,7 @@ Program {
             balance
           Literal(NUMBER: 0.0)
     }
-    PUBLIC  METHOD deposit : NamedType(void) Block {
+    PUBLIC  METHOD deposit : PrimitiveType(VOID) Block {
       ExprStmt
         BinaryOp(+=)
           MemberAccess(.)
@@ -126,19 +126,19 @@ Program {
     PRIVATE  FIELD x : PrimitiveType(INT);
   }
   DYNAMIC obj = FreeObject {
-  x: Literal(NUMBER: 10)
-  y: Literal(NUMBER: 20)
-}
+      x: Literal(NUMBER: 10)
+      y: Literal(NUMBER: 20)
+    }
   DYNAMIC inferredObj = FreeObject {
-  name: Literal(STRING: "Zenith")
-  version: Literal(NUMBER: 1.0)
-}
+      name: Literal(STRING: "Zenith")
+      version: Literal(NUMBER: 1.0)
+    }
   main() Block {
       Unsafe {
         DYNAMIC ptr = Call
-  Var(malloc)
-  Arguments:
-  Literal(NUMBER: 1024)
+            Var(malloc)
+            Arguments:
+            Literal(NUMBER: 1024)
         EmptyStmt
         ExprStmt
           BinaryOp(=)
@@ -154,21 +154,21 @@ Program {
       }
     }
   DYNAMIC buffer = Call
-  Var(malloc)
-  Arguments:
-  Literal(NUMBER: 512)
+      Var(malloc)
+      Arguments:
+      Literal(NUMBER: 512)
   STATIC x : PrimitiveType(INT) = Literal(NUMBER: 10)
   STRUCT Point {
     // Auto-generated getters/setters enabled
     PUBLIC  FIELD x : PrimitiveType(INT);
     PUBLIC  FIELD y : PrimitiveType(INT);
   }
-  STATIC p : NamedType(Point) = Positional{  Literal(NUMBER: 1),   Literal(NUMBER: 2)}
+  STATIC p : NamedType(Point) = Positional{      Literal(NUMBER: 1),       Literal(NUMBER: 2)}
   DYNAMIC y = Literal(STRING: "dynamic")
   DYNAMIC z = Literal(NUMBER: 3.14)
   STATIC config : Type(DYNAMIC) = FreeObject {
-  debug: Literal(BOOL: true)
-  log: (msg) Block {
+      debug: Literal(BOOL: true)
+      log: (msg) Block {
     return Call
         MemberAccess(.)
           Var(IO)
@@ -176,10 +176,10 @@ Program {
         Arguments:
         Var(msg)
   }
-}
+    }
   STATIC config2 : Type(DYNAMIC) = FreeObject {
-  debug: Literal(BOOL: true)
-  log: (msg) Block {
+      debug: Literal(BOOL: true)
+      log: (msg) Block {
     return Call
         MemberAccess(.)
           Var(IO)
@@ -187,7 +187,7 @@ Program {
         Arguments:
         Var(msg)
   }
-}
+    }
   CLASS Vehicle {
     // Auto-generated getters/setters enabled
     PRIVATEW  FIELD model : PrimitiveType(STRING);
@@ -213,7 +213,7 @@ Program {
     PUBLIC  FIELD g : PrimitiveType(BYTE);
     PUBLIC  FIELD b : PrimitiveType(BYTE);
   }
-  UNION {
+  UNIONANumber{
     PrimitiveType(INT)
 ,     PrimitiveType(FLOAT)
 
@@ -342,15 +342,15 @@ Program {
       }
     }
   DYNAMIC ptr = Call
-  Var(malloc)
-  Arguments:
-  Literal(NUMBER: 10)
+      Var(malloc)
+      Arguments:
+      Literal(NUMBER: 10)
   STRUCT Point {
     // Auto-generated getters/setters enabled
     PUBLIC  FIELD x : PrimitiveType(INT);
     PUBLIC  FIELD y : PrimitiveType(INT);
   }
-  STATIC p : NamedType(Point) = Positional{  Literal(NUMBER: 1.5),   Literal(NUMBER: 2)}
+  STATIC p : NamedType(Point) = Positional{      Literal(NUMBER: 1.5),       Literal(NUMBER: 2)}
   CLASS Demo {
     // Auto-generated getters/setters enabled
   }

@@ -10,15 +10,16 @@
 #include <sstream>
 #include <variant>
 #include "../core/ASTNode.hpp"
+#include "../core/indirect_polymorphic.hpp"
 
 namespace zenith{
 	struct AnnotationNode : ASTNode {
 		std::string name;
-		std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>> arguments;
+		std::vector<std::pair<std::string, std_P3019_modified::polymorphic<ExprNode>>> arguments;
 
 		AnnotationNode(SourceLocation loc,
 		               std::string name,
-		               std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>> args)
+		               std::vector<std::pair<std::string, std_P3019_modified::polymorphic<ExprNode>>> args)
 		: name(std::move(name)), arguments(std::move(args)) {
 			this->loc = loc;
 		}
@@ -45,6 +46,7 @@ namespace zenith{
 
 			return ss.str();
 		}
+		void accept(Visitor& visitor) override { visitor.visit(*this); }
 	};
 	struct ErrorNode : ASTNode {
 	public:
@@ -56,18 +58,20 @@ namespace zenith{
 			return std::string(indent, ' ') + "<PARSE ERROR>";
 		}
 
+		void accept(Visitor& visitor) override { visitor.visit(*this); }
+
 	};
-	struct TemplateParameter {
+	struct TemplateParameter : ASTNode{
 		enum Kind { TYPE, NON_TYPE, TEMPLATE } kind;
 		std::string name;
 		bool isVariadic = false;
 
 		// For type parameters
-		std::unique_ptr<TypeNode> defaultType;
+		std_P3019_modified::polymorphic<TypeNode> defaultType;
 
 		// For non-type parameters - changed from Token to TypeNode
-		std::unique_ptr<TypeNode> type;
-		std::unique_ptr<ExprNode> defaultValue;
+		std_P3019_modified::polymorphic<TypeNode> type;
+		std_P3019_modified::polymorphic<ExprNode> defaultValue;
 
 		// For template template parameters
 		std::vector<TemplateParameter> templateParams;
@@ -77,20 +81,20 @@ namespace zenith{
 		                  bool isVariadic,
 		                  std::variant<
 				                  std::monostate,
-				                  std::unique_ptr<TypeNode>, // For TYPE parameters (default type)
-				                  std::pair<std::unique_ptr<TypeNode>, std::unique_ptr<ExprNode>>, // For NON_TYPE (type + default)
+				                  std_P3019_modified::polymorphic<TypeNode>, // For TYPE parameters (default type)
+				                  std::pair<std_P3019_modified::polymorphic<TypeNode>, std_P3019_modified::polymorphic<ExprNode>>, // For NON_TYPE (type + default)
 				                  std::vector<TemplateParameter> // For TEMPLATE parameters
 		                  > params = std::monostate{})
 				: kind(kind), name(std::move(name)), isVariadic(isVariadic) {
 
 			switch (kind) {
 				case TYPE:
-					if (auto* type = std::get_if<std::unique_ptr<TypeNode>>(&params)) {
+					if (auto* type = std::get_if<std_P3019_modified::polymorphic<TypeNode>>(&params)) {
 						defaultType = std::move(*type);
 					}
 					break;
 				case NON_TYPE:
-					if (auto* pair = std::get_if<std::pair<std::unique_ptr<TypeNode>, std::unique_ptr<ExprNode>>>(&params)) {
+					if (auto* pair = std::get_if<std::pair<std_P3019_modified::polymorphic<TypeNode>, std_P3019_modified::polymorphic<ExprNode>>>(&params)) {
 						type = std::move(pair->first);
 						defaultValue = std::move(pair->second);
 					}
@@ -102,14 +106,50 @@ namespace zenith{
 					break;
 			}
 		}
+		std::string toString(int indent = 0) const override {
+			std::string result = std::string(indent, ' ') + "TemplateParameter(" + name;
+			switch (kind) {
+				case TYPE:
+					result += ", TYPE";
+					if (defaultType) {
+						result += ", default=" + defaultType->toString(indent + 2);
+					}
+					break;
+				case NON_TYPE:
+					result += ", NON_TYPE";
+					if (type) {
+						result += ", type=" + type->toString(indent + 2);
+					}
+					if (defaultValue) {
+						result += ", default=" + defaultValue->toString(indent + 2);
+					}
+					break;
+				case TEMPLATE:
+					result += ", TEMPLATE";
+					if (!templateParams.empty()) {
+						result += ", params=[\n";
+						for (const auto& param : templateParams) {
+							result += param.toString(indent + 2) + ",\n";
+						}
+						result += std::string(indent, ' ') + "]";
+					}
+					break;
+			}
+			if (isVariadic) {
+				result += ", variadic";
+			}
+			result += ")";
+			return result;
+		}
+		void accept(Visitor& visitor) override { visitor.visit(*this); }
 	};
 	struct TemplateDeclNode : ASTNode {
 		std::vector<TemplateParameter> parameters;
-		std::unique_ptr<ASTNode> declaration;
+		std_P3019_modified::polymorphic<ASTNode> declaration;
 
 		TemplateDeclNode(SourceLocation loc,
 		                 std::vector<TemplateParameter> params,
-		                 std::unique_ptr<ASTNode> decl)
+		                 std_P3019_modified::polymorphic<ASTNode> decl)
 				: parameters(std::move(params)),
 				  declaration(std::move(decl)) {
 			this->loc = loc;
@@ -150,6 +190,7 @@ namespace zenith{
 			ss << declaration->toString(indent);
 			return ss.str();
 		}
+		void accept(Visitor& visitor) override { visitor.visit(*this); }
 	};
 
 } // namespace zenith

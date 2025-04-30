@@ -115,6 +115,24 @@ build CMakeFiles/Zenith.dir/src/SemanticAnalysis/SemanticAnalyzer.cpp.obj: CXX_C
   OBJECT_DIR = CMakeFiles\Zenith.dir
   OBJECT_FILE_DIR = CMakeFiles\Zenith.dir\src\SemanticAnalysis
 
+build CMakeFiles/Zenith.dir/src/SemanticAnalysis/SymbolTable.cpp.obj: CXX_COMPILER__Zenith_Debug C$:/Users/gogop/CLionProjects/Zenith/src/SemanticAnalysis/SymbolTable.cpp || cmake_object_order_depends_target_Zenith
+  DEP_FILE = CMakeFiles\Zenith.dir\src\SemanticAnalysis\SymbolTable.cpp.obj.d
+  FLAGS = -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -fdiagnostics-color=always -std=gnu++23
+  OBJECT_DIR = CMakeFiles\Zenith.dir
+  OBJECT_FILE_DIR = CMakeFiles\Zenith.dir\src\SemanticAnalysis
+
+build CMakeFiles/Zenith.dir/src/visitor/Visitor.cpp.obj: CXX_COMPILER__Zenith_Debug C$:/Users/gogop/CLionProjects/Zenith/src/visitor/Visitor.cpp || cmake_object_order_depends_target_Zenith
+  DEP_FILE = CMakeFiles\Zenith.dir\src\visitor\Visitor.cpp.obj.d
+  FLAGS = -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -fdiagnostics-color=always -std=gnu++23
+  OBJECT_DIR = CMakeFiles\Zenith.dir
+  OBJECT_FILE_DIR = CMakeFiles\Zenith.dir\src\visitor
+
+build CMakeFiles/Zenith.dir/src/core/polymorphic.cpp.obj: CXX_COMPILER__Zenith_Debug C$:/Users/gogop/CLionProjects/Zenith/src/core/polymorphic.cpp || cmake_object_order_depends_target_Zenith
+  DEP_FILE = CMakeFiles\Zenith.dir\src\core\polymorphic.cpp.obj.d
+  FLAGS = -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -fdiagnostics-color=always -std=gnu++23
+  OBJECT_DIR = CMakeFiles\Zenith.dir
+  OBJECT_FILE_DIR = CMakeFiles\Zenith.dir\src\core
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Zenith
@@ -123,7 +141,7 @@ build CMakeFiles/Zenith.dir/src/SemanticAnalysis/SemanticAnalyzer.cpp.obj: CXX_C
 #############################################
 # Link the executable Zenith.exe
 
-build Zenith.exe: CXX_EXECUTABLE_LINKER__Zenith_Debug CMakeFiles/Zenith.dir/main.cpp.obj CMakeFiles/Zenith.dir/src/lexer/lexer.cpp.obj CMakeFiles/Zenith.dir/src/parser/parser.cpp.obj CMakeFiles/Zenith.dir/src/core/MainNodes.cpp.obj CMakeFiles/Zenith.dir/src/exceptions/ParseError.cpp.obj CMakeFiles/Zenith.dir/src/utils/ReadFile.cpp.obj CMakeFiles/Zenith.dir/src/utils/RemovePadding.cpp.obj CMakeFiles/Zenith.dir/src/exceptions/LexError.cpp.obj CMakeFiles/Zenith.dir/src/utils/small_vector.cpp.obj CMakeFiles/Zenith.dir/src/exceptions/ErrorReporter.cpp.obj CMakeFiles/Zenith.dir/src/SemanticAnalysis/SemanticAnalyzer.cpp.obj
+build Zenith.exe: CXX_EXECUTABLE_LINKER__Zenith_Debug CMakeFiles/Zenith.dir/main.cpp.obj CMakeFiles/Zenith.dir/src/lexer/lexer.cpp.obj CMakeFiles/Zenith.dir/src/parser/parser.cpp.obj CMakeFiles/Zenith.dir/src/core/MainNodes.cpp.obj CMakeFiles/Zenith.dir/src/exceptions/ParseError.cpp.obj CMakeFiles/Zenith.dir/src/utils/ReadFile.cpp.obj CMakeFiles/Zenith.dir/src/utils/RemovePadding.cpp.obj CMakeFiles/Zenith.dir/src/exceptions/LexError.cpp.obj CMakeFiles/Zenith.dir/src/utils/small_vector.cpp.obj CMakeFiles/Zenith.dir/src/exceptions/ErrorReporter.cpp.obj CMakeFiles/Zenith.dir/src/SemanticAnalysis/SemanticAnalyzer.cpp.obj CMakeFiles/Zenith.dir/src/SemanticAnalysis/SymbolTable.cpp.obj CMakeFiles/Zenith.dir/src/visitor/Visitor.cpp.obj CMakeFiles/Zenith.dir/src/core/polymorphic.cpp.obj
   FLAGS = -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\Zenith.dir

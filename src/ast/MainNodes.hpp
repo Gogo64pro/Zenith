@@ -8,13 +8,14 @@
 #include <memory>
 #include <sstream>
 #include "../core/ASTNode.hpp"
+#include "../core/indirect_polymorphic.hpp"
 
 namespace zenith {
 	struct ProgramNode : ASTNode {
-		std::vector<std::unique_ptr<ASTNode>> declarations;
+		std::vector<std_P3019_modified::polymorphic<ASTNode>> declarations;
 
 		explicit ProgramNode(SourceLocation loc,
-		                     std::vector<std::unique_ptr<ASTNode>> decls)
+		                     std::vector<std_P3019_modified::polymorphic<ASTNode>> decls)
 				: declarations(std::move(decls)) {
 			this->loc = loc;
 		}
@@ -29,6 +30,7 @@ namespace zenith {
 			ss << pad << "}";
 			return ss.str();
 		}
+		void accept(Visitor& visitor) override { visitor.visit(*this); }
 	};
 
 	struct ImportNode : ASTNode {
@@ -44,5 +46,6 @@ namespace zenith {
 			std::string pad(indent, ' ');
 			return pad + "Import " + (isJavaImport ? "Java: " : "") + "\"" + path + "\"";
 		}
+		void accept(Visitor& visitor) override { visitor.visit(*this); }
 	};
 }

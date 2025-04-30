@@ -48,6 +48,7 @@ const std::unordered_map<std::string, TokenType> Lexer::keywords = {
 		{"Number", TokenType::NUMBER},
 		{"BigInt", TokenType::BIGINT},
 		{"BigNumber", TokenType::BIGNUMBER},
+		{"void", TokenType::VOID},
 
 		{"const", TokenType::CONST},
 		{"java", TokenType::JAVA},

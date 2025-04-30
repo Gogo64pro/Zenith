@@ -3,12 +3,12 @@
 
 namespace zenith{
 
-	void ErrorReporter::report(const SourceLocation &loc, const std::string &message, const std::string &errorType) {
+	void ErrorReporter::report(const SourceLocation &loc, const std::string &message, const errType& errorType) {
 		std::string line = getSourceLine(loc);
 
 		// Format the error message
 		errStream << "\033[1m" << loc.file << ":" << loc.line << ":" << loc.column << ": "
-		          << "\033[1;31m" << errorType << ": \033[0m"
+		          << "\033" << errorType.second << errorType.first << ": \033[0m"
 		          << message << "\n";
 
 		// Show the problematic line
@@ -19,7 +19,7 @@ namespace zenith{
 		for (size_t i = 0; i < loc.column + std::to_string(loc.line).size() + 3; ++i) {
 			errStream << " ";
 		}
-		errStream << "\033[1;31m^";
+		errStream << "\033" << errorType.second << "^";
 		for (size_t i = 1; i < loc.length; ++i) {
 			errStream << "~";
 		}

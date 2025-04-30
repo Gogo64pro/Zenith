@@ -3,6 +3,12 @@ project(Zenith)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions")
+message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+message(STATUS "CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
+# You can also check the specific flags for build types
+message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")
 #set(LLVM_INCLUDE_DIRS "C:\\Program Files\\LLVM\\include")
 #set(LLVM_DIR "C:\\Program Files\\LLVM\\lib\\cmake\\llvm")
 #find_package(LLVM 19.1.5 REQUIRED CONFIG)
@@ -26,6 +32,15 @@ add_executable(Zenith
         src/ast/TypeNodes.hpp
         src/ast/Other.hpp src/utils/ReadFile.cpp src/utils/ReadFile.hpp
         src/utils/RemovePadding.cpp src/utils/RemovePadding.hpp
-        src/exceptions/LexError.cpp src/exceptions/LexError.hpp src/utils/small_vector.cpp src/utils/small_vector.hpp src/exceptions/ErrorReporter.cpp src/exceptions/ErrorReporter.hpp src/core/IAnnotatable.hpp src/SemanticAnalysis/SemanticAnalyzer.cpp src/SemanticAnalysis/SemanticAnalyzer.hpp)
+        src/exceptions/LexError.cpp src/exceptions/LexError.hpp
+        src/utils/small_vector.cpp src/utils/small_vector.hpp
+        src/exceptions/ErrorReporter.cpp src/exceptions/ErrorReporter.hpp
+        src/core/IAnnotatable.hpp
+        #src/SemanticAnalysis/SemanticAnalyzernss.cpp
+        src/SemanticAnalysis/SemanticAnalyzer.hpp src/SemanticAnalysis/SemanticAnalyzer.cpp
+        src/SemanticAnalysis/SymbolTable.cpp src/SemanticAnalysis/SymbolTable.hpp
+        src/visitor/Visitor.cpp src/visitor/Visitor.hpp
+        #src/exceptions/SemanticAnalysisError.cpp src/exceptions/SemanticAnalysisError.hpp
+        src/core/polymorphic.cpp src/core/polymorphic.hpp src/core/indirect_polymorphic.hpp)
 
 #add_compile_options(-fsanitize=address)

@@ -1,3 +1,0 @@
-C:/Users/gogop/CLionProjects/Zenith/cmake-build-debug-llvm-clang/CMakeFiles/Zenith.dir
-C:/Users/gogop/CLionProjects/Zenith/cmake-build-debug-llvm-clang/CMakeFiles/edit_cache.dir
-C:/Users/gogop/CLionProjects/Zenith/cmake-build-debug-llvm-clang/CMakeFiles/rebuild_cache.dir

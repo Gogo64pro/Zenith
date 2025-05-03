@@ -216,7 +216,7 @@ namespace zenith {
 		symbolTable.enterScope();
 
 		for (size_t i = 0; i < node.lambda->params.size(); ++i) {
-			auto paramTypeForSymbol = paramTypes[i]->clone();
+			auto paramTypeForSymbol = paramTypes[i];
 			if (!paramTypeForSymbol) {
 				errorReporter.report(node.loc, "Internal error: Failed to clone type for lambda parameter symbol.");
 				analysisError = true;

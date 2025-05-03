@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include <vector>
 #include "../core/ASTNode.hpp"
 #include "../core/indirect_polymorphic.hpp"
@@ -18,7 +19,7 @@ namespace zenith {
 		explicit BlockNode(SourceLocation loc,
 		                   std::vector<std_P3019_modified::polymorphic<ASTNode>> stmts)
 				: statements(std::move(stmts)) {
-			this->loc = loc;
+			this->loc = std::move(loc);
 		}
 
 		std::string toString(int indent = 0) const override {

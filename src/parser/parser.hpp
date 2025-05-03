@@ -22,7 +22,7 @@ namespace zenith {
 		const Flags& flags;
 		std::ostream& errStream;
 		ErrorReporter errorReporter;
-		std::vector<std::unique_ptr<AnnotationNode>> pendingAnnotations;
+		std::vector<std_P3019_modified::polymorphic<AnnotationNode>> pendingAnnotations;
 
 		// Helper methods
 		bool isAtEnd() const;
@@ -45,57 +45,58 @@ namespace zenith {
 		bool peekIsTemplateStart() const;
 		bool isInStructInitializerContext() const;
 
-		//std::vector<std::unique_ptr<MemberDeclNode>> parseActorMembers(std::string& actorName);
-		//std::unique_ptr<MultiVarDeclNode> parseVarDecls();
+		//std::vector<std_P3019_modified::polymorphic<MemberDeclNode>> parseActorMembers(std::string& actorName);
+		//std_P3019_modified::polymorphic<MultiVarDeclNode> parseVarDecls();
 		// Parsing methods
-		std::unique_ptr<TypeNode> parseType();
-		std::unique_ptr<ExprNode> parsePrimary();
-		std::unique_ptr<StmtNode> parseStatement();
+		std_P3019_modified::polymorphic<TypeNode> parseType();
+		std_P3019_modified::polymorphic<ExprNode> parsePrimary();
+		std_P3019_modified::polymorphic<StmtNode> parseStatement();
 		std::vector<std::string> parseArrowFunctionParams();
 		std::vector<TemplateParameter> parseTemplateParameters();
-		std::unique_ptr<ExprNode> parseExpression(int precedence = 0);
-		std::unique_ptr<StructInitializerNode> parseStructInitializer();
-		std::pair<std::vector<std::pair<std::string, std::unique_ptr<TypeNode>>>, bool> parseParameters();
-		std::unique_ptr<MemberDeclNode> parseMessageHandler(std::vector<std::unique_ptr<AnnotationNode>> annotations);
-		std::unique_ptr<MemberDeclNode> parseField(std::vector<std::unique_ptr<AnnotationNode>> &annotations, const MemberDeclNode::Access &access, bool isConst);
-		std::unique_ptr<MemberDeclNode> parseConstructor(const MemberDeclNode::Access &access, bool isConst, std::string &className, std::vector<std::unique_ptr<AnnotationNode>> &annotations);
-		std::unique_ptr<MemberDeclNode> parseObjectPrimary(std::string &name, std::vector<std::unique_ptr<AnnotationNode>> &annotations, MemberDeclNode::Access defaultLevel = MemberDeclNode::PUBLIC);
+		std_P3019_modified::polymorphic<ExprNode> parseExpression(int precedence = 0);
+		std_P3019_modified::polymorphic<StructInitializerNode> parseStructInitializer();
+		std::pair<std::vector<std::pair<std::string, std_P3019_modified::polymorphic<TypeNode>>>, bool> parseParameters();
+		std_P3019_modified::polymorphic<MemberDeclNode> parseMessageHandler(std::vector<std_P3019_modified::polymorphic<AnnotationNode>> annotations);
+		std_P3019_modified::polymorphic<MemberDeclNode> parseField(std::vector<std_P3019_modified::polymorphic<AnnotationNode>> &annotations, const MemberDeclNode::Access &access, bool isConst);
+		std_P3019_modified::polymorphic<MemberDeclNode> parseConstructor(const MemberDeclNode::Access &access, bool isConst, std::string &className, std::vector<std_P3019_modified::polymorphic<AnnotationNode>> &annotations);
+		std_P3019_modified::polymorphic<MemberDeclNode> parseObjectPrimary(std::string &name, std::vector<std_P3019_modified::polymorphic<AnnotationNode>> &annotations, MemberDeclNode::Access defaultLevel = MemberDeclNode::PUBLIC);
 
 		// Declaration parsers
-		std::unique_ptr<ImportNode> parseImport();
-		std::unique_ptr<VarDeclNode> parseVarDecl();
-		std::unique_ptr<UnionDeclNode> parseUnion();
-		std::unique_ptr<ObjectDeclNode> parseObject();
-		std::unique_ptr<ActorDeclNode> parseActorDecl();
-		std::unique_ptr<FunctionDeclNode> parseFunction();
-		std::unique_ptr<AnnotationNode> parseAnnotation();
-		std::vector<std::unique_ptr<AnnotationNode>> parseAnnotations();
+		std_P3019_modified::polymorphic<ImportNode> parseImport();
+		std_P3019_modified::polymorphic<VarDeclNode> parseVarDecl();
+		std_P3019_modified::polymorphic<UnionDeclNode> parseUnion();
+		std_P3019_modified::polymorphic<ObjectDeclNode> parseObject();
+		std_P3019_modified::polymorphic<ActorDeclNode> parseActorDecl();
+		std_P3019_modified::polymorphic<FunctionDeclNode> parseFunction();
+		std_P3019_modified::polymorphic<AnnotationNode> parseAnnotation();
+		std::vector<std_P3019_modified::polymorphic<AnnotationNode>> parseAnnotations();
 
 		// Statement parsers
-		std::unique_ptr<IfNode> parseIfStmt();
-		std::unique_ptr<ForNode> parseForStmt();
-		std::unique_ptr<WhileNode> parseWhileStmt();
-		std::unique_ptr<DoWhileNode> parseDoWhileStmt();
-		std::unique_ptr<ReturnStmtNode> parseReturnStmt();
-		std::unique_ptr<ScopeBlockNode> parseScopeBlock();
-		std::unique_ptr<TemplateDeclNode> parseTemplate();
-		std::unique_ptr<BlockNode> parseBlock();
-		std::unique_ptr<UnsafeNode> parseUnsafeBlock();
+		std_P3019_modified::polymorphic<IfNode> parseIfStmt();
+		std_P3019_modified::polymorphic<ForNode> parseForStmt();
+		std_P3019_modified::polymorphic<WhileNode> parseWhileStmt();
+		std_P3019_modified::polymorphic<DoWhileNode> parseDoWhileStmt();
+		std_P3019_modified::polymorphic<ReturnStmtNode> parseReturnStmt();
+		std_P3019_modified::polymorphic<ScopeBlockNode> parseScopeBlock();
+		std_P3019_modified::polymorphic<TemplateDeclNode> parseTemplate();
+		std_P3019_modified::polymorphic<BlockNode> parseBlock();
+		std_P3019_modified::polymorphic<UnsafeNode> parseUnsafeBlock();
 
 		// Expression parsers
-		std::unique_ptr<NewExprNode> parseNewExpression();
-		std::unique_ptr<FreeObjectNode> parseFreeObject();
-		std::unique_ptr<CallNode> parseFunctionCall(std::unique_ptr<ExprNode> callee);
-		std::unique_ptr<ExprNode> parseArrayAccess(std::unique_ptr<ExprNode> arrayExpr);
-		std::unique_ptr<LambdaExprNode> parseArrowFunction(std::vector<std::string>&& params);
-		std::unique_ptr<MemberAccessNode> parseMemberAccess(std::unique_ptr<ExprNode> object);
+		std_P3019_modified::polymorphic<NewExprNode> parseNewExpression();
+		std_P3019_modified::polymorphic<FreeObjectNode> parseFreeObject();
+		std_P3019_modified::polymorphic<CallNode> parseFunctionCall(std_P3019_modified::polymorphic<ExprNode> callee);
+		std_P3019_modified::polymorphic<ExprNode> parseArrayAccess(std_P3019_modified::polymorphic<ExprNode> arrayExpr);
+		std_P3019_modified::polymorphic<LambdaExprNode> parseArrowFunction(std::vector<std::string>&& params);
+		std_P3019_modified::polymorphic<ExprNode> parseMemberAccess(std_P3019_modified::polymorphic<ExprNode> object);
 		// Error handling
-		std::unique_ptr<ErrorNode> createErrorNode();
-		std::unique_ptr<MemberDeclNode> createErrorNodeAsMember();
+		std_P3019_modified::polymorphic<ErrorNode> createErrorNode();
+
+		[[maybe_unused]] std_P3019_modified::polymorphic<MemberDeclNode> createErrorNodeAsMember();
 
 	public:
 		explicit Parser(std::vector<Token> tokens, const Flags& flags, std::ostream& errStream = std::cerr);
-		std::unique_ptr<ProgramNode> parse();
+		std_P3019_modified::polymorphic<ProgramNode> parse();
 
 	};
 }

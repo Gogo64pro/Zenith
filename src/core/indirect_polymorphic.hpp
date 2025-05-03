@@ -3,68 +3,71 @@
 //
 
 #pragma once
-#include <memory>
-#include <utility>
-#include <type_traits>
-#include <concepts>
-#include <functional>
+#define DEBUG true
+#include <memory> // For unique_ptr, allocator_traits, pointer_traits
+#include <utility> // For move, exchange, forward, pair
+#include <type_traits> // For standard type traits
+#include <concepts> // For concepts
+#include <functional> // For hash (potentially)
 #include <compare> // Needed for <=>
-#include <new>
-#include <cassert>
-#include <stdexcept>
-#include <initializer_list>
-#include <optional> // For potential future use or comparison
-#include <string> // For deprecation messages
+#include <new> // For placement new if needed, allocation functions
+#include <cassert> // For assert
+#include <stdexcept> // For exceptions
+#include <initializer_list> // For initializer_list constructors
+#include <optional> // For comparison (not used directly)
+#include <string> // For deprecation messages (potentially)
+#include <typeinfo> // For typeid used in control block and target()
+#include <iostream> // For DEBUG
 
 // Forward declarations within a modified namespace
 namespace std_P3019_modified {
 
 	// Forward declarations WITHOUT default template arguments
-	template < class T, class Allocator >
+	template <class T, class Allocator>
 	class polymorphic;
-	template < class T, class Allocator >
+	template <class T, class Allocator>
 	class indirect;
 
 	//----------------------------------------------------------------------------
-	// Type Traits
+	// Type Traits (Unchanged)
 	//----------------------------------------------------------------------------
 
-	template < typename >
+	template <typename>
 	struct is_indirect: std::false_type {};
-	template < typename T, typename A >
-	struct is_indirect < indirect < T, A >>: std::true_type {};
-	template < typename T >
-	inline constexpr bool is_indirect_v = is_indirect < T > ::value;
+	template <typename T, typename A>
+	struct is_indirect<indirect<T, A>>: std::true_type {};
+	template <typename T>
+	inline constexpr bool is_indirect_v = is_indirect<T>::value;
 
-	template < typename >
+	template <typename>
 	struct is_polymorphic: std::false_type {};
-	template < typename T, typename A >
-	struct is_polymorphic < polymorphic < T, A >>: std::true_type {};
-	template < typename T >
-	inline constexpr bool is_polymorphic_v = is_polymorphic < T > ::value;
+	template <typename T, typename A>
+	struct is_polymorphic<polymorphic<T, A>>: std::true_type {};
+	template <typename T>
+	inline constexpr bool is_polymorphic_v = is_polymorphic<T>::value;
 
-	template < typename >
+	template <typename>
 	struct is_in_place_type: std::false_type {};
-	template < typename T >
-	struct is_in_place_type < std::in_place_type_t < T >>: std::true_type {};
-	template < typename T >
-	inline constexpr bool is_in_place_type_v = is_in_place_type < T > ::value;
+	template <typename T>
+	struct is_in_place_type<std::in_place_type_t<T>>: std::true_type {};
+	template <typename T>
+	inline constexpr bool is_in_place_type_v = is_in_place_type<T>::value;
 
 	//----------------------------------------------------------------------------
-	// indirect<T, Allocator>
+	// indirect<T, Allocator> (Unchanged from your provided version)
 	//----------------------------------------------------------------------------
 
-	template < class T, class Allocator = std::allocator < T >> // Default argument here on definition
+	template <class T, class Allocator = std::allocator<T>>
 	class indirect {
 		// Static asserts...
-		static_assert(!std::is_array_v < T > , "indirect<T>: T cannot be an array type.");
-		static_assert(std::is_object_v < T > , "indirect<T>: T must be an object type.");
-		static_assert(!std::is_const_v < T > && !std::is_volatile_v < T > , "indirect<T>: T cannot be cv-qualified.");
-		static_assert(!std::same_as < T, std::in_place_t > , "indirect<T>: T cannot be in_place_t.");
-		static_assert(!is_in_place_type_v < T > , "indirect<T>: T cannot be a specialization of in_place_type_t.");
+		static_assert(!std::is_array_v<T>, "indirect<T>: T cannot be an array type.");
+		static_assert(std::is_object_v<T>, "indirect<T>: T must be an object type.");
+		static_assert(!std::is_const_v<T> && !std::is_volatile_v<T>, "indirect<T>: T cannot be cv-qualified.");
+		static_assert(!std::same_as<T, std::in_place_t>, "indirect<T>: T cannot be in_place_t.");
+		static_assert(!is_in_place_type_v<T>, "indirect<T>: T cannot be a specialization of in_place_type_t.");
 
-		using AllocTraits = std::allocator_traits < Allocator > ;
-		static_assert(std::same_as < typename AllocTraits::value_type, T > ,
+		using AllocTraits = std::allocator_traits<Allocator>;
+		static_assert(std::same_as<typename AllocTraits::value_type, T>,
 		              "indirect<T, Allocator>: allocator_traits<Allocator>::value_type must be T.");
 
 	public:
@@ -75,7 +78,7 @@ namespace std_P3019_modified {
 
 	private:
 		pointer p_ = nullptr;
-		[[no_unique_address]] Allocator alloc_ {};
+		[[no_unique_address]] Allocator alloc_{};
 
 		constexpr void destroy_deallocate() noexcept {
 			if (p_) {
@@ -87,12 +90,12 @@ namespace std_P3019_modified {
 			}
 		}
 
-		template < typename...Args >
-		requires std::constructible_from < T, Args... >
-		constexpr pointer allocate_construct(Args && ...args) {
+		template <typename...Args>
+		requires std::constructible_from<T, Args...>
+		constexpr pointer allocate_construct(Args&&...args) {
 			pointer ptr = AllocTraits::allocate(alloc_, 1);
 			try {
-				AllocTraits::construct(alloc_, std::to_address(ptr), std::forward < Args > (args)...);
+				AllocTraits::construct(alloc_, std::to_address(ptr), std::forward<Args>(args)...);
 				return ptr;
 			} catch (...) {
 				AllocTraits::deallocate(alloc_, ptr, 1);
@@ -100,8 +103,6 @@ namespace std_P3019_modified {
 			}
 		}
 
-		// Added for operator= case POCMA=true alloc!=other
-		// Also useful for implementing certain assignment scenarios cleanly.
 		[[nodiscard]] constexpr pointer release() noexcept {
 			pointer old_p = p_;
 			p_ = nullptr;
@@ -109,1043 +110,976 @@ namespace std_P3019_modified {
 		}
 
 	public:
-		// Constructors
-		explicit constexpr indirect() requires std::default_initializable < Allocator > && std::default_initializable < T > {
+		// Constructors (Unchanged)
+		explicit constexpr indirect() requires std::default_initializable<Allocator> && std::default_initializable<T> {
 			p_ = allocate_construct();
 		}
 
 		explicit constexpr indirect(std::allocator_arg_t,
-		                            const Allocator & a) requires std::default_initializable < T >
+		                            const Allocator& a) requires std::default_initializable<T>
 				: alloc_(a) {
 			p_ = allocate_construct();
 		}
 
-		// NOTE: indirect copy is NOT deprecated by default. Its cost is primarily T's copy cost.
-		constexpr indirect(const indirect & other) requires std::copy_constructible < T >
+		constexpr indirect(const indirect& other) requires std::copy_constructible<T>
 				: alloc_(AllocTraits::select_on_container_copy_construction(other.alloc_)) {
 			if (!other.valueless_after_move()) {
-				p_ = allocate_construct( * other);
+				p_ = allocate_construct(*other);
 			}
 		}
 
 		constexpr indirect(std::allocator_arg_t,
-		                   const Allocator & a,
-		                   const indirect & other) requires std::copy_constructible < T >
+		                   const Allocator& a,
+		                   const indirect& other) requires std::copy_constructible<T>
 				: alloc_(a) {
 			if (!other.valueless_after_move()) {
-				p_ = allocate_construct( * other);
+				p_ = allocate_construct(*other);
 			}
 		}
 
-		constexpr indirect(indirect && other) noexcept: p_(std::exchange(other.p_, nullptr)),
-		                                                alloc_(std::move(other.alloc_)) {}
+		constexpr indirect(indirect&& other) noexcept: p_(std::exchange(other.p_, nullptr)),
+		                                               alloc_(std::move(other.alloc_)) {}
 
 		constexpr indirect(std::allocator_arg_t,
-		                   const Allocator & a, indirect && other) noexcept(AllocTraits::is_always_equal::value): alloc_(a) {
-			if (other.valueless_after_move()) return; // *this remains default constructed (empty), other is empty
+		                   const Allocator& a, indirect&& other) noexcept(AllocTraits::is_always_equal::value): alloc_(a) {
+			if (other.valueless_after_move()) return;
 
 			if constexpr(AllocTraits::is_always_equal::value) {
-				p_ = std::exchange(other.p_, nullptr); // Steal pointer
+				p_ = std::exchange(other.p_, nullptr);
 			}
 			else {
 				if (alloc_ == other.alloc_) {
-					p_ = std::exchange(other.p_, nullptr); // Steal pointer
+					p_ = std::exchange(other.p_, nullptr);
 				} else {
-					// Allocators differ, must construct new using move, then destroy old in 'other'
 					pointer new_p = nullptr;
 					try {
-						new_p = allocate_construct(std::move( * other));
+						new_p = allocate_construct(std::move(*other));
 					} catch (...) {
-						// If construction fails, 'this' remains empty, 'other' is unchanged.
-						throw; // Re-throw construction error
+						throw;
 					}
-					// Construction succeeded
-					other.destroy_deallocate(); // Destroy and deallocate in 'other'
-					p_ = new_p; // Assign the newly constructed pointer to *this
+					other.destroy_deallocate();
+					p_ = new_p;
 				}
 			}
 		}
 
-
-		template < class U = T >
-		explicit constexpr indirect(U && u) requires std::default_initializable < Allocator > &&
-		                                             (!std::same_as < std::remove_cvref_t < U > , indirect > ) &&
-		                                             (!std::same_as < std::remove_cvref_t < U > , std::in_place_t > ) &&
-		                                             (!is_indirect_v < std::remove_cvref_t < U >> ) &&
-		                                             (!is_in_place_type_v < std::remove_cvref_t < U >> ) &&
-		                                             (!std::is_same_v<std::remove_cvref_t<U>, std::allocator_arg_t>) && // Disambiguate
-		                                             (!std::is_base_of_v<std::allocator_arg_t, std::remove_cvref_t<U>>) && // Disambiguate
-		                                             std::constructible_from < T, U > {
-			p_ = allocate_construct(std::forward < U > (u));
+		template <class U = T>
+		explicit constexpr indirect(U&& u) requires std::default_initializable<Allocator> &&
+		                                            (!std::same_as<std::remove_cvref_t<U>, indirect>) &&
+		                                            (!std::same_as<std::remove_cvref_t<U>, std::in_place_t>) &&
+		                                            (!is_indirect_v<std::remove_cvref_t<U>>) &&
+		                                            (!is_in_place_type_v<std::remove_cvref_t<U>>) &&
+		                                            (!std::is_same_v<std::remove_cvref_t<U>, std::allocator_arg_t>) &&
+		                                            (!std::is_base_of_v<std::allocator_arg_t, std::remove_cvref_t<U>>) &&
+		                                            std::constructible_from<T, U> {
+			p_ = allocate_construct(std::forward<U>(u));
 		}
 
-		template < class U = T >
+		template <class U = T>
 		explicit constexpr indirect(std::allocator_arg_t,
-		                            const Allocator & a, U && u) requires(!std::same_as < std::remove_cvref_t < U > , indirect > ) &&
-		(!std::same_as < std::remove_cvref_t < U > , std::in_place_t > ) &&
-		(!is_indirect_v < std::remove_cvref_t < U >> ) &&
-		(!is_in_place_type_v < std::remove_cvref_t < U >> ) &&
-		std::constructible_from < T, U >
+		                            const Allocator& a, U&& u) requires(!std::same_as<std::remove_cvref_t<U>, indirect>) &&
+		(!std::same_as<std::remove_cvref_t<U>, std::in_place_t>) &&
+		(!is_indirect_v<std::remove_cvref_t<U>>) &&
+		(!is_in_place_type_v<std::remove_cvref_t<U>>) &&
+		std::constructible_from<T, U>
 				: alloc_(a) {
-				p_ = allocate_construct(std::forward < U > (u));
+				p_ = allocate_construct(std::forward<U>(u));
 		}
 
-
-		template < class...Us >
-		explicit constexpr indirect(std::in_place_t, Us && ...us) requires std::default_initializable < Allocator > &&
-		                                                                   std::constructible_from < T, Us... > {
-			p_ = allocate_construct(std::forward < Us > (us)...);
+		template <class...Us>
+		explicit constexpr indirect(std::in_place_t, Us&&...us) requires std::default_initializable<Allocator> &&
+		                                                                 std::constructible_from<T, Us...> {
+			p_ = allocate_construct(std::forward<Us>(us)...);
 		}
 
-		template < class...Us >
+		template <class...Us>
 		explicit constexpr indirect(std::allocator_arg_t,
-		                            const Allocator & a, std::in_place_t, Us && ...us) requires std::constructible_from < T, Us... >
+		                            const Allocator& a, std::in_place_t, Us&&...us) requires std::constructible_from<T, Us...>
 				: alloc_(a) {
-			p_ = allocate_construct(std::forward < Us > (us)...);
+			p_ = allocate_construct(std::forward<Us>(us)...);
 		}
 
-		template < class I, class...Us >
-		explicit constexpr indirect(std::in_place_t, std::initializer_list < I > ilist, Us && ...us) requires std::default_initializable < Allocator > &&
-		                                                                                                      std::constructible_from < T, std::initializer_list < I > & , Us... > {
-			p_ = allocate_construct(ilist, std::forward < Us > (us)...);
+		template <class I, class...Us>
+		explicit constexpr indirect(std::in_place_t, std::initializer_list<I> ilist, Us&&...us) requires std::default_initializable<Allocator> &&
+		                                                                                                 std::constructible_from<T, std::initializer_list<I>&, Us...> {
+			p_ = allocate_construct(ilist, std::forward<Us>(us)...);
 		}
 
-		template < class I, class...Us >
+		template <class I, class...Us>
 		explicit constexpr indirect(std::allocator_arg_t,
-		                            const Allocator & a, std::in_place_t, std::initializer_list < I > ilist, Us && ...us) requires std::constructible_from < T, std::initializer_list < I > & , Us... >
+		                            const Allocator& a, std::in_place_t, std::initializer_list<I> ilist, Us&&...us) requires std::constructible_from<T, std::initializer_list<I>&, Us...>
 				: alloc_(a) {
-			p_ = allocate_construct(ilist, std::forward < Us > (us)...);
+			p_ = allocate_construct(ilist, std::forward<Us>(us)...);
 		}
 
-		constexpr~indirect() {
+		constexpr ~indirect() {
 			destroy_deallocate();
 		}
 
-		// Assignment
-		// NOTE: indirect copy assignment NOT deprecated by default.
-		constexpr indirect & operator = (const indirect & other) requires std::copy_constructible < T > && std::is_copy_assignable_v < T > {
+		// Assignment (Unchanged)
+		constexpr indirect& operator=(const indirect& other) requires std::copy_constructible<T> && std::is_copy_assignable_v<T> {
 			if (std::addressof(other) == this) return *this;
-
 			constexpr bool pocca = AllocTraits::propagate_on_container_copy_assignment::value;
-
 			if constexpr(pocca) {
 				if (alloc_ != other.alloc_) {
-					// Allocators differ and POCMA is true. Replace allocator and content.
 					if (other.valueless_after_move()) {
-						// Other is empty, just destroy current and copy allocator.
 						destroy_deallocate();
 						alloc_ = other.alloc_;
 					} else {
-						// Other has value. Need to allocate+copy with other's allocator *before* destroying.
-						Allocator target_alloc = other.alloc_; // Allocator to use for the new copy
+						Allocator target_alloc = other.alloc_;
 						pointer new_p = nullptr;
 						try {
-							// Allocate and construct using the target allocator
 							using TempAllocTraits = std::allocator_traits<Allocator>;
-							new_p = TempAllocTraits::allocate(target_alloc, 1); // Allocate with target
+							new_p = TempAllocTraits::allocate(target_alloc, 1);
 							try {
-								TempAllocTraits::construct(target_alloc, std::to_address(new_p), *other); // Construct with target
+								TempAllocTraits::construct(target_alloc, std::to_address(new_p), *other);
 							} catch(...) {
-								TempAllocTraits::deallocate(target_alloc, new_p, 1); // Cleanup on construction failure
+								TempAllocTraits::deallocate(target_alloc, new_p, 1);
 								throw;
 							}
 						} catch (...) {
-							// If allocation fails, *this is unchanged, rethrow
 							throw;
 						}
-						// Allocation/construction succeeded, now commit
-						destroy_deallocate(); // Destroy old object (uses old alloc_)
-						alloc_ = std::move(target_alloc); // Commit new allocator
-						p_ = new_p; // Commit new pointer
+						destroy_deallocate();
+						alloc_ = std::move(target_alloc);
+						p_ = new_p;
 					}
-					return * this;
+					return *this;
 				}
-				// Allocators are same or POCMA is false, proceed without changing allocator yet
 			}
-
-			// If we reach here, either allocators are equal or POCCA is false.
-			// Allocator propagation is handled above if POCMA was true. Now handle content.
 			if (other.valueless_after_move()) {
-				destroy_deallocate(); // Make *this valueless (allocator unchanged)
+				destroy_deallocate();
 			} else {
 				if (!valueless_after_move()) {
-					// Both have values, perform assignment on the contained object
-					*(*this) = *other; // Use *(*this) which works for raw pointers too
+					*(*this) = *other;
 				} else {
-					// *this is valueless, other has a value, construct a copy using current allocator
 					pointer new_p = nullptr;
 					try {
-						new_p = allocate_construct( * other); // Uses current alloc_
+						new_p = allocate_construct(*other);
 					} catch(...) {
-						// *this remains valueless on failure
 						throw;
 					}
-					p_ = new_p; // Commit pointer
+					p_ = new_p;
 				}
 			}
-			return * this;
+			return *this;
 		}
 
-
-		constexpr indirect & operator = (indirect && other) noexcept(
+		constexpr indirect& operator=(indirect&& other) noexcept(
 		AllocTraits::propagate_on_container_move_assignment::value ||
 		AllocTraits::is_always_equal::value) {
-			if (std::addressof(other) == this) return * this;
-
+			if (std::addressof(other) == this) return *this;
 			constexpr bool pocma = AllocTraits::propagate_on_container_move_assignment::value;
 			if constexpr(pocma) {
-				destroy_deallocate(); // Destroy current content
-				alloc_ = std::move(other.alloc_); // Move allocator
-				p_ = std::exchange(other.p_, nullptr); // Steal pointer
+				destroy_deallocate();
+				alloc_ = std::move(other.alloc_);
+				p_ = std::exchange(other.p_, nullptr);
 			}
-			else { // Not POCMA
+			else {
 				if (alloc_ == other.alloc_) {
-					// Allocators equal, just swap pointers after destroying current
 					destroy_deallocate();
 					p_ = std::exchange(other.p_, nullptr);
-				} else { // Allocators differ, non-propagating
+				} else {
 					if (other.valueless_after_move()) {
-						destroy_deallocate(); // Make *this valueless
-						// other is already valueless
+						destroy_deallocate();
 					} else {
-						// Allocators differ, must move-construct into *this's allocation space if possible,
-						// or reallocate using *this allocator otherwise.
 						if (!valueless_after_move()) {
-							// Both have value. Try move assignment first.
 							if constexpr (std::is_nothrow_move_assignable_v<T>) {
 								*(*this) = std::move(*other);
-								other.destroy_deallocate(); // Destroy moved-from object in other
+								other.destroy_deallocate();
 							} else {
-								// Move assignment might throw. Reconstruct for strong guarantee.
 								pointer new_p = nullptr;
 								try {
-									new_p = allocate_construct(std::move(*other)); // Move construct into new memory (using this->alloc_)
+									new_p = allocate_construct(std::move(*other));
 								} catch (...) {
-									// If move construction fails, *this is unchanged.
 									throw;
 								}
-								// Move construct succeeded
-								destroy_deallocate(); // Destroy original object in *this
-								p_ = new_p; // Assign new pointer
-								other.destroy_deallocate(); // Destroy original object in other
+								destroy_deallocate();
+								p_ = new_p;
+								other.destroy_deallocate();
 							}
 						} else {
-							// *this was valueless, so just move-construct using this->alloc_
 							pointer new_p = nullptr;
 							try {
 								new_p = allocate_construct(std::move(*other));
 							} catch (...) {
-								// *this remains valueless
 								throw;
 							}
 							p_ = new_p;
-							other.destroy_deallocate(); // Destroy original object in other
+							other.destroy_deallocate();
 						}
 					}
-					// Ensure other becomes valueless (its p_ is null via destroy_deallocate)
 				}
 			}
-			return * this;
+			return *this;
 		}
 
-		template < class U = T > requires(!std::same_as < std::remove_cvref_t < U > , indirect > ) &&
-		(!is_indirect_v < std::remove_cvref_t < U >> ) &&
-		(!is_in_place_type_v < std::remove_cvref_t < U >> ) &&
-		std::constructible_from < T, U > &&
-				std::assignable_from < T & , U >
-		constexpr indirect & operator = (U && u) {
+		template <class U = T> requires(!std::same_as<std::remove_cvref_t<U>, indirect>) &&
+		(!is_indirect_v<std::remove_cvref_t<U>>) &&
+		(!is_in_place_type_v<std::remove_cvref_t<U>>) &&
+		std::constructible_from<T, U> &&
+				std::assignable_from<T&, U>
+		constexpr indirect& operator=(U&& u) {
 			if (valueless_after_move()) {
-				// If valueless, need to construct
 				pointer new_p = nullptr;
 				try {
-					new_p = allocate_construct(std::forward < U > (u));
+					new_p = allocate_construct(std::forward<U>(u));
 				} catch (...) {
-					// Remains valueless
 					throw;
 				}
-				p_ = new_p; // Commit
+				p_ = new_p;
 			} else {
-				// Has value, assign to it
-				*(*this) = std::forward < U > (u);
+				*(*this) = std::forward<U>(u);
 			}
-			return * this;
+			return *this;
 		}
 
-		// Observers
-		constexpr
-		const T & operator * () const & noexcept {
-			assert(!valueless_after_move() && "Precondition: indirect::operator* called on valueless object");
-			return * std::to_address(p_); // Use std::to_address for fancy pointers
-		}
+		// Observers (Unchanged)
+		constexpr const T& operator*() const& noexcept { assert(!valueless_after_move()); return *std::to_address(p_); }
+		constexpr T& operator*()& noexcept { assert(!valueless_after_move()); return *std::to_address(p_); }
+		constexpr const T&& operator*() const&& noexcept { assert(!valueless_after_move()); return std::move(*std::to_address(p_)); }
+		constexpr T&& operator*() && noexcept { assert(!valueless_after_move()); return std::move(*std::to_address(p_)); }
+		constexpr const_pointer operator->() const noexcept { assert(!valueless_after_move()); return p_; }
+		constexpr pointer operator->() noexcept { assert(!valueless_after_move()); return p_; }
+		constexpr bool valueless_after_move() const noexcept { return p_ == nullptr; }
+		constexpr bool has_value() const noexcept { return p_ != nullptr; }
+		constexpr allocator_type get_allocator() const noexcept { return alloc_; }
 
-		constexpr T & operator * () & noexcept {
-			assert(!valueless_after_move() && "Precondition: indirect::operator* called on valueless object");
-			return * std::to_address(p_); // Use std::to_address
-		}
-
-		constexpr
-		const T && operator * () const && noexcept {
-			assert(!valueless_after_move() && "Precondition: indirect::operator* called on valueless object");
-			return std::move( * std::to_address(p_)); // Use std::to_address
-		}
-
-		constexpr T && operator * () && noexcept {
-			assert(!valueless_after_move() && "Precondition: indirect::operator* called on valueless object");
-			return std::move( * std::to_address(p_)); // Use std::to_address
-		}
-
-
-		constexpr const_pointer operator -> () const noexcept {
-			assert(!valueless_after_move() && "Precondition: indirect::operator-> called on valueless object");
-			return p_;
-		}
-
-		constexpr pointer operator -> () noexcept {
-			assert(!valueless_after_move() && "Precondition: indirect::operator-> called on valueless object");
-			return p_;
-		}
-
-		constexpr bool valueless_after_move() const noexcept {
-			return p_ == nullptr;
-		}
-
-		constexpr bool has_value() const noexcept {
-			return p_ != nullptr;
-		}
-
-		constexpr allocator_type get_allocator() const noexcept {
-			return alloc_;
-		}
-
-		// Swap
-		constexpr void swap(indirect & other) noexcept(
-		AllocTraits::propagate_on_container_swap::value ||
-		AllocTraits::is_always_equal::value) {
+		// Swap (Unchanged)
+		constexpr void swap(indirect& other) noexcept( AllocTraits::propagate_on_container_swap::value || AllocTraits::is_always_equal::value) {
 			if constexpr(AllocTraits::propagate_on_container_swap::value) {
 				std::swap(p_, other.p_);
 				std::swap(alloc_, other.alloc_);
 			}
 			else {
-				// Requires allocators to compare equal per [container.requirements.general]
-				if (alloc_ != other.alloc_) {
-					// Undefined behavior or assert? Let's assert for debug builds.
-					assert(alloc_ == other.alloc_ && "indirect::swap requires allocators to be equal when POCS is false");
-					// In release, maybe just proceed with pointer swap? Or is UB better?
-					// Sticking with standard container rules: UB if allocators != and POCS==false. Assert helps catch it.
-				}
+				assert(alloc_ == other.alloc_ && "indirect::swap requires allocators to be equal when POCS is false");
 				std::swap(p_, other.p_);
 			}
 		}
+		friend constexpr void swap(indirect& lhs, indirect& rhs) noexcept(noexcept(lhs.swap(rhs))) { lhs.swap(rhs); }
 
-		friend constexpr void swap(indirect & lhs, indirect & rhs) noexcept(noexcept(lhs.swap(rhs))) {
-			lhs.swap(rhs);
-		}
-
-		// Comparisons
-		template < class U, class AA >
-		requires requires(const T & t,
-		                  const U & u) {
-			{
-			t == u
-			} -> std::convertible_to < bool > ;
-		}
-		friend constexpr bool operator == (const indirect & lhs,
-		                                   const indirect < U, AA > & rhs) {
+		// Comparisons (Unchanged)
+		template <class U, class AA> requires requires(const T& t, const U& u) { { t == u } -> std::convertible_to<bool>; }
+		friend constexpr bool operator==(const indirect& lhs, const indirect<U, AA>& rhs) {
 			const bool lhs_has_value = lhs.has_value();
 			const bool rhs_has_value = rhs.has_value();
-			if (lhs_has_value != rhs_has_value) {
-				return false; // One has value, the other doesn't
-			}
-			if (!lhs_has_value) { // Both must be empty
-				return true;
-			}
-			// Both have values
-			return * lhs == * rhs;
+			if (lhs_has_value != rhs_has_value) return false;
+			if (!lhs_has_value) return true;
+			return *lhs == *rhs;
 		}
 
-		template < class U, class AA >
-		requires std::three_way_comparable_with < T, U > // Use concept directly
-		friend constexpr std::compare_three_way_result_t < T, U >
-		operator <=> (const indirect & lhs,
-		              const indirect < U, AA > & rhs) {
+		template <class U, class AA> requires std::three_way_comparable_with<T, U>
+		friend constexpr std::compare_three_way_result_t<T, U> operator<=>(const indirect& lhs, const indirect<U, AA>& rhs) {
 			const bool lhs_has_value = lhs.has_value();
 			const bool rhs_has_value = rhs.has_value();
-
-			if (lhs_has_value && rhs_has_value) return *lhs <=> *rhs; // Both have value
-			if (!lhs_has_value && !rhs_has_value) return std::strong_ordering::equal; // Both empty
-			if (!lhs_has_value) return std::strong_ordering::less; // Empty < non-empty
-			/*if (!rhs_has_value)*/ return std::strong_ordering::greater; // Non-empty > empty
+			if (lhs_has_value && rhs_has_value) return *lhs <=> *rhs;
+			if (!lhs_has_value && !rhs_has_value) return std::strong_ordering::equal;
+			if (!lhs_has_value) return std::strong_ordering::less;
+			return std::strong_ordering::greater;
 		}
-
-		// Comparisons with non-indirect type U
-		template < class U > requires(!is_indirect_v < std::remove_cvref_t < U >> ) &&
-		requires(
-		const T & t,
-		const U & u
-		) {
-			{
-				t == u
-			} -> std::convertible_to < bool > ;
-		}
-		friend constexpr bool operator == (const indirect & lhs,
-		                                   const U & rhs) {
-			// Compare value with value if lhs has one, otherwise false (empty != value)
-			return lhs.has_value() ? (*lhs == rhs) : false;
-		}
-
-		template < class U > requires(!is_indirect_v < std::remove_cvref_t < U >> ) &&
-		std::three_way_comparable_with < T, U > // Use concept directly
-		friend constexpr std::compare_three_way_result_t < T, U >
-		operator <=> (const indirect & lhs,
-		              const U & rhs) {
-			// Compare value with value if lhs has one, otherwise empty < value
-			return lhs.has_value() ? (*lhs <=> rhs) : std::strong_ordering::less;
-		}
+		template <class U> requires(!is_indirect_v<std::remove_cvref_t<U>>) && requires( const T& t, const U& u ) { { t == u } -> std::convertible_to<bool>; }
+		friend constexpr bool operator==(const indirect& lhs, const U& rhs) { return lhs.has_value() ? (*lhs == rhs) : false; }
+		template <class U> requires(!is_indirect_v<std::remove_cvref_t<U>>) && std::three_way_comparable_with<T, U>
+		friend constexpr std::compare_three_way_result_t<T, U> operator<=>(const indirect& lhs, const U& rhs) { return lhs.has_value() ? (*lhs <=> rhs) : std::strong_ordering::less; }
 	};
 
-	// Deduction guides
-	template < class Value >
-	indirect(Value) -> indirect < Value > ;
-
-	template < class Allocator, class Value >
-	indirect(std::allocator_arg_t, Allocator, Value) -> indirect < Value, Allocator > ;
-
+	// Deduction guides (Unchanged)
+	template <class Value> indirect(Value) -> indirect<Value>;
+	template <class Allocator, class Value> indirect(std::allocator_arg_t, Allocator, Value) -> indirect<Value, Allocator>;
 
 	//----------------------------------------------------------------------------
-	// polymorphic<T, Allocator>
+	// polymorphic<T, Allocator> (Control Block Implementation)
 	//----------------------------------------------------------------------------
 
-	template < class T, class Allocator = std::allocator < T >> // Default argument here on definition
+	namespace detail {
+
+		// --- Control Block Base ---
+		template<typename BaseT, typename BaseAlloc>
+		struct ControlBlockBase {
+			using BasePointer = typename std::allocator_traits<BaseAlloc>::pointer;
+			using ConstBasePointer = typename std::allocator_traits<BaseAlloc>::const_pointer;
+
+			virtual ~ControlBlockBase() = default;
+
+			// Type-erased operations
+			virtual void destroy(BaseAlloc& alloc, BasePointer p) noexcept = 0;
+			[[nodiscard]] virtual BasePointer copy(BaseAlloc& target_alloc, ConstBasePointer p) const = 0;
+			[[nodiscard]] virtual ControlBlockBase* clone(BaseAlloc& target_cb_alloc) const = 0; // For deep copy
+			[[nodiscard]] virtual const std::type_info& target_type_info() const noexcept = 0;
+		};
+
+		// --- Control Block Derived ---
+		template<typename ConcreteDerived, typename BaseT, typename BaseAlloc>
+		struct ControlBlockDerived final : ControlBlockBase<BaseT, BaseAlloc> {
+			using BasePointer = typename ControlBlockBase<BaseT, BaseAlloc>::BasePointer;
+			using ConstBasePointer = typename ControlBlockBase<BaseT, BaseAlloc>::ConstBasePointer;
+			using ControlBlock = ControlBlockBase<BaseT, BaseAlloc>; // Alias for clarity
+
+			void destroy(BaseAlloc& base_alloc, BasePointer p_base) noexcept override {
+				using DerivedAlloc = typename std::allocator_traits<BaseAlloc>::template rebind_alloc<ConcreteDerived>;
+				using DerivedAllocTraits = std::allocator_traits<DerivedAlloc>;
+				using DerivedPointer = typename DerivedAllocTraits::pointer;
+
+				auto* p_derived_raw = static_cast<ConcreteDerived*>(std::to_address(p_base));
+				DerivedPointer derived_p = std::pointer_traits<DerivedPointer>::pointer_to(*p_derived_raw);
+				DerivedAlloc derived_alloc(base_alloc);
+
+				try {
+					DerivedAllocTraits::destroy(derived_alloc, std::to_address(derived_p));
+				} catch (...) {
+					assert(false && "Destructor threw an exception."); std::terminate();
+				}
+				std::allocator_traits<BaseAlloc>::deallocate(base_alloc, p_base, 1);
+			}
+
+			[[nodiscard]] BasePointer copy(BaseAlloc& target_base_alloc, ConstBasePointer p_base_const) const override {
+				using DerivedAlloc = typename std::allocator_traits<BaseAlloc>::template rebind_alloc<ConcreteDerived>;
+				using DerivedAllocTraits = std::allocator_traits<DerivedAlloc>;
+				using DerivedPointer = typename DerivedAllocTraits::pointer;
+
+				const BaseT* p_base_addr = std::to_address(p_base_const);
+				const auto& derived_obj_ref = static_cast<const ConcreteDerived&>(*p_base_addr);
+				DerivedAlloc target_derived_alloc(target_base_alloc);
+
+				DerivedPointer new_derived_p = DerivedAllocTraits::allocate(target_derived_alloc, 1);
+				BasePointer bp_result = nullptr;
+				try {
+					DerivedAllocTraits::construct(target_derived_alloc,
+					                              std::to_address(new_derived_p),
+					                              derived_obj_ref);  // This copies the ConcreteDerived
+					ConcreteDerived* new_derived_raw = std::to_address(new_derived_p);
+					auto* new_base_raw = static_cast<BaseT*>(new_derived_raw);
+					bp_result = std::pointer_traits<BasePointer>::pointer_to(*new_base_raw);
+					return bp_result;
+				} catch (...) {
+					DerivedAllocTraits::deallocate(target_derived_alloc, new_derived_p, 1);
+					throw;
+				}
+			}
+
+			[[nodiscard]] ControlBlock* clone(BaseAlloc& target_cb_alloc) const override {
+				// Allocate memory for the new control block using the target allocator
+				using CBDerivedAlloc = typename std::allocator_traits<BaseAlloc>::template rebind_alloc<ControlBlockDerived>;
+				using CBDerivedAllocTraits = std::allocator_traits<CBDerivedAlloc>;
+				CBDerivedAlloc cb_alloc(target_cb_alloc); // Use the provided target allocator
+
+				typename CBDerivedAllocTraits::pointer cb_ptr = CBDerivedAllocTraits::allocate(cb_alloc, 1);
+				try {
+					// Construct the new control block (placement new or construct)
+					CBDerivedAllocTraits::construct(cb_alloc, std::to_address(cb_ptr)); // Default construct CB
+					return std::to_address(cb_ptr);
+				} catch (...) {
+					CBDerivedAllocTraits::deallocate(cb_alloc, cb_ptr, 1);
+					throw;
+				}
+			}
+
+			[[nodiscard]] const std::type_info& target_type_info() const noexcept override {
+				return typeid(ConcreteDerived);
+			}
+		};
+
+	} // namespace detail
+
+	template <class T, class Allocator = std::allocator<T>>
 	class polymorphic {
-		// Static asserts
-		static_assert(!std::is_array_v < T > , "polymorphic<T>: T cannot be an array type.");
-		static_assert(std::is_object_v < T > , "polymorphic<T>: T must be an object type.");
-		static_assert(!std::is_const_v < T > && !std::is_volatile_v < T > , "polymorphic<T>: T cannot be cv-qualified.");
-		static_assert(!std::same_as < T, std::in_place_t > , "polymorphic<T>: T cannot be in_place_t.");
-		static_assert(!is_in_place_type_v < T > , "polymorphic<T>: T cannot be a specialization of in_place_type_t.");
-		using BaseAllocTraits = std::allocator_traits < Allocator > ;
-		static_assert(std::same_as < typename BaseAllocTraits::value_type, T > ,
+		template<typename, typename> friend class polymorphic; // Allow access for conversions
+
+		// Static asserts...
+		static_assert(!std::is_array_v<T>, "polymorphic<T>: T cannot be an array type.");
+		static_assert(std::is_object_v<T>, "polymorphic<T>: T must be an object type.");
+		static_assert(!std::is_const_v<T> && !std::is_volatile_v<T>, "polymorphic<T>: T cannot be cv-qualified.");
+		static_assert(!std::same_as<T, std::in_place_t>, "polymorphic<T>: T cannot be in_place_t.");
+		static_assert(!is_in_place_type_v<T>, "polymorphic<T>: T cannot be a specialization of in_place_type_t.");
+		using BaseAllocTraits = std::allocator_traits<Allocator>;
+		static_assert(std::same_as<typename BaseAllocTraits::value_type, T>,
 		              "polymorphic<T, Allocator>: allocator_traits<Allocator>::value_type must be T.");
 
-		// --- Type Erasure Internals ---
-		using base_pointer = typename BaseAllocTraits::pointer;
-		using const_base_pointer = typename BaseAllocTraits::const_pointer;
-		// Function pointer types for type erasure
-		using destroy_fn_t = void( * )(Allocator & , base_pointer) noexcept;
-		using copy_fn_t = base_pointer( * )(Allocator & , const_base_pointer); // Returns new pointer, takes target base allocator and const source base pointer
+		using pointer = typename BaseAllocTraits::pointer;
+		using const_pointer = typename BaseAllocTraits::const_pointer;
+		using ControlBlock = detail::ControlBlockBase<T, Allocator>;
 
-		template < typename U >
-		requires std::derived_from < U, T >
-		static void concrete_destroy(Allocator & base_alloc, base_pointer p_base) noexcept {
-			// Rebind allocator to the actual derived type U
-			using DerivedAlloc = typename BaseAllocTraits::template rebind_alloc < U > ;
-			using DerivedAllocTraits = std::allocator_traits < DerivedAlloc > ;
-			using derived_pointer = typename DerivedAllocTraits::pointer;
+		// Custom deleter for the Control Block unique_ptr
+		struct ControlBlockDeleter {
+			Allocator alloc;
 
-			// Get pointer-to-U from pointer-to-T
-			U* p_derived_raw = static_cast<U*>(std::to_address(p_base));
-			derived_pointer derived_p = std::pointer_traits<derived_pointer>::pointer_to(*p_derived_raw);
+			// Rebind the allocator to the ControlBlock type for deletion
+			using CBAlloc = typename BaseAllocTraits::template rebind_alloc<ControlBlock>;
+			using CBAllocTraits = std::allocator_traits<CBAlloc>;
 
-			// Create the derived allocator from the base allocator (needed for destroy call)
-			DerivedAlloc derived_alloc(base_alloc);
-
-			try {
-				DerivedAllocTraits::destroy(derived_alloc, std::to_address(derived_p));
-			} catch (...) {
-				// Destructors must not throw
-				assert(false && "Destructor threw an exception.");
-				std::terminate(); // No recovery possible if destructor throws
+			void operator()(ControlBlock* cb) const noexcept {
+				if (!cb) return;
+				CBAlloc cb_alloc(alloc);
+				try {
+					CBAllocTraits::destroy(cb_alloc, cb);
+				} catch (...) {
+					assert(false && "Control block destructor threw"); std::terminate();
+				}
+				CBAllocTraits::deallocate(cb_alloc, cb, 1);
 			}
+		};
 
-			// Deallocate using the BASE allocator and BASE pointer
-			BaseAllocTraits::deallocate(base_alloc, p_base, 1);
+		using ControlBlockPtr = std::unique_ptr<ControlBlock, ControlBlockDeleter>;
+
+		pointer p_ = nullptr;
+		ControlBlockPtr cb_ptr_ = nullptr;
+
+		// --- Private Helpers ---
+		constexpr Allocator& get_allocator_ref() noexcept {
+			return cb_ptr_.get_deleter().alloc;
 		}
 
-
-		template < typename U >
-		requires std::derived_from < U, T > && std::copy_constructible < U >
-		static base_pointer concrete_copy(Allocator & target_base_alloc, const_base_pointer p_base_const) {
-			// Rebind allocator to the actual derived type U
-			using DerivedAlloc = typename BaseAllocTraits::template rebind_alloc < U > ;
-			using DerivedAllocTraits = std::allocator_traits < DerivedAlloc > ;
-			using derived_pointer = typename DerivedAllocTraits::pointer;
-
-			// Get reference to const U from const T*
-			const T* p_base_addr = std::to_address(p_base_const);
-			const U & derived_obj_ref = static_cast < const U & > ( * p_base_addr);
-
-			// Create the derived allocator using the *target* base allocator
-			DerivedAlloc target_derived_alloc(target_base_alloc);
-
-			// Allocate memory using the target derived allocator
-			derived_pointer new_derived_p = DerivedAllocTraits::allocate(target_derived_alloc, 1);
-			base_pointer bp = nullptr; // For returning the base pointer
-			try {
-				// Construct a copy of the derived object into the new memory using target derived allocator
-				DerivedAllocTraits::construct(target_derived_alloc, std::to_address(new_derived_p), derived_obj_ref);
-
-				// Construction succeeded, now get the base pointer
-				U* new_derived_raw = std::to_address(new_derived_p);
-				T* new_base_raw = static_cast<T*>(new_derived_raw);
-				bp = std::pointer_traits < base_pointer > ::pointer_to(*new_base_raw);
-				return bp;
-
-			} catch (...) {
-				DerivedAllocTraits::deallocate(target_derived_alloc, new_derived_p, 1); // Clean up allocation on failure
-				throw; // Re-throw the construction exception
-			}
+		constexpr const Allocator& get_allocator_ref() const noexcept {
+			return cb_ptr_.get_deleter().alloc;
 		}
 
-		// Members
-		base_pointer p_ = nullptr;
-		destroy_fn_t destroy_ = nullptr;
-		copy_fn_t copy_ = nullptr;
-		[[no_unique_address]] Allocator alloc_ {};
-
-		// Helper to destroy and deallocate using function pointer
-		constexpr void call_destroy_deallocate() noexcept {
+		constexpr void reset() noexcept {
 			if (p_) {
-				// Invariant: if p_ != nullptr, destroy_ must also be != nullptr (unless moved from)
-				// A moved-from object has p_ == nullptr.
-				assert(destroy_ != nullptr && "Invariant violation: p_ is set but destroy_ is null.");
-				destroy_(alloc_, p_); // Call the stored destruction function
-				p_ = nullptr; // Mark as valueless
-				destroy_ = nullptr; // Clear function pointers
-				copy_ = nullptr;
+				assert(cb_ptr_ && "Invariant violation: p_ set but cb_ptr_ is null");
+				cb_ptr_->destroy(get_allocator_ref(), p_);
+				p_ = nullptr;
 			}
-			// Ensure members are null if p_ was already null (or just became null)
-			assert(p_ == nullptr && destroy_ == nullptr && copy_ == nullptr);
+			cb_ptr_.reset();
+			if (!cb_ptr_) p_ = nullptr;
 		}
 
-		// Helper to allocate and construct a derived U
-		template < typename U, typename...Args >
-		requires std::derived_from < U, T > && std::constructible_from < U, Args... > && std::copy_constructible < U >
-		constexpr base_pointer allocate_construct_derived(Args && ...args) {
-			using DerivedAlloc = typename BaseAllocTraits::template rebind_alloc < U > ;
-			using DerivedAllocTraits = std::allocator_traits < DerivedAlloc > ;
-			using derived_pointer = typename DerivedAllocTraits::pointer;
+		template<typename ConcreteDerived, typename... Args>
+		requires std::derived_from<ConcreteDerived, T> && std::constructible_from<ConcreteDerived, Args...>
+		void allocate_construct_and_init(Allocator current_alloc, Args&&... args) {
+			using DerivedAlloc = typename BaseAllocTraits::template rebind_alloc<ConcreteDerived>;
+			using DerivedAllocTraits = std::allocator_traits<DerivedAlloc>;
+			DerivedAlloc derived_alloc(current_alloc);
+			typename DerivedAllocTraits::pointer derived_p = nullptr;
+			pointer base_p_new = nullptr;
+			ControlBlock* cb_new = nullptr;
 
-			DerivedAlloc derived_alloc(alloc_); // Use *this object's base allocator to create derived
+			derived_p = DerivedAllocTraits::allocate(derived_alloc, 1);
 
-			derived_pointer derived_p = DerivedAllocTraits::allocate(derived_alloc, 1);
-			base_pointer bp = nullptr; // For returning the base pointer
 			try {
-				DerivedAllocTraits::construct(derived_alloc, std::to_address(derived_p), std::forward < Args > (args)...);
-
-				// Construction succeeded, now get the base pointer
-				U* derived_raw = std::to_address(derived_p);
+				DerivedAllocTraits::construct(derived_alloc, std::to_address(derived_p), std::forward<Args>(args)...);
+				ConcreteDerived* derived_raw = std::to_address(derived_p);
 				T* base_raw = static_cast<T*>(derived_raw);
-				bp = std::pointer_traits<base_pointer>::pointer_to(*base_raw);
+				base_p_new = std::pointer_traits<pointer>::pointer_to(*base_raw);
 
-				// Set the function pointers for type erasure *after* construction succeeds
-				destroy_ = & concrete_destroy < U > ;
-				copy_ = & concrete_copy < U > ; // Needs copy_constructible<U>
-				return bp;
+				using CBDerived = detail::ControlBlockDerived<ConcreteDerived, T, Allocator>;
+				using CBAlloc = typename BaseAllocTraits::template rebind_alloc<CBDerived>;
+				using CBAllocTraits = std::allocator_traits<CBAlloc>;
+				CBAlloc cb_alloc(current_alloc);
+				typename CBAllocTraits::pointer cb_derived_p = CBAllocTraits::allocate(cb_alloc, 1);
+
+				try {
+					CBAllocTraits::construct(cb_alloc, std::to_address(cb_derived_p));
+					cb_new = std::to_address(cb_derived_p);
+				} catch (...) {
+					CBAllocTraits::deallocate(cb_alloc, cb_derived_p, 1);
+					throw;
+				}
+
+				reset();
+				p_ = base_p_new;
+				cb_ptr_ = ControlBlockPtr(cb_new, ControlBlockDeleter{current_alloc});
 
 			} catch (...) {
-				// Construction failed, ensure no dangling function pointers are set
-				destroy_ = nullptr;
-				copy_ = nullptr;
-				DerivedAllocTraits::deallocate(derived_alloc, derived_p, 1); // Clean up allocation
-				throw; // Re-throw the construction exception
+				if (derived_p) {
+					if (base_p_new) {
+						try { DerivedAllocTraits::destroy(derived_alloc, std::to_address(derived_p)); }
+						catch (...) {}
+					}
+					DerivedAllocTraits::deallocate(derived_alloc, derived_p, 1);
+				}
+				reset();
+				throw;
 			}
 		}
+
+		pointer release_p() noexcept { return std::exchange(p_, nullptr); }
+		ControlBlockPtr release_cb_ptr() noexcept { return std::move(cb_ptr_); }
 
 	public:
 		using value_type = T;
 		using allocator_type = Allocator;
-		using pointer = base_pointer; // Expose base pointer type
-		using const_pointer = const_base_pointer; // Expose const base pointer type
 
 		// --- Constructors ---
+		explicit constexpr polymorphic() requires std::default_initializable<Allocator>
+				: p_(nullptr), cb_ptr_(nullptr, ControlBlockDeleter{Allocator{}}) {}
 
-		// Default constructor (constructs T)
-		explicit constexpr polymorphic() requires std::default_initializable < Allocator > &&
-		                                          std::default_initializable < T > &&
-		                                          std::copy_constructible < T > {
-			p_ = allocate_construct_derived < T > ();
+		explicit constexpr polymorphic(std::allocator_arg_t, const Allocator& a) noexcept
+				: p_(nullptr), cb_ptr_(nullptr, ControlBlockDeleter{a}) {}
+
+		constexpr polymorphic(std::nullptr_t) requires std::default_initializable<Allocator> : polymorphic() {}
+		constexpr polymorphic(std::allocator_arg_t, const Allocator& a, std::nullptr_t) noexcept : polymorphic(std::allocator_arg, a) {}
+
+		template <class U, class... Ts>
+		explicit constexpr polymorphic(std::in_place_type_t<U>, Ts&&... ts) requires std::default_initializable<Allocator> &&
+		                                                                             std::derived_from<U, T> && std::constructible_from<U, Ts...>
+				: polymorphic()
+		{
+			allocate_construct_and_init<U>(Allocator{}, std::forward<Ts>(ts)...);
 		}
 
-		// Allocator-extended default constructor (constructs T)
-		explicit constexpr polymorphic(std::allocator_arg_t,
-		                               const Allocator & a) requires std::default_initializable < T > && std::copy_constructible < T >
-				: alloc_(a) {
-			p_ = allocate_construct_derived < T > ();
+		template <class U, class... Ts>
+		explicit constexpr polymorphic(std::allocator_arg_t, const Allocator& a, std::in_place_type_t<U>, Ts&&... ts) requires
+		std::derived_from<U, T> && std::constructible_from<U, Ts...>
+				: polymorphic(std::allocator_arg, a)
+		{
+			allocate_construct_and_init<U>(a, std::forward<Ts>(ts)...);
 		}
 
-		// *** MODIFIED: Added nullptr constructor ***
-//		[[deprecated("Use std::optional<polymorphic<T>> for intentional nullability. This deviates from P3019.")]]
-		constexpr polymorphic(std::nullptr_t) noexcept: p_(nullptr), destroy_(nullptr), copy_(nullptr), alloc_ {} {
-			// Creates a "null" or valueless polymorphic object
-		}
-
-//		[[deprecated("Use std::optional<polymorphic<T>> for intentional nullability. This deviates from P3019.")]]
-		constexpr polymorphic(std::allocator_arg_t,
-		                      const Allocator & a, std::nullptr_t) noexcept: p_(nullptr), destroy_(nullptr), copy_(nullptr), alloc_(a) {}
-
-		// --- Copy constructor ---
-		// <<< ADDED [[deprecated]] HERE >>>
-		[[deprecated("polymorphic performs potentially expensive deep copy; consider moving or using std::optional.")]]
-		constexpr polymorphic(const polymorphic & other)
-				: alloc_(BaseAllocTraits::select_on_container_copy_construction(other.alloc_)) {
-			if (other.p_) { // Check if source has a value
-				assert(other.copy_ != nullptr && "polymorphic copy ctor: Source has value but copy_ fn ptr is null.");
-				// Call the source's copy function, using *this* object's (potentially copied) allocator
-				p_ = other.copy_(alloc_, other.p_); // Can throw
-				// If copy succeeds, store the function pointers from the source
-				destroy_ = other.destroy_;
-				copy_ = other.copy_;
-			} else {
-				// Source is valueless (null or moved-from), so *this becomes valueless.
-				p_ = nullptr;
-				destroy_ = nullptr;
-				copy_ = nullptr;
-			}
-		}
-
-		// --- Allocator-extended copy constructor ---
-		// <<< ADDED [[deprecated]] HERE >>>
-		[[deprecated("polymorphic performs potentially expensive deep copy; consider moving or using std::optional.")]]
-		constexpr polymorphic(std::allocator_arg_t,
-		                      const Allocator & a,
-		                      const polymorphic & other)
-				: alloc_(a) { // Use the provided allocator 'a'
-			if (other.p_) {
-				assert(other.copy_ != nullptr && "polymorphic alloc-extended copy ctor: Source has value but copy_ fn ptr is null.");
-				// Call source's copy function with the provided allocator 'a'
-				p_ = other.copy_(alloc_, other.p_); // Can throw
-				destroy_ = other.destroy_;
-				copy_ = other.copy_;
-			} else {
-				p_ = nullptr;
-				destroy_ = nullptr;
-				copy_ = nullptr;
-			}
-		}
-
-		// Move constructor (basic)
-		constexpr polymorphic(polymorphic && other) noexcept
-				: p_(std::exchange(other.p_, nullptr)),
-				  destroy_(std::exchange(other.destroy_, nullptr)),
-				  copy_(std::exchange(other.copy_, nullptr)),
-				  alloc_(std::move(other.alloc_)) // Always move allocator (standard container behavior)
+		template <class U>
+		explicit constexpr polymorphic(U&& u) requires std::default_initializable<Allocator> &&
+		                                               (!std::same_as<std::remove_cvref_t<U>, polymorphic>) &&
+		                                               (!is_polymorphic_v<std::remove_cvref_t<U>>) &&
+		                                               (!std::same_as<std::remove_cvref_t<U>, std::in_place_t>) &&
+		                                               (!is_in_place_type_v<std::remove_cvref_t<U>>) &&
+		                                               (!std::is_same_v<std::remove_cvref_t<U>, std::allocator_arg_t>) &&
+		                                               (!std::is_base_of_v<std::allocator_arg_t, std::remove_cvref_t<U>>) &&
+		                                               std::derived_from<std::remove_cvref_t<U>, T> &&
+		                                               std::constructible_from<std::remove_cvref_t<U>, U> &&
+		                                               std::copy_constructible<std::remove_cvref_t<U>>
+				: polymorphic(std::in_place_type<std::remove_cvref_t<U>>, std::forward<U>(u))
 		{}
 
-		// Allocator-extended move constructor
-		constexpr polymorphic(std::allocator_arg_t,
-		                      const Allocator & a, polymorphic && other) noexcept(BaseAllocTraits::is_always_equal::value)
-				: alloc_(a) // Initialize with the target allocator 'a'
-		{
-			if (!other.p_) { // Check if other is already valueless
-				p_ = nullptr;
-				destroy_ = nullptr;
-				copy_ = nullptr;
-				return; // other is already valueless, *this is default initialized to valueless
-			}
+		template <class U>
+		explicit constexpr polymorphic(std::allocator_arg_t, const Allocator& a, U&& u) requires
+		(!std::same_as<std::remove_cvref_t<U>, polymorphic>) &&
+		(!is_polymorphic_v<std::remove_cvref_t<U>>) &&
+		(!std::same_as<std::remove_cvref_t<U>, std::in_place_t>) &&
+		(!is_in_place_type_v<std::remove_cvref_t<U>>) &&
+		std::derived_from<std::remove_cvref_t<U>, T> &&
+				std::constructible_from<std::remove_cvref_t<U>, U> &&
+		std::copy_constructible<std::remove_cvref_t<U>>
+				: polymorphic(std::allocator_arg, a, std::in_place_type<std::remove_cvref_t<U>>, std::forward<U>(u))
+				{}
 
-			// Other has a value
-			if constexpr(BaseAllocTraits::is_always_equal::value) {
-				// Allocators are always equal, just steal the state
-				p_ = std::exchange(other.p_, nullptr);
-				destroy_ = std::exchange(other.destroy_, nullptr);
-				copy_ = std::exchange(other.copy_, nullptr);
-				// Note: alloc_ was already initialized with 'a'. If is_always_equal, 'a' must equal other.alloc_.
-			}
-			else { // Allocators might differ
-				if (alloc_ == other.alloc_) {
-					// Allocators happen to be equal, steal the state
-					p_ = std::exchange(other.p_, nullptr);
-					destroy_ = std::exchange(other.destroy_, nullptr);
-					copy_ = std::exchange(other.copy_, nullptr);
-				} else {
-					// Allocators differ. P3019 implies a potentially throwing allocation/copy.
-					// Since move_fn_t isn't present, fallback to copy using the target allocator.
-					assert(other.copy_ != nullptr && "polymorphic alloc-move ctor: Source has value but copy_ fn ptr is null.");
-					base_pointer new_p = nullptr;
-					try {
-						new_p = other.copy_(alloc_, other.p_); // Copy using the target allocator 'alloc_'
-						// Copy succeeded, now destroy the object managed by 'other'.
-						other.call_destroy_deallocate(); // Make 'other' valueless (uses other.alloc_)
-						// Assign pointer and functions *after* other is destroyed (in case destroy throws? No, it's noexcept)
-						p_ = new_p;
-						destroy_ = other.destroy_; // These were nulled in other, but we need the *original* values
-						copy_ = other.copy_;      // This logic is flawed. We need to save them *before* destroying other.
-
-						// Revised logic for allocators differ case:
-						destroy_fn_t saved_destroy = other.destroy_;
-						copy_fn_t saved_copy = other.copy_;
-						new_p = other.copy_(alloc_, other.p_); // Copy using target allocator (this->alloc_)
-						// If copy throws, *this is left valueless (alloc_ is set, p_/fns are null), other is unchanged.
-						// If copy succeeds:
-						other.call_destroy_deallocate(); // Destroy object in other (using other.alloc_)
-						p_ = new_p;
-						destroy_ = saved_destroy; // Assign saved function pointers
-						copy_ = saved_copy;
-
-
-					} catch (...) {
-						// If copy fails, *this should be left valueless (as if default constructed with alloc 'a').
-						p_ = nullptr;
-						destroy_ = nullptr;
-						copy_ = nullptr;
-						// 'other' remains unchanged by the failed copy attempt.
-						throw; // Re-throw the exception from copy_.
-					}
-				}
-			}
-		}
-
-
-		// Single-argument constructor from U&& (where U derives from T)
-		template < class U > // No default needed if deduction guide exists
-		explicit constexpr polymorphic(U && u) requires std::default_initializable < Allocator > &&
-		                                                (!std::same_as < std::remove_cvref_t < U > , polymorphic > ) &&
-		                                                (!is_polymorphic_v < std::remove_cvref_t < U >> ) &&
-		                                                (!is_in_place_type_v < std::remove_cvref_t < U >> ) &&
-		                                                (!std::is_same_v<std::remove_cvref_t<U>, std::allocator_arg_t>) && // Disambiguate from alloc-extended ctors
-		                                                (!std::is_base_of_v<std::allocator_arg_t, std::remove_cvref_t<U>>) &&
-		                                                std::derived_from < std::remove_cvref_t < U > , T > &&
-		                                                std::constructible_from < std::remove_cvref_t < U > , U > &&
-		                                                std::copy_constructible < std::remove_cvref_t < U >> { // Requires copy constructible for type erasure
-			using ActualU = std::remove_cvref_t < U > ;
-			p_ = allocate_construct_derived < ActualU > (std::forward < U > (u));
-		}
-
-		// Allocator-extended single-argument constructor from U&&
-		template < class U >
-		explicit constexpr polymorphic(std::allocator_arg_t,
-		                               const Allocator & a, U && u) requires (!std::same_as < std::remove_cvref_t < U > , polymorphic > ) &&
-		(!is_polymorphic_v < std::remove_cvref_t < U >> ) &&
-		(!is_in_place_type_v < std::remove_cvref_t < U >> ) &&
-		std::derived_from < std::remove_cvref_t < U > , T > &&
-				std::constructible_from < std::remove_cvref_t < U > , U > &&
-		std::copy_constructible < std::remove_cvref_t < U >>
-				: alloc_(a) {
-				using ActualU = std::remove_cvref_t < U > ;
-				p_ = allocate_construct_derived < ActualU > (std::forward < U > (u));
-		}
-
-		// In-place constructor for type U
-		template < class U, class...Ts >
-		explicit constexpr polymorphic(std::in_place_type_t < U > , Ts && ...ts) requires std::default_initializable < Allocator > &&
-		                                                                                  std::derived_from < U, T > &&
-		                                                                                  std::constructible_from < U, Ts... > &&
-		                                                                                  std::copy_constructible < U > {
-			p_ = allocate_construct_derived < U > (std::forward < Ts > (ts)...);
-		}
-
-		// Allocator-extended in-place constructor for type U
-		template < class U, class...Ts >
-		explicit constexpr polymorphic(std::allocator_arg_t,
-		                               const Allocator & a, std::in_place_type_t < U > , Ts && ...ts) requires std::derived_from < U, T > &&
-		                                                                                                       std::constructible_from < U, Ts... > &&
-		                                                                                                       std::copy_constructible < U >
-				: alloc_(a) {
-			p_ = allocate_construct_derived < U > (std::forward < Ts > (ts)...);
-		}
-
-		// Init list constructors
-		template < class U, class I, class...Us >
-		explicit constexpr polymorphic(std::in_place_type_t < U > , std::initializer_list < I > ilist, Us && ...us) requires std::default_initializable < Allocator > &&
-		                                                                                                                     std::derived_from < U, T > &&
-		                                                                                                                     std::constructible_from < U, std::initializer_list < I > & , Us... > &&
-		                                                                                                                     std::copy_constructible < U > {
-			p_ = allocate_construct_derived < U > (ilist, std::forward < Us > (us)...);
-		}
-
-		template < class U, class I, class...Us >
-		explicit constexpr polymorphic(std::allocator_arg_t,
-		                               const Allocator & a, std::in_place_type_t < U > , std::initializer_list < I > ilist, Us && ...us) requires std::derived_from < U, T > &&
-		                                                                                                                                          std::constructible_from < U, std::initializer_list < I > & , Us... > &&
-		                                                                                                                                          std::copy_constructible < U >
-				: alloc_(a) {
-			p_ = allocate_construct_derived < U > (ilist, std::forward < Us > (us)...);
-		}
-
-		// --- Destructor ---
-		constexpr~polymorphic() {
-			call_destroy_deallocate(); // Handles null p_ correctly
-		}
-
-		// --- Assignment ---
-
-		// --- Copy assignment ---
-		// <<< ADDED [[deprecated]] HERE >>>
+		// Copy Constructor
 		[[deprecated("polymorphic performs potentially expensive deep copy; consider moving or using std::optional.")]]
-		constexpr polymorphic & operator = (const polymorphic & other) {
-			if (std::addressof(other) == this) {
-				return * this;
-			}
-
-			constexpr bool pocca = BaseAllocTraits::propagate_on_container_copy_assignment::value;
-			Allocator target_alloc = alloc_; // Start with current allocator
-
-			if constexpr (pocca) {
-				if (alloc_ != other.alloc_) {
-					target_alloc = other.alloc_; // If POCMA true and allocs differ, target is other's
-				}
-			}
-
-			if (!other.p_) { // other is valueless
-				call_destroy_deallocate(); // Make *this valueless
-				// Update allocator only if POCMA is true and they differed *and* we actually needed to propagate
-				if constexpr (pocca) {
-					if (alloc_ != other.alloc_) {
-						alloc_ = other.alloc_; // Assign other's allocator
-					}
-				}
-			} else { // other has a value
-				assert(other.copy_ != nullptr);
-				// Perform the copy using the determined target allocator
-				base_pointer new_p = nullptr;
+		polymorphic(const polymorphic& other) {
+			if (other) {
+				if(DEBUG) std::cout << "COPY CTOR CALLED\n";
+				// Use the control block to create a copy
 				try {
-					new_p = other.copy_(target_alloc, other.p_); // Use target_alloc for the copy
+					p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
+					cb_ptr_.reset(other.cb_ptr_->clone(get_allocator_ref()));
 				} catch (...) {
-					// If copy fails, *this state should remain unchanged.
-					// If target_alloc was different from alloc_, this is hard.
-					// Assume strong guarantee: *this is unchanged.
+					reset();
 					throw;
 				}
-
-				// Copy succeeded, now commit changes
-				call_destroy_deallocate(); // Destroy the old object in *this (uses old alloc_)
-				p_ = new_p;
-				destroy_ = other.destroy_; // Take function pointers from other
-				copy_ = other.copy_;
-				// Update allocator if POCMA is true and they differed
-				if constexpr (pocca) {
-					if (alloc_ != other.alloc_) { // Check original allocators
-						alloc_ = other.alloc_; // Assign other's allocator
-					}
-				} else {
-					// Ensure alloc_ == target_alloc if pocca is false (it should be)
-					assert(alloc_ == target_alloc);
-				}
 			}
-			return * this;
 		}
 
-		// Move assignment
-		constexpr polymorphic & operator = (polymorphic && other) noexcept(
-		BaseAllocTraits::propagate_on_container_move_assignment::value ||
-		BaseAllocTraits::is_always_equal::value) {
-			if (std::addressof(other) == this) {
-				return * this;
+		// Allocator-extended Copy Constructor
+		[[deprecated("polymorphic performs potentially expensive deep copy; consider moving or using std::optional.")]]
+		constexpr polymorphic(std::allocator_arg_t, const Allocator& a, const polymorphic& other)
+				: cb_ptr_(nullptr, ControlBlockDeleter{a})
+		{
+			if (other.p_) {
+				if(DEBUG) std::cout << "COPY CTOR CALLED\n";
+				assert(other.cb_ptr_ && "Source has value but no control block");
+				ControlBlock* cb_raw = nullptr;
+				try {
+					p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
+					cb_raw = other.cb_ptr_->clone(get_allocator_ref());
+					cb_ptr_.reset(cb_raw);
+				} catch(...) {
+					if (p_ && !cb_raw) { p_ = nullptr; }
+					reset();
+					throw;
+				}
 			}
+		}
 
-			constexpr bool pocma = BaseAllocTraits::propagate_on_container_move_assignment::value;
-			if constexpr(pocma) {
-				// If POCMA is true: destroy lhs, move assign allocator, then steal state from rhs.
-				call_destroy_deallocate();
-				alloc_ = std::move(other.alloc_); // Move allocator
-				p_ = std::exchange(other.p_, nullptr);
-				destroy_ = std::exchange(other.destroy_, nullptr);
-				copy_ = std::exchange(other.copy_, nullptr);
-			}
-			else { // POCMA is false
-				if (alloc_ == other.alloc_) {
-					// Allocators are equal: destroy lhs, then steal state from rhs.
-					call_destroy_deallocate();
+		template<typename Derived, typename DerivedAlloc>
+		requires std::derived_from<Derived, T> &&
+		         std::is_convertible_v<DerivedAlloc, Allocator>
+		polymorphic(polymorphic<Derived, DerivedAlloc>&& other) noexcept
+				: cb_ptr_(nullptr, ControlBlockDeleter{Allocator(std::move(other.get_allocator_ref()))})
+		{
+			if (other.p_) {
+				using CBDerived = detail::ControlBlockDerived<Derived, T, Allocator>;
+				using CBAlloc = typename BaseAllocTraits::template rebind_alloc<CBDerived>;
+				using CBAllocTraits = std::allocator_traits<CBAlloc>;
+
+				CBAlloc cb_alloc(get_allocator_ref());
+				auto* new_cb = CBAllocTraits::allocate(cb_alloc, 1);
+				try {
+					CBAllocTraits::construct(cb_alloc, new_cb);
+					cb_ptr_.reset(new_cb);
 					p_ = std::exchange(other.p_, nullptr);
-					destroy_ = std::exchange(other.destroy_, nullptr);
-					copy_ = std::exchange(other.copy_, nullptr);
-				} else { // Allocators differ, POCMA is false
-					if (!other.p_) { // other is valueless
-						call_destroy_deallocate(); // Make *this valueless
-						// other is already valueless, ensure its members are null
-						other.p_ = nullptr; other.destroy_ = nullptr; other.copy_ = nullptr;
-					} else { // other has value, allocators differ, POCMA false
-						// Fallback to copy using *this object's allocator (alloc_).
-						assert(other.copy_ != nullptr);
-						base_pointer new_p = nullptr;
-						destroy_fn_t saved_destroy = other.destroy_; // Save before potential modification
-						copy_fn_t saved_copy = other.copy_;
-						try {
-							new_p = other.copy_(alloc_, other.p_); // Copy using this->alloc_
-						} catch (...) {
-							// If copy fails, *this remains unchanged. other remains unchanged.
-							throw;
-						}
-						// Copy succeeded. Commit.
-						call_destroy_deallocate(); // Destroy original object in *this (using this->alloc_)
-						p_ = new_p;
-						destroy_ = saved_destroy;
-						copy_ = saved_copy;
-						other.call_destroy_deallocate(); // Destroy the object in other, making it valueless (using other.alloc_)
+				} catch (...) {
+					CBAllocTraits::deallocate(cb_alloc, new_cb, 1);
+					throw;
+				}
+			}
+		}
+
+		// Copy version of the conversion constructor
+		template<typename Derived, typename DerivedAlloc>
+		requires std::derived_from<Derived, T> &&
+		         std::is_convertible_v<const DerivedAlloc&, Allocator>
+		constexpr polymorphic(const polymorphic<Derived, DerivedAlloc>& other)
+				: cb_ptr_(nullptr, ControlBlockDeleter{Allocator(other.get_allocator_ref())})
+		{
+			if (other.p_) {
+				p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
+
+				using CBDerived = detail::ControlBlockDerived<Derived, T, Allocator>;
+				using CBAlloc = typename BaseAllocTraits::template rebind_alloc<CBDerived>;
+				using CBAllocTraits = std::allocator_traits<CBAlloc>;
+
+				CBAlloc cb_alloc(get_allocator_ref());
+				auto* new_cb = CBAllocTraits::allocate(cb_alloc, 1);
+				try {
+					CBAllocTraits::construct(cb_alloc, new_cb);  // Fixed line
+					cb_ptr_.reset(new_cb);
+				} catch (...) {
+					CBAllocTraits::deallocate(cb_alloc, new_cb, 1);
+					throw;
+				}
+			}
+		}
+
+		template<typename Derived, typename DerivedAlloc>
+		requires std::derived_from<Derived, T> &&
+		         std::is_convertible_v<DerivedAlloc, Allocator>
+		polymorphic(const polymorphic<Derived, DerivedAlloc>& other)
+				: cb_ptr_(nullptr, ControlBlockDeleter{Allocator(other.get_allocator_ref())})
+		{
+			if (other) {
+				p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
+				cb_ptr_.reset(other.cb_ptr_->clone(get_allocator_ref()));
+			}
+		}
+
+
+		// Move Constructor
+		constexpr polymorphic(polymorphic&& other) noexcept
+				: p_(other.release_p()),
+				  cb_ptr_(other.release_cb_ptr())
+		{}
+
+		// Allocator-extended Move Constructor
+		constexpr polymorphic(std::allocator_arg_t, const Allocator& a, polymorphic&& other)
+		noexcept(BaseAllocTraits::is_always_equal::value)
+				: cb_ptr_(nullptr, ControlBlockDeleter{a})
+		{
+			if (!other.p_) { return; }
+
+			if constexpr (BaseAllocTraits::is_always_equal::value) {
+				p_ = other.release_p();
+				cb_ptr_ = other.release_cb_ptr();
+				cb_ptr_.get_deleter().alloc = a;
+			} else {
+				if (get_allocator_ref() == other.get_allocator_ref()) {
+					p_ = other.release_p();
+					cb_ptr_ = other.release_cb_ptr();
+				} else {
+					assert(other.cb_ptr_ && "Source has value but no control block");
+					ControlBlock* cb_raw = nullptr;
+					try {
+						p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
+						cb_raw = other.cb_ptr_->clone(get_allocator_ref());
+						cb_ptr_.reset(cb_raw);
+						other.reset();
+					} catch(...) {
+						if (p_ && !cb_raw) { p_ = nullptr; }
+						reset();
+						throw;
 					}
 				}
 			}
-			return * this;
 		}
 
-		// *** MODIFIED: Added nullptr assignment ***
-//		[[deprecated("Use std::optional<polymorphic<T>> for intentional nullability. This deviates from P3019.")]]
-		constexpr polymorphic & operator = (std::nullptr_t) noexcept {
-			reset(); // Destroy current object and set to valueless state
-			return * this;
+
+		// Converting copy constructor from derived to base
+		template <class U, class A>
+		requires std::derived_from<U, T>
+		polymorphic(const polymorphic<U, A>& other) {
+			if (other) {
+				p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
+				cb_ptr_.reset(other.cb_ptr_->clone(get_allocator_ref()));
+			}
 		}
 
-		// --- Observers ---
 
-		constexpr
-		const T & operator * () const noexcept {
-			assert(has_value() && "Precondition violation: polymorphic::operator*() const called on valueless object.");
-			return * std::to_address(p_);
+		// Destructor
+		constexpr ~polymorphic() {
+			reset();
 		}
 
-		constexpr T & operator * () noexcept {
-			assert(has_value() && "Precondition violation: polymorphic::operator*() called on valueless object.");
-			return * std::to_address(p_);
+		// Assignment Operators
+		[[deprecated("polymorphic performs potentially expensive deep copy; consider moving or using std::optional.")]]
+		constexpr polymorphic& operator=(const polymorphic& other) {
+			if(DEBUG) std::cout << "COPY CTOR CALLED\n";
+			if (this == &other) return *this;
+			polymorphic temp(other);
+			if constexpr (BaseAllocTraits::propagate_on_container_copy_assignment::value) {
+				if (get_allocator_ref() != other.get_allocator_ref()) {
+					get_allocator_ref() = other.get_allocator_ref();
+					cb_ptr_.get_deleter().alloc = get_allocator_ref();
+				}
+			}
+			swap(temp);
+			return *this;
 		}
 
-		constexpr const_pointer operator -> () const noexcept {
-			assert(has_value() && "Precondition violation: polymorphic::operator->() const called on valueless object.");
-			return p_;
+		constexpr polymorphic& operator=(polymorphic&& other) noexcept(
+		BaseAllocTraits::propagate_on_container_move_assignment::value ||
+		BaseAllocTraits::is_always_equal::value)
+		{
+			if (this == &other) return *this;
+			constexpr bool pocma = BaseAllocTraits::propagate_on_container_move_assignment::value;
+			if constexpr (pocma) {
+				reset();
+				get_allocator_ref() = std::move(other.get_allocator_ref());
+				cb_ptr_.get_deleter().alloc = get_allocator_ref();
+				p_ = other.release_p();
+				cb_ptr_ = other.release_cb_ptr();
+			} else {
+				if (get_allocator_ref() == other.get_allocator_ref()) {
+					reset();
+					p_ = other.release_p();
+					cb_ptr_ = other.release_cb_ptr();
+				} else {
+					if (other.p_) {
+						polymorphic temp(std::allocator_arg, get_allocator_ref(), other);
+						swap(temp);
+						other.reset();
+					} else {
+						reset();
+					}
+				}
+			}
+			return *this;
 		}
 
-		constexpr pointer operator -> () noexcept {
-			assert(has_value() && "Precondition violation: polymorphic::operator->() called on valueless object.");
-			return p_;
+		constexpr polymorphic& operator=(std::nullptr_t) noexcept {
+			reset();
+			return *this;
 		}
 
-		// *** MODIFIED: Added explicit operator bool ***
-//		[[deprecated("Use has_value() or std::optional<polymorphic<T>>. This deviates from P3019.")]]
-		explicit constexpr operator bool() const noexcept {
-			return has_value();
+		template<typename Derived, typename DerivedAllocator>
+		requires std::derived_from<Derived, T> &&
+		         std::is_constructible_v<Allocator, DerivedAllocator&&> &&
+		         std::is_assignable_v<Allocator&, Allocator&&>
+		constexpr polymorphic& operator=(polymorphic<Derived, DerivedAllocator>&& other)
+		noexcept(
+		std::is_nothrow_constructible_v<Allocator, DerivedAllocator&&> &&  // Converting constructor allocator construction
+		std::is_nothrow_move_constructible_v<ControlBlockPtr> &&           // Control block move
+		std::is_nothrow_swappable_v<ControlBlockPtr> &&                    // Swap operation
+		(BaseAllocTraits::propagate_on_container_move_assignment::value || // Allocator move assignment
+		 BaseAllocTraits::is_always_equal::value)                          // or allocators are always equal
+		) {
+			polymorphic temp(std::move(other));
+			swap(temp);
+			return *this;
 		}
 
-		// Check if the object holds a value (preferred over operator bool)
-		constexpr bool has_value() const noexcept {
-			return p_ != nullptr;
+		template<typename Derived, typename DerivedAllocator>
+		requires std::derived_from<Derived, T> &&
+		         std::is_constructible_v<Allocator, const DerivedAllocator&>
+		[[deprecated("polymorphic performs potentially expensive deep copy; consider moving or using std::optional.")]]
+		constexpr polymorphic& operator=(const polymorphic<Derived, DerivedAllocator>& other) {
+			if(DEBUG) std::cout << "COPY CTOR CALLED\n";
+			polymorphic temp(other);
+			if constexpr (BaseAllocTraits::propagate_on_container_copy_assignment::value) {
+				if (get_allocator_ref() != other.get_allocator_ref()) {
+					get_allocator_ref() = other.get_allocator_ref();
+					cb_ptr_.get_deleter().alloc = get_allocator_ref();
+				}
+			}
+			swap(temp);
+			return *this;
 		}
 
-		// Check if valueless (consistent with !has_value())
-		constexpr bool valueless_after_move() const noexcept {
-			return p_ == nullptr;
+		template <typename U, typename A>
+		requires std::derived_from<U, T> &&
+		         std::is_convertible_v<A, Allocator>
+		operator polymorphic<U, A>() const {
+			if (!*this) return nullptr;
+			return polymorphic<U, A>(std::in_place_type<U>, **this);
 		}
 
-		constexpr allocator_type get_allocator() const noexcept {
-			return alloc_;
+		// Observers
+		constexpr const T& operator*() const noexcept { assert(has_value()); return *std::to_address(p_); }
+		constexpr T& operator*() noexcept { assert(has_value()); return *std::to_address(p_); }
+		constexpr const_pointer operator->() const noexcept { assert(has_value()); return p_; }
+		constexpr pointer operator->() noexcept { assert(has_value()); return p_; }
+
+		constexpr bool has_value() const noexcept { return p_ != nullptr; }
+		constexpr bool valueless_after_move() const noexcept { return p_ == nullptr; }
+		constexpr explicit operator bool() const noexcept { return has_value(); }
+		constexpr allocator_type get_allocator() const noexcept { return get_allocator_ref(); }
+
+		[[deprecated("Access via operator* or operator-> is preferred.")]]
+		constexpr pointer get() noexcept { return p_; }
+
+		[[deprecated("Access via operator* or operator-> is preferred.")]]
+		constexpr const_pointer get() const noexcept { return p_; }
+
+		// Modifiers
+		[[deprecated("Value types typically use assignment for replacement. This deviates from P3019.")]]
+		constexpr void reset_public() noexcept { reset(); }
+
+		[[deprecated("Value types manage their own resources; releasing breaks ownership. This deviates from P3019.")]]
+		[[nodiscard]] constexpr pointer release_public() noexcept {
+			cb_ptr_.reset();
+			return std::exchange(p_, nullptr);
 		}
 
-		// *** MODIFIED: Added get() ***
-//		[[deprecated("Access via operator* or operator-> is preferred. This deviates from P3019.")]]
-		constexpr pointer get() noexcept {
-			return p_;
-		}
-
-//		[[deprecated("Access via operator* or operator-> is preferred. This deviates from P3019.")]]
-		constexpr const_pointer get() const noexcept {
-			return p_;
-		}
-
-		// --- Modifiers ---
-
-		// *** MODIFIED: Added reset() ***
-//		[[deprecated("Value types typically use assignment for replacement. This deviates from P3019.")]]
-		constexpr void reset() noexcept {
-			call_destroy_deallocate(); // Destroys object and nulls members
-		}
-
-		// *** MODIFIED: Added release() ***
-//		[[deprecated("Value types manage their own resources; releasing breaks ownership. This deviates from P3019.")]]
-		[[nodiscard]] constexpr pointer release() noexcept {
-			// Caller takes ownership of the pointer AND responsibility for deletion/destruction!
-			pointer old_p = p_;
-			p_ = nullptr;
-			destroy_ = nullptr;
-			copy_ = nullptr;
-			return old_p;
-		}
-
-		// --- Swap ---
-		constexpr void swap(polymorphic & other) noexcept(
+		// Swap
+		constexpr void swap(polymorphic& other) noexcept(
 		BaseAllocTraits::propagate_on_container_swap::value ||
-		BaseAllocTraits::is_always_equal::value) {
+		BaseAllocTraits::is_always_equal::value)
+		{
 			using std::swap;
 			if constexpr(BaseAllocTraits::propagate_on_container_swap::value) {
 				swap(p_, other.p_);
-				swap(destroy_, other.destroy_);
-				swap(copy_, other.copy_);
-				swap(alloc_, other.alloc_); // Swap allocators if POCS is true
+				swap(cb_ptr_, other.cb_ptr_);
 			}
-			else { // POCS is false
-				// Requires allocators to compare equal per standard container rules
-				if (alloc_ != other.alloc_) {
-					assert(alloc_ == other.alloc_ && "polymorphic::swap requires allocators to be equal when POCS is false");
+			else {
+				if (get_allocator_ref() != other.get_allocator_ref()) {
+					assert(false && "polymorphic::swap requires allocators to be equal when POCS is false");
+					return;
 				}
 				swap(p_, other.p_);
-				swap(destroy_, other.destroy_);
-				swap(copy_, other.copy_);
-				// Do NOT swap allocators if POCS is false
+				swap(cb_ptr_, other.cb_ptr_);
 			}
 		}
 
-		friend constexpr void swap(polymorphic & lhs, polymorphic & rhs) noexcept(noexcept(lhs.swap(rhs))) {
+		friend constexpr void swap(polymorphic& lhs, polymorphic& rhs) noexcept(noexcept(lhs.swap(rhs))) {
 			lhs.swap(rhs);
 		}
+
+		// Type Checking/Access
+		template <typename Target>
+		[[nodiscard]] bool is_type() const noexcept {
+			return has_value() && (cb_ptr_->target_type_info() == typeid(Target));
+		}
+
+		template <typename Target>
+		[[nodiscard]] polymorphic<Target> dynamic_cast_to() const {
+			if (!is_type<Target>()) return nullptr;
+			return polymorphic<Target>(*this); // Uses converting constructor
+		}
+
+        template <typename Target>
+        [[nodiscard]] Target* dynamic_get() noexcept {
+        // First try static_cast if we're sure of the hierarchy
+        if constexpr (std::is_base_of_v<T, Target>) {
+            auto* result = static_cast<Target*>(std::to_address(p_));
+            // Optional: verify with typeid if debug mode
+            assert(typeid(*result) == typeid(Target) && "Static cast violated");
+            return result;
+        }
+        else {
+            return dynamic_cast<Target*>(std::to_address(p_));
+        }
+    }
+
+		template <typename Interface>
+		std::optional<Interface*> try_as_interface() const {
+			if (!p_) return std::nullopt;
+			return dynamic_cast<Interface*>(std::to_address(p_));
+		}
+
+		// Inside the polymorphic class definition
+		template <typename To>
+		[[nodiscard]] polymorphic<To> cast() && {
+			if (!has_value()) return nullptr;
+			if (cb_ptr_->target_type_info() != typeid(To)) {
+				throw std::bad_cast();
+			}
+			return polymorphic<To>(std::move(*this)); // Will use the copy constructor
+		}
+
+		template <typename To>
+		[[nodiscard]] polymorphic<To> cast() const& {
+			if (!has_value()) return nullptr;
+			if (cb_ptr_->target_type_info() != typeid(To)) {
+				throw std::bad_cast();
+			}
+			return polymorphic<To>(*this); // Will use the copy constructor
+		}
+
 	};
 
-	// *** MODIFIED: Added make_polymorphic factory functions ***
+	template <typename T>
+	concept HasBaseType = requires {
+		typename T::base_type;
+	};
 
-	template < typename T, // T is the DERIVED type to create
-			typename Base, // Base is the polymorphic<Base> type
-			typename Alloc,
-			typename...Args >
-	requires std::derived_from < T, Base > && std::constructible_from < T, Args... >
-	[[nodiscard]] constexpr polymorphic < Base, Alloc >
-	make_polymorphic_alloc(std::allocator_arg_t,
-	                       const Alloc & alloc, Args && ...args) {
-		// Requires copy_constructible<T> for polymorphic constructor
-		static_assert(std::copy_constructible<T>, "make_polymorphic_alloc requires derived type T to be copy constructible");
-		return polymorphic < Base, Alloc > (std::allocator_arg, alloc, std::in_place_type < T > , std::forward < Args > (args)...);
+
+	// Factory Functions
+	template <typename ConcreteDerived, typename Base, typename BaseAlloc, typename... Args>
+	requires std::derived_from<ConcreteDerived, Base> &&
+	         std::constructible_from<ConcreteDerived, Args...> &&
+	         std::copy_constructible<ConcreteDerived> &&
+	         std::is_same_v<typename std::allocator_traits<BaseAlloc>::value_type, Base>
+	[[nodiscard]] constexpr polymorphic<Base, BaseAlloc>
+	make_polymorphic_alloc(std::allocator_arg_t, const BaseAlloc& alloc, Args&&... args) {
+		return polymorphic<Base, BaseAlloc>(std::allocator_arg, alloc,
+		                                    std::in_place_type<ConcreteDerived>,
+		                                    std::forward<Args>(args)...);
 	}
 
-	template < typename T, // T is the DERIVED type to create
-			typename Base, // Base is the polymorphic<Base> type
-			typename...Args >
-	requires std::derived_from < T, Base > && std::constructible_from < T, Args... > && std::default_initializable < std::allocator < Base >>
-	[[nodiscard]] constexpr polymorphic < Base, std::allocator < Base >>
-	make_polymorphic(Args && ...args) {
-		// Requires copy_constructible<T> for polymorphic constructor
-		static_assert(std::copy_constructible<T>, "make_polymorphic requires derived type T to be copy constructible");
-		return polymorphic < Base, std::allocator < Base >> (std::in_place_type < T > , std::forward < Args > (args)...);
+	template <typename ConcreteDerived, typename Base, typename... Args>
+	requires std::derived_from<ConcreteDerived, Base> &&
+	         std::constructible_from<ConcreteDerived, Args...> &&
+	         std::copy_constructible<ConcreteDerived> &&
+	         std::default_initializable<std::allocator<Base>>
+	[[nodiscard]] constexpr polymorphic<Base, std::allocator<Base>>
+	make_polymorphic(Args&&... args) {
+		return polymorphic<Base, std::allocator<Base>>(std::in_place_type<ConcreteDerived>,
+		                                               std::forward<Args>(args)...);
 	}
+
+	template <typename T, typename Alloc, typename... Args>
+	requires std::constructible_from<T, Args...> &&
+	         std::copy_constructible<T> &&
+	         std::is_same_v<typename std::allocator_traits<Alloc>::value_type, T>
+	[[nodiscard]] constexpr polymorphic<T, Alloc>
+	make_polymorphic_alloc(std::allocator_arg_t, const Alloc& alloc, Args&&... args) {
+		return polymorphic<T, Alloc>(std::allocator_arg, alloc,
+		                             std::in_place_type<T>,
+		                             std::forward<Args>(args)...);
+	}
+
+	template <typename Concrete, typename... Args>
+	auto make_polymorphic(Args&&... args) {
+		return std_P3019_modified::polymorphic<std::remove_cvref_t<Concrete>>(
+				std::in_place_type<std::remove_cvref_t<Concrete>>,
+				std::forward<Args>(args)...
+		);
+	}
+	template <typename To, typename From, typename Alloc>
+	[[nodiscard]] polymorphic<To> polymorphic_cast(polymorphic<From, Alloc>&& p) {
+		return std::move(p).template cast<To>();
+	}
+
+	template <typename To, typename From, typename Alloc>
+	[[nodiscard]] polymorphic<To> polymorphic_cast(const polymorphic<From, Alloc>& p) {
+		return p.template cast<To>();
+	}
+
 
 } // namespace std_P3019_modified
 
-
-// std::hash specialization moved OUTSIDE the custom namespace and INSIDE std namespace
+// std::hash specialization
 namespace std {
 
-	template < class T, class Allocator >
-	struct hash < std_P3019_modified::indirect < T, Allocator >> {
-	using indirect_type = std_P3019_modified::indirect < T, Allocator >; // Use qualified name
+	template<class T, class Allocator>
+	struct hash<std_P3019_modified::indirect < T, Allocator>> {
+		using indirect_type = std_P3019_modified::indirect<T, Allocator>;
+		using is_enabled = std::bool_constant<requires(const T &t) { std::hash<T>{}(t); }>;
 
-	// Check if T itself is hashable
-	using is_enabled = std::bool_constant < requires(const T & t) {
-		std::hash < T > {}(t); // Requires std::hash<T> to be valid
-	} > ;
-
-	// Only enable this specialization if T is hashable
-	template < bool E = is_enabled::value,
-			std::enable_if_t < E, int > = 0 >
-	std::size_t operator()(const indirect_type & i) const
-	noexcept( noexcept( std::hash<T>{}( *i ) ) ) // Propagate noexcept from underlying hash
-	{
-		if (i.has_value()) {
-			return std::hash < T > {}( * i); // Hash the contained value
-		} else {
-			// Return a hash for the valueless state. Use a fixed value unlikely
-			// to collide with valid hashes (e.g., from a large prime).
-			// Using 0 is also common but might collide if 0 is a valid hash for T.
-			// P3019 doesn't specify, so using a large number is safer.
-			return static_cast < std::size_t > (0xcbf29ce484222325ULL ^ 0x100000001b3ULL); // FNV-1a basis and prime for empty state
+		template<bool E = is_enabled::value, std::enable_if_t<E, int> = 0>
+		std::size_t operator()(const indirect_type &i) const noexcept(noexcept(std::hash<T>{}(*i))) {
+			if (i.has_value()) {
+				return std::hash<T>{}(*i);
+			}
+			else {
+				return static_cast<std::size_t>(0xcbf29ce484222325ULL ^ 0x100000001b3ULL);
+			}
 		}
-	}
-};
-
-// Consider adding std::hash specialization for polymorphic? Generally difficult.
-// See comments in previous response. Usually avoided.
-
-} // namespace std
+	};
+}

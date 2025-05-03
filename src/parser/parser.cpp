@@ -1,9 +1,9 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "misc-no-recursion"
 #include "parser.hpp"
-#include <memory>
 #include <iostream>
 #include <algorithm>
 #include <unordered_set>
-#include "../ast/Expressions.hpp"
 #include "../exceptions/ParseError.hpp"
 
 namespace zenith {
@@ -36,7 +36,7 @@ namespace zenith {
 			auto sizeExpr = parseExpression();
 
 			// Create a new ArrayTypeNode with the size expression
-			auto arrayType = std_P3019_modified::make_polymorphic<ASTNode,ArrayTypeNode>(
+			auto arrayType = std_P3019_modified::make_polymorphic<ArrayTypeNode, TypeNode>(
 					loc,
 					std::move(typeNode),
 					std::move(sizeExpr)
@@ -52,7 +52,7 @@ namespace zenith {
 		}
 
 		// Handle initialization
-		std_P3019_modified::polymorphic<ExprNode> initializer;
+		std_P3019_modified::polymorphic<ExprNode> initializer = nullptr;
 		if (match(TokenType::EQUAL)) {
 			consume(TokenType::EQUAL);
 			initializer = parseExpression();
@@ -63,7 +63,7 @@ namespace zenith {
 			}
 		}
 
-		return std_P3019_modified::make_polymorphic<ASTNode,VarDeclNode>(
+		return std_P3019_modified::make_polymorphic<VarDeclNode>(
 				loc, kind, std::move(name),
 				std::move(typeNode), std::move(initializer),
 				isHoisted
@@ -96,7 +96,7 @@ namespace zenith {
 		if (match({TokenType::INCREASE, TokenType::DECREASE})) {
 			Token op = advance();
 			auto right = parseExpression(getPrecedence(op.type));
-			return std_P3019_modified::make_polymorphic<ASTNode,UnaryOpNode>(
+			return std_P3019_modified::make_polymorphic<UnaryOpNode>(
 					op.loc,
 					op.type,
 					std::move(right),
@@ -109,7 +109,7 @@ namespace zenith {
 		while (true) {
 			if (match({TokenType::INCREASE, TokenType::DECREASE})) {
 				Token op = advance();
-				return std_P3019_modified::make_polymorphic<ASTNode,UnaryOpNode>(
+				return std_P3019_modified::make_polymorphic<UnaryOpNode>(
 						op.loc,
 						op.type,
 						std::move(expr),
@@ -124,7 +124,7 @@ namespace zenith {
 
 			advance();
 			auto right = parseExpression(opPrecedence);
-			expr = std_P3019_modified::make_polymorphic<ASTNode,BinaryOpNode>(
+			expr = std_P3019_modified::make_polymorphic<BinaryOpNode, ExprNode>(
 					op.loc, // Pass operator location
 					op.type,
 					std::move(expr),
@@ -132,33 +132,33 @@ namespace zenith {
 			);
 		}
 
-		return expr;
+		return std::move(expr);
 	}
 
 	std_P3019_modified::polymorphic<ExprNode> Parser::parsePrimary() {
 		SourceLocation startLoc = currentToken.loc;
 
 		if (match(TokenType::NEW)) {
-			return parseNewExpression();
+			return std::move(parseNewExpression());
 		}
 		else if (match({TokenType::NUMBER,TokenType::INTEGER,TokenType::FLOAT_LIT})) {
 			Token numToken = advance();
-			return std_P3019_modified::make_polymorphic<ASTNode,LiteralNode>(startLoc, LiteralNode::NUMBER, numToken.lexeme);
+			return std_P3019_modified::make_polymorphic<LiteralNode>(startLoc, LiteralNode::NUMBER, numToken.lexeme);
 		}
 		else if (match(TokenType::STRING_LIT)) {
 			Token strToken = advance();
-			return std_P3019_modified::make_polymorphic<ASTNode,LiteralNode>(startLoc, LiteralNode::STRING, strToken.lexeme);
+			return std_P3019_modified::make_polymorphic<LiteralNode>(startLoc, LiteralNode::STRING, strToken.lexeme);
 		} else if (match(TokenType::TRUE) || match(TokenType::FALSE)) {
 			Token boolToken = advance();
-			return std_P3019_modified::make_polymorphic<ASTNode,LiteralNode>(startLoc, LiteralNode::BOOL, boolToken.lexeme);
+			return std_P3019_modified::make_polymorphic<LiteralNode>(startLoc, LiteralNode::BOOL, boolToken.lexeme);
 		}
 		else if (match(TokenType::NULL_LIT)) {
 			advance();
-			return std_P3019_modified::make_polymorphic<ASTNode,LiteralNode>(startLoc, LiteralNode::NIL, "nil");
+			return std_P3019_modified::make_polymorphic<LiteralNode>(startLoc, LiteralNode::NIL, "nil");
 		}
 		else if (match(TokenType::LBRACE)) {
 			if (isInStructInitializerContext()) {
-				return parseStructInitializer();
+				return std::move(parseStructInitializer());
 			}
 			return parseFreeObject();
 		} else if (match(TokenType::FREEOBJ)) {
@@ -171,7 +171,7 @@ namespace zenith {
 		else if (match(TokenType::LPAREN)) {
 				auto params = parseArrowFunctionParams();
 				if (match(TokenType::LAMBARROW)) {
-					return parseArrowFunction(std::move(params));
+					return std::move(parseArrowFunction(std::move(params)));
 				}
 				// else treat as normal parenthesized expression
 			}
@@ -180,9 +180,9 @@ namespace zenith {
 			std_P3019_modified::polymorphic<ExprNode> expr;
 
 			if (identToken.type == TokenType::THIS) {
-				expr = std_P3019_modified::make_polymorphic<ASTNode,ThisNode>(startLoc);
+				expr = std_P3019_modified::make_polymorphic<ThisNode>(startLoc);
 			} else {
-				expr = std_P3019_modified::make_polymorphic<ASTNode,VarNode>(startLoc, identToken.lexeme);
+				expr = std_P3019_modified::make_polymorphic<VarNode>(startLoc, identToken.lexeme);
 			}
 
 			// Handle chained operations
@@ -266,29 +266,31 @@ namespace zenith {
 			else if (typeToken.type == TokenType::VOID) kind = PrimitiveTypeNode::VOID;
 			else if (typeToken.type == TokenType::FREEOBJ) {
 				// For freeobj, we'll return a TypeNode with DYNAMIC kind since it's a special case
-				return std_P3019_modified::make_polymorphic<ASTNode,TypeNode>(startLoc, TypeNode::DYNAMIC);
+				return std_P3019_modified::make_polymorphic<TypeNode>(startLoc, TypeNode::DYNAMIC);
 			}
 			else kind = PrimitiveTypeNode::BIGNUMBER;
 
-			return std_P3019_modified::make_polymorphic<ASTNode,PrimitiveTypeNode>(startLoc, kind);
+			return std_P3019_modified::make_polymorphic<PrimitiveTypeNode, TypeNode>(startLoc, kind);
 		}
 		else if (match(TokenType::LBRACKET)) {
 			// Array type (e.g., [int] or [MyClass])
 			advance(); // Consume '['
 			auto elementType = parseType();
 			consume(TokenType::RBRACKET, "Expected ']' after array type");
-			return std_P3019_modified::make_polymorphic<ASTNode,ArrayTypeNode>(startLoc, std::move(elementType));
+			return std_P3019_modified::make_polymorphic<ArrayTypeNode, TypeNode>(startLoc, std::move(elementType));
 		}
 		else if (match(TokenType::IDENTIFIER)) {
 			// User-defined type (class/struct/type alias) - now with template support
 			Token typeToken = advance();
 			std::string baseName = typeToken.lexeme;
 
+			//Todo change this
 			if(baseName == "Function")
-				return std_P3019_modified::make_polymorphic<ASTNode,TypeNode>(
+				return std_P3019_modified::make_polymorphic<TypeNode>(
 						startLoc,
 						TypeNode::FUNCTION
 						);
+			//End todo
 
 			// Check for template arguments
 			if (peekIsTemplateStart()) {
@@ -303,7 +305,7 @@ namespace zenith {
 
 				consume(TokenType::GREATER, "Expected '>' to close template arguments");
 
-				return std_P3019_modified::make_polymorphic<ASTNode,TemplateTypeNode>(
+				return std_P3019_modified::make_polymorphic<TemplateTypeNode, TypeNode>(
 						startLoc,
 						baseName,
 						std::move(templateArgs)
@@ -311,7 +313,7 @@ namespace zenith {
 			}
 
 			// Non-templated case
-			return std_P3019_modified::make_polymorphic<ASTNode,NamedTypeNode>(startLoc, baseName);
+			return std_P3019_modified::make_polymorphic<NamedTypeNode, TypeNode>(startLoc, baseName);
 		}
 
 		throw ParseError(
@@ -455,34 +457,34 @@ namespace zenith {
 			try {
 				auto annotations = parseAnnotations();
 				if (match(TokenType::IMPORT)) {
-					declarations.push_back(parseImport());
+					declarations.emplace_back(std::move(parseImport()));
 				}
 				if (match(TokenType::TEMPLATE)) {
-					declarations.push_back(parseTemplate());
+					declarations.emplace_back(std::move(parseTemplate()));
 				}
 				else if (match({TokenType::CLASS,TokenType::STRUCT})) {
-					declarations.push_back(parseObject());
+					declarations.emplace_back(std::move(parseObject()));
 				}
 				else if (match(TokenType::UNION)) {
-					declarations.push_back(parseUnion());
+					declarations.emplace_back(std::move(parseUnion()));
 				}
 				else if (match(TokenType::FUN)) {
-					declarations.push_back(parseFunction());
+					declarations.emplace_back(std::move(parseFunction()));
 				}
 				else if (isBuiltInType(currentToken.type) || currentToken.type == TokenType::IDENTIFIER) {
 					// Handle both built-in types and user-defined types
 					if (isPotentialMethod()) {
-						declarations.push_back(parseFunction());
+						declarations.emplace_back(std::move(parseFunction()));
 					} else {
 						// It's a variable declaration
-						declarations.push_back(parseVarDecl());
+						declarations.emplace_back(std::move(parseVarDecl()));
 					}
 				}
 				else if (match({TokenType::LET, TokenType::VAR, TokenType::DYNAMIC})) {
-					declarations.push_back(parseVarDecl());
+					declarations.emplace_back(std::move(parseVarDecl()));
 				}
 				else if (match(TokenType::ACTOR)) {
-					declarations.push_back(parseActorDecl());
+					declarations.emplace_back(std::move(parseActorDecl()));
 				}
 				else if (!annotations.empty()) {
 					throw ParseError(currentToken.loc,
@@ -493,8 +495,8 @@ namespace zenith {
 					advance();
 				}
 				if(!declarations.empty()) {
-					if (auto annotatable = dynamic_cast<IAnnotatable *>(declarations.back().get())) {
-						annotatable->setAnnotations(std::move(pendingAnnotations));
+					if (auto annotatable = declarations.back().try_as_interface<IAnnotatable>()) {
+						(*annotatable)->setAnnotations(std::move(pendingAnnotations));
 					}
 					else if (!pendingAnnotations.empty()) {
 					throw ParseError(currentToken.loc,
@@ -507,7 +509,7 @@ namespace zenith {
 				synchronize();
 			}
 		}
-		auto program = std_P3019_modified::make_polymorphic<ASTNode,ProgramNode>(startLoc,std::move(declarations));
+		auto program = std_P3019_modified::make_polymorphic<ProgramNode>(startLoc,std::move(declarations));
 
 		return program;
 	}
@@ -532,13 +534,11 @@ namespace zenith {
 			consume(TokenType::RPAREN);
 		}
 
-		return std_P3019_modified::make_polymorphic<ASTNode,NewExprNode>(location,className, std::move(args));
+		return std_P3019_modified::make_polymorphic<NewExprNode>(location,className, std::move(args));
 	}
 
 	std_P3019_modified::polymorphic<FunctionDeclNode> Parser::parseFunction() {
 		SourceLocation loc = currentToken.loc;
-		bool hasFunKeyword = false;
-
 		// Handle annotations
 		bool isAsync = std::find_if(pendingAnnotations.begin(), pendingAnnotations.end(), [](const std_P3019_modified::polymorphic<AnnotationNode>& ann) {
 			return ann->name == "Async";
@@ -548,7 +548,6 @@ namespace zenith {
 		// Parse return type (optional)
 		std_P3019_modified::polymorphic<TypeNode> returnType;
 		if (match(TokenType::FUN)) {
-			hasFunKeyword = true;
 			advance();
 
 			// Only parse return type if followed by type specifier
@@ -576,7 +575,7 @@ namespace zenith {
 		}
 		auto body = parseBlock();
 
-		return std_P3019_modified::make_polymorphic<ASTNode,FunctionDeclNode>(
+		return std_P3019_modified::make_polymorphic<FunctionDeclNode>(
 				loc,
 				std::move(name),
 				std::move(params),
@@ -595,18 +594,18 @@ namespace zenith {
 		std::vector<std_P3019_modified::polymorphic<ASTNode>> statements;
 		try {
 			while (!match(TokenType::RBRACE) && !isAtEnd()) {
-				statements.push_back(parseStatement());
+				statements.emplace_back(std::move(parseStatement()));
 			}
 			consume(TokenType::RBRACE,"Expected '}' after block");
 		} catch (const ParseError&) {
 			synchronize(); // Your error recovery method
 			if (!match(TokenType::RBRACE)) {
 				// Insert synthetic '}' if missing
-				statements.push_back(createErrorNode());
+				statements.emplace_back(std::move(createErrorNode()));
 			}
 		}
 
-		return std_P3019_modified::make_polymorphic<ASTNode,BlockNode>(startLoc, std::move(statements));
+		return std_P3019_modified::make_polymorphic<BlockNode>(startLoc, std::move(statements));
 	}
 
 	std_P3019_modified::polymorphic<StmtNode> Parser::parseStatement() {
@@ -630,15 +629,15 @@ namespace zenith {
 		if (match(TokenType::THIS)) {
 			auto expr = parseExpression();
 			if (match(TokenType::SEMICOLON)) advance();
-			return std_P3019_modified::make_polymorphic<ASTNode,ExprStmtNode>(loc, std::move(expr));
+			return std_P3019_modified::make_polymorphic<ExprStmtNode>(loc, std::move(expr));
 		}
 
 		// Control flow statements
-		if (match(TokenType::IF)) return parseIfStmt();
-		if (match(TokenType::FOR)) return parseForStmt();
-		if (match(TokenType::WHILE)) return parseWhileStmt();
-		if (match(TokenType::DO)) return parseDoWhileStmt();
-		if (match(TokenType::RETURN)) return parseReturnStmt();
+		if (match(TokenType::IF)) return std::move(parseIfStmt());
+		if (match(TokenType::FOR)) return std::move(parseForStmt());
+		if (match(TokenType::WHILE)) return std::move(parseWhileStmt());
+		if (match(TokenType::DO)) return std::move(parseDoWhileStmt());
+		if (match(TokenType::RETURN)) return std::move(parseReturnStmt());
 
 		// Unsafe blocks
 		if (match(TokenType::UNSAFE)) {
@@ -660,13 +659,13 @@ namespace zenith {
 			if (match(TokenType::SEMICOLON)) {
 				advance();
 			}
-			return std_P3019_modified::make_polymorphic<ASTNode,ExprStmtNode>(loc, std::move(expr));
+			return std_P3019_modified::make_polymorphic<ExprStmtNode>(loc, std::move(expr));
 		}
 
 		// Empty statement (just a semicolon)
 		if (match(TokenType::SEMICOLON)) {
 			advance();
-			return std_P3019_modified::make_polymorphic<ASTNode,EmptyStmtNode>(loc);
+			return std_P3019_modified::make_polymorphic<EmptyStmtNode>(loc);
 		}
 
 		// Error recovery
@@ -680,7 +679,7 @@ namespace zenith {
 			case TokenType::INTEGER:
 			case TokenType::FLOAT_LIT:
 			case TokenType::STRING_LIT:
-			case TokenType::LPAREN:          //Maybe also arrow lambda
+			case TokenType::LPAREN:          // Maybe also arrow lambda
 			case TokenType::LBRACE:         // For object literals
 			case TokenType::NEW:           // Constructor calls
 			case TokenType::BANG:         // Unary operators
@@ -722,7 +721,7 @@ namespace zenith {
 			errStream << "Error in if body: " << e.what() << std::endl;
 			synchronize(); // Skip to next statement
 			auto errorNode = createErrorNode();
-			thenBranch = std_P3019_modified::make_polymorphic<ASTNode,EmptyStmtNode>(errorNode->loc);
+			thenBranch = std_P3019_modified::make_polymorphic<EmptyStmtNode, StmtNode>(errorNode->loc);
 		}
 
 		// Parse 'else' branch (also enforce braces if required)
@@ -744,12 +743,12 @@ namespace zenith {
 				errStream << "Error in else body: " << e.what() << std::endl;
 				synchronize();
 				// Create error node or empty node as fallback
-				elseBranch = std_P3019_modified::make_polymorphic<ASTNode,EmptyStmtNode>(currentToken.loc); // Simplified
+				elseBranch = std_P3019_modified::make_polymorphic<EmptyStmtNode, ASTNode>(currentToken.loc); // Simplified
 			}
 
 		}
 
-		return std_P3019_modified::make_polymorphic<ASTNode,IfNode>(
+		return std_P3019_modified::make_polymorphic<IfNode>(
 				loc,
 				std::move(condition),
 				std::move(thenBranch),
@@ -771,7 +770,7 @@ namespace zenith {
 			init = parseVarDecl();
 		}
 		else {
-			init = std_P3019_modified::make_polymorphic<ASTNode,ExprStmtNode>(currentToken.loc, parseExpression());
+			init = std_P3019_modified::make_polymorphic<ExprStmtNode, ASTNode>(currentToken.loc, parseExpression());
 		}
 		consume(TokenType::SEMICOLON);
 
@@ -794,7 +793,7 @@ namespace zenith {
 		}
 
 		auto body = parseStatement(); // parseBlock() if braces are required
-		return std_P3019_modified::make_polymorphic<ASTNode,ForNode>(loc, std::move(init), std::move(condition),
+		return std_P3019_modified::make_polymorphic<ForNode>(loc, std::move(init), std::move(condition),
 		                                 std::move(increment), std::move(body));
 	}
 
@@ -811,7 +810,7 @@ namespace zenith {
 		}
 
 		auto body = parseStatement(); // parseBlock() if braces are required
-		return std_P3019_modified::make_polymorphic<ASTNode,WhileNode>(loc, std::move(condition), std::move(body));
+		return std_P3019_modified::make_polymorphic<WhileNode>(loc, std::move(condition), std::move(body));
 	}
 
 	std_P3019_modified::polymorphic<DoWhileNode> Parser::parseDoWhileStmt() {
@@ -835,7 +834,7 @@ namespace zenith {
 			advance();
 		}
 
-		return std_P3019_modified::make_polymorphic<ASTNode,DoWhileNode>(loc, std::move(condition), std::move(body));
+		return std_P3019_modified::make_polymorphic<DoWhileNode>(loc, std::move(condition), std::move(body));
 	}
 
 	std_P3019_modified::polymorphic<ReturnStmtNode> Parser::parseReturnStmt() {
@@ -844,7 +843,7 @@ namespace zenith {
 		// Handle empty return (no expression)
 		if (match(TokenType::SEMICOLON)) {
 			advance();  // Consume the semicolon
-			return std_P3019_modified::make_polymorphic<ASTNode,ReturnStmtNode>(loc, nullptr);
+			return std_P3019_modified::make_polymorphic<ReturnStmtNode>(loc, nullptr);
 		}
 
 		// Parse return value (optional in Zenith)
@@ -863,7 +862,7 @@ namespace zenith {
 			parseAnnotation();
 		}
 
-		return std_P3019_modified::make_polymorphic<ASTNode,ReturnStmtNode>(loc, std::move(value));
+		return std_P3019_modified::make_polymorphic<ReturnStmtNode>(loc, std::move(value));
 	}
 
 	bool Parser::peekIsStatementTerminator() const {
@@ -889,7 +888,7 @@ namespace zenith {
 		}
 
 		consume(TokenType::RBRACE);
-		return std_P3019_modified::make_polymorphic<ASTNode,FreeObjectNode>(loc, std::move(properties));
+		return std_P3019_modified::make_polymorphic<FreeObjectNode>(loc, std::move(properties));
 	}
 
 	std_P3019_modified::polymorphic<CallNode> Parser::parseFunctionCall(std_P3019_modified::polymorphic<ExprNode> callee) {
@@ -904,30 +903,29 @@ namespace zenith {
 		}
 
 		consume(TokenType::RPAREN);
-		return std_P3019_modified::make_polymorphic<ASTNode,CallNode>(loc, std::move(callee), std::move(args));
+		return std_P3019_modified::make_polymorphic<CallNode>(loc, std::move(callee), std::move(args));
 	}
 
-	std_P3019_modified::polymorphic<MemberAccessNode> Parser::parseMemberAccess(std_P3019_modified::polymorphic<ExprNode> object) {
+	std_P3019_modified::polymorphic<ExprNode> Parser::parseMemberAccess(std_P3019_modified::polymorphic<ExprNode> object) {
 		// Horse guarantee: We only get called when we see a DOT, if not I'm a horse or tramvai
 		SourceLocation loc = object->loc;
 
 		// First access (guaranteed to exist)
 		advance(); // Consume '.'
 		std::string member = consume(TokenType::IDENTIFIER).lexeme;
-		auto result = std_P3019_modified::make_polymorphic<ASTNode,MemberAccessNode>(loc, std::move(object), member);
+		std_P3019_modified::polymorphic<ExprNode> result = std_P3019_modified::make_polymorphic<MemberAccessNode>(loc, std::move(object), member);
 
 		// Handle additional accesses or calls
 		while (match(TokenType::DOT)) {
 			advance();
 			member = consume(TokenType::IDENTIFIER).lexeme;
-			result = std_P3019_modified::make_polymorphic<ASTNode,MemberAccessNode>(loc, std::move(result), member);
+			result = std_P3019_modified::make_polymorphic<MemberAccessNode>(loc, std::move(result), member);
 
 			if (match(TokenType::LPAREN)) {
-				// Temporarily degrade to ExprNode for the call
-				auto temp = std_P3019_modified::polymorphic<ExprNode>(result.release());
-				temp = parseFunctionCall(std::move(temp));
-				// Then immediately cast back - if this fails, we deserve to be horses
-				result.reset(dynamic_cast<MemberAccessNode*>(temp.release()));
+				if (!result.is_type<MemberAccessNode>()) {
+					throw ParseError(loc, "Only member accesses can be called");
+				}
+				result = parseFunctionCall(std::move(result));
 			}
 		}
 
@@ -945,7 +943,7 @@ namespace zenith {
 			consume(TokenType::RBRACKET, "Expected ']' after array index");
 
 			// Create new array access node
-			arrayExpr = std_P3019_modified::make_polymorphic<ASTNode,ArrayAccessNode>(
+			arrayExpr = std_P3019_modified::make_polymorphic<ArrayAccessNode>(
 					loc,
 					std::move(arrayExpr),  // The array being accessed
 					std::move(indexExpr)   // The index expression
@@ -986,11 +984,11 @@ namespace zenith {
 			consume(TokenType::RPAREN); // Consume ')'
 		}
 
-		return std_P3019_modified::make_polymorphic<ASTNode,AnnotationNode>(loc, name, std::move(arguments));
+		return std_P3019_modified::make_polymorphic<AnnotationNode>(loc, name, std::move(arguments));
 	}
 
 	std_P3019_modified::polymorphic<ErrorNode> Parser::createErrorNode() {
-		return std_P3019_modified::make_polymorphic<ASTNode,ErrorNode>(currentToken.loc);
+		return std_P3019_modified::make_polymorphic<ErrorNode>(currentToken.loc);
 	}
 
 	std_P3019_modified::polymorphic<ImportNode> Parser::parseImport() {
@@ -1036,7 +1034,7 @@ namespace zenith {
 			advance();
 		}
 
-		return std_P3019_modified::make_polymorphic<ASTNode,ImportNode>(loc, importPath, isJavaImport);
+		return std_P3019_modified::make_polymorphic<ImportNode>(loc, importPath, isJavaImport);
 	}
 
 	std_P3019_modified::polymorphic<ObjectDeclNode> Parser::parseObject() {
@@ -1044,7 +1042,6 @@ namespace zenith {
 			errorReporter.report(currentToken.loc, "Uhhh, +1 the compiler fucked up point", {"Internal Error", RED_TEXT});
 		}
 		bool isClass = match(TokenType::CLASS);
-		TokenType objectType = isClass ? TokenType::CLASS : TokenType::STRUCT;
 		ObjectDeclNode::Kind kind = isClass ? ObjectDeclNode::Kind::CLASS : ObjectDeclNode::Kind::STRUCT;
 
 		SourceLocation classLoc;
@@ -1073,7 +1070,7 @@ namespace zenith {
 					annotations.push_back(parseAnnotation());
 				}
 				// Parse access modifier
-				members.push_back(parseObjectPrimary(className, annotations));
+				members.push_back(parseObjectPrimary(className, annotations, isClass ? MemberDeclNode::PRIVATE : MemberDeclNode::PUBLIC));
 
 			} catch (const ParseError& e) {
 				errorReporter.report(e.location, e.format());
@@ -1084,7 +1081,7 @@ namespace zenith {
 
 		consume(TokenType::RBRACE, "Expected '}' after object body");
 
-		return std_P3019_modified::make_polymorphic<ASTNode,ObjectDeclNode>(
+		return std_P3019_modified::make_polymorphic<ObjectDeclNode>(
 				classLoc,
 				kind,
 				std::move(className),
@@ -1125,7 +1122,7 @@ namespace zenith {
 		else if (isPotentialMethod()) {
 			auto funcDecl = parseFunction();
 			// Convert FunctionDeclNode to MemberDeclNode
-			 return std_P3019_modified::make_polymorphic<ASTNode,MemberDeclNode>(
+			 return std_P3019_modified::make_polymorphic<MemberDeclNode>(
 					funcDecl->loc,
 					MemberDeclNode::METHOD,
 					access,
@@ -1149,7 +1146,7 @@ namespace zenith {
 
 		consume(TokenType::SEMICOLON, "Expected ';' after field declaration");
 
-		return std_P3019_modified::make_polymorphic<ASTNode,MemberDeclNode>(
+		return std_P3019_modified::make_polymorphic<MemberDeclNode>(
 				currentToken.loc,
 				MemberDeclNode::FIELD,
 				access,
@@ -1182,7 +1179,7 @@ namespace zenith {
 		}
 		auto body = parseBlock();
 
-		return std_P3019_modified::make_polymorphic<ASTNode,MemberDeclNode>(
+		return std_P3019_modified::make_polymorphic<MemberDeclNode>(
 				loc,
 				MemberDeclNode::METHOD_CONSTRUCTOR,
 				access,
@@ -1221,11 +1218,11 @@ namespace zenith {
 				paramType = parseType();
 			}else if(match({TokenType::LET,TokenType::VAR,TokenType::DYNAMIC})){
 				advance();
-				paramType = std_P3019_modified::make_polymorphic<ASTNode,TypeNode>(currentToken.loc, TypeNode::DYNAMIC);
+				paramType = std_P3019_modified::make_polymorphic<TypeNode>(currentToken.loc, TypeNode::DYNAMIC);
 			}/*else if (lastExplicitType) {
             paramType = lastExplicitType->clone();
 			}*/else{
-				paramType = std_P3019_modified::make_polymorphic<ASTNode,TypeNode>(currentToken.loc, TypeNode::DYNAMIC);
+				paramType = std_P3019_modified::make_polymorphic<TypeNode>(currentToken.loc, TypeNode::DYNAMIC);
 			}
 			std::string name = consume(TokenType::IDENTIFIER, "Expected parameter name").lexeme;
 			params.emplace_back(name, std::move(paramType));
@@ -1314,7 +1311,7 @@ namespace zenith {
 		}
 
 		consume(TokenType::RBRACE);
-		return std_P3019_modified::make_polymorphic<ASTNode,StructInitializerNode>(loc, std::move(fields));
+		return std_P3019_modified::make_polymorphic<StructInitializerNode>(loc, std::move(fields));
 	}
 
 	std::vector<std::string> Parser::parseArrowFunctionParams() {
@@ -1345,18 +1342,18 @@ namespace zenith {
 		if (!match(TokenType::LBRACE)) {
 			auto expr = parseExpression();
 			auto stmts = std::vector<std_P3019_modified::polymorphic<ASTNode>>();
-			stmts.push_back(std_P3019_modified::make_polymorphic<ASTNode,ReturnStmtNode>(loc, std::move(expr)));
-			auto body = std_P3019_modified::make_polymorphic<ASTNode,BlockNode>(loc, std::move(stmts));
+			stmts.emplace_back(std_P3019_modified::make_polymorphic<ReturnStmtNode>(loc, std::move(expr)));
+			auto body = std_P3019_modified::make_polymorphic<BlockNode>(loc, std::move(stmts));
 
-			lambda = std_P3019_modified::make_polymorphic<ASTNode,LambdaNode>(loc,std::move(typedParams),nullptr, std::move(body),false);
-			return std_P3019_modified::make_polymorphic<ASTNode,LambdaExprNode>(loc,std::move(lambda));
+			lambda = std_P3019_modified::make_polymorphic<LambdaNode>(loc,std::move(typedParams),nullptr, std::move(body),false);
+			return std_P3019_modified::make_polymorphic<LambdaExprNode>(loc,std::move(lambda));
 		}
 
 		// Handle block body
 		auto body = parseBlock();
-		lambda = std_P3019_modified::make_polymorphic<ASTNode,LambdaNode>(loc,std::move(typedParams),nullptr,std::move(body),false);
+		lambda = std_P3019_modified::make_polymorphic<LambdaNode>(loc,std::move(typedParams),nullptr,std::move(body),false);
 
-		return std_P3019_modified::make_polymorphic<ASTNode,LambdaExprNode>(loc,std::move(lambda));
+		return std_P3019_modified::make_polymorphic<LambdaExprNode>(loc,std::move(lambda));
 	}
 
 	std_P3019_modified::polymorphic<UnionDeclNode> Parser::parseUnion() {
@@ -1385,7 +1382,7 @@ namespace zenith {
 		} while (!match(TokenType::RBRACE) && !isAtEnd());
 
 		consume(TokenType::RBRACE, "Expected '}' after union body");
-		return std_P3019_modified::make_polymorphic<ASTNode,UnionDeclNode>(loc, std::move(name), std::move(types));
+		return std_P3019_modified::make_polymorphic<UnionDeclNode>(loc, std::move(name), std::move(types));
 	}
 
 	std_P3019_modified::polymorphic<ActorDeclNode> Parser::parseActorDecl() {
@@ -1420,7 +1417,7 @@ namespace zenith {
 
 		consume(TokenType::RBRACE, "Expected '}' after actor body");
 
-		return std_P3019_modified::make_polymorphic<ASTNode,ActorDeclNode>(
+		return std_P3019_modified::make_polymorphic<ActorDeclNode>(
 				loc,
 				std::move(name),
 				std::move(members),
@@ -1465,7 +1462,7 @@ namespace zenith {
 
 		auto body = parseBlock();
 
-		return std_P3019_modified::make_polymorphic<ASTNode,MemberDeclNode>(
+		return std_P3019_modified::make_polymorphic<MemberDeclNode>(
 				loc,
 				MemberDeclNode::MESSAGE_HANDLER,
 				MemberDeclNode::PUBLIC,
@@ -1480,8 +1477,8 @@ namespace zenith {
 	}
 
 	// Helper function to create error nodes that can be used as members
-	std_P3019_modified::polymorphic<MemberDeclNode> Parser::createErrorNodeAsMember() {
-		return std_P3019_modified::make_polymorphic<ASTNode,MemberDeclNode>(
+	[[maybe_unused]] std_P3019_modified::polymorphic<MemberDeclNode> Parser::createErrorNodeAsMember() {
+		return std_P3019_modified::make_polymorphic<MemberDeclNode>(
 				currentToken.loc,
 				MemberDeclNode::FIELD,  // Using FIELD as generic error type
 				MemberDeclNode::PRIVATE,
@@ -1512,12 +1509,12 @@ namespace zenith {
 		std::vector<std_P3019_modified::polymorphic<ASTNode>> statements;
 
 		while (!match(TokenType::RBRACE) && !isAtEnd()) {
-			statements.push_back(parseStatement());
+			statements.emplace_back(std::move(parseStatement()));
 		}
 
 		consume(TokenType::RBRACE, "Expected '}' after scope block");
 
-		return std_P3019_modified::make_polymorphic<ASTNode,ScopeBlockNode>(loc, std::move(statements));
+		return std_P3019_modified::make_polymorphic<ScopeBlockNode>(loc, std::move(statements));
 	}
 
 	std::vector<std_P3019_modified::polymorphic<AnnotationNode>> Parser::parseAnnotations() {
@@ -1555,7 +1552,7 @@ namespace zenith {
 			                 "Expected class, struct, function, union or actor after template declaration");
 		}
 
-		return std_P3019_modified::make_polymorphic<ASTNode,TemplateDeclNode>(
+		return std_P3019_modified::make_polymorphic<TemplateDeclNode>(
 				loc,
 				std::move(params),
 				std::move(declaration)
@@ -1653,17 +1650,17 @@ namespace zenith {
 		std::vector<std_P3019_modified::polymorphic<ASTNode>> statements;
 		try {
 			while (!match(TokenType::RBRACE) && !isAtEnd()) {
-				statements.push_back(parseStatement());
+				statements.emplace_back(std::move(parseStatement()));
 			}
 			consume(TokenType::RBRACE,"Expected '}' after block");
 		} catch (const ParseError&) {
 			synchronize(); // Your error recovery method
 			if (!match(TokenType::RBRACE)) {
 				// Insert synthetic '}' if missing
-				statements.push_back(createErrorNode());
+				statements.emplace_back(std::move(createErrorNode()));
 			}
 		}
-		return std_P3019_modified::make_polymorphic<ASTNode,UnsafeNode>(startLoc,  std::move(statements));
+		return std_P3019_modified::make_polymorphic<UnsafeNode>(startLoc,  std::move(statements));
 	}
 
 
@@ -1725,3 +1722,4 @@ namespace zenith {
 //
 
 }
+#pragma clang diagnostic pop

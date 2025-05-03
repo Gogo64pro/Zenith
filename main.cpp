@@ -4,7 +4,7 @@
 #include "src/utils/mainargs.hpp"
 #include "src/exceptions/ParseError.hpp"
 #include "src/utils/ReadFile.hpp"
-#include "src/SemanticAnalysis/SemanticAnalyzer.hpp"
+//#include "src/SemanticAnalysis/SemanticAnalyzer.hpp"
 
 
 using namespace zenith;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 
 
 	std::ofstream parserOut("parserout.log");
-	std::unique_ptr<ProgramNode> programNode;
+	std_P3019_modified::polymorphic<ProgramNode> programNode;
 	try{
 		//throw ParseError({0,0,0,0},"STEEPEST"); //Debugger test error
 		Parser parser(tokens,flags,parserOut);
@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
 	}
 	std::cout << "Done Parsing \n";
 
-	ErrorReporter reporter(std::cout);
-	SemanticAnalyzer semanticAnalyzer(reporter);
-	std::cout << semanticAnalyzer.analyze(*programNode).toString();
+//	ErrorReporter reporter(std::cout);
+//	SemanticAnalyzer semanticAnalyzer(reporter);
+//	std::cout << semanticAnalyzer.analyze(*programNode).toString();
 
 }
 //	std::string source = R"(

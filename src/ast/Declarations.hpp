@@ -47,7 +47,7 @@ namespace zenith {
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
 	};
 
-	struct FunctionDeclNode : ASTNode, IAnnotatable {
+	struct FunctionDeclNode : public ASTNode, public IAnnotatable {
 		virtual bool isLambda() const { return false; }
 		std::string name;
 		std::vector<std::pair<std::string, std_P3019_modified::polymorphic<TypeNode>>> params;

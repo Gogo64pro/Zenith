@@ -174,8 +174,8 @@ namespace zenith{
 
 		MemberAccessNode(SourceLocation loc, std_P3019_modified::polymorphic<ExprNode> obj,
 		                 std::string mem)
-				: ExprNode(), object(std::move(obj)), member(mem) {
-			this->loc = loc;
+				: ExprNode(), object(std::move(obj)), member(std::move(mem)) {
+			this->loc = std::move(loc);
 		}
 
 		std::string toString(int indent = 0) const override {
@@ -294,7 +294,7 @@ namespace zenith{
 
 	struct EmptyStmtNode : StmtNode {
 		explicit EmptyStmtNode(SourceLocation loc) {
-			this->loc = loc;
+			this->loc = std::move(loc);
 		}
 
 		std::string toString(int indent = 0) const override {

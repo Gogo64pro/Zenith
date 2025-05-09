@@ -1,9 +1,0 @@
-"C:\Program Files\JetBrains\CLion 2023.1.4\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/JetBrains/CLion 2023.1.4/bin/ninja/win/x64/ninja.exe" "-DCMAKE_C_COMPILER=C:/Program Files/LLVM/bin/clang.exe" "-DCMAKE_CXX_COMPILER=C:/Program Files/LLVM/bin/clang++.exe" -G Ninja -S C:\Users\gogop\CLionProjects\Zenith -B C:\Users\gogop\CLionProjects\Zenith\cmake-build-debug-llvm-clang
--- CMAKE_CXX_COMPILER: C:/Program Files/LLVM/bin/clang++.exe
--- CMAKE_CXX_FLAGS: 
--- CMAKE_CXX_STANDARD: 23
--- CMAKE_CXX_FLAGS_DEBUG: -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions
--- CMAKE_CXX_FLAGS_RELEASE: -O3 -DNDEBUG
--- Configuring done
--- Generating done
--- Build files have been written to: C:/Users/gogop/CLionProjects/Zenith/cmake-build-debug-llvm-clang

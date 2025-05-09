@@ -29,17 +29,18 @@ namespace zenith {
 		bool inLoop = false;
 
 		//Return type workaround
-		std::unique_ptr<TypeNode> exprVR;
+		TypeNode* exprVR;
+		std::unique_ptr<TypeNode> dynamicType;
 
 		// Type system helpers
 		bool areTypesCompatible(const TypeNode* targetType, const TypeNode* valueType);
-		std::unique_ptr<TypeNode> resolveType(TypeNode* typeNode);
+		TypeNode* resolveType(TypeNode* typeNode);
 		std::string typeToString(const TypeNode* type);
-		static std::unique_ptr<TypeNode> getErrorTypeNode(const SourceLocation& loc);
+		static TypeNode* getErrorTypeNode(const SourceLocation& loc);
 
 		// Visitor methods
 		void visit(ASTNode& node) override;
-		std::unique_ptr<TypeNode> visitExpression(ExprNode& expr) override;
+		std::pair<TypeNode*, std::unique_ptr<TypeNode>> visitExpression(ExprNode& expr) override;
 
 		// Declaration visitors
 		void visit(ProgramNode& node) override;

@@ -3,8 +3,8 @@
 #include <ranges>
 
 namespace zenith{
-	SymbolInfo::SymbolInfo(Kind k, std::unique_ptr<TypeNode> t, ASTNode* node, bool isConst, bool isStatic)
-			: kind(k), type(std::move(t)), declarationNode(node), isConst(isConst), isStatic(isStatic) {}
+	SymbolInfo::SymbolInfo(Kind k, TypeNode* t, ASTNode* node, bool isConst, bool isStatic)
+			: kind(k), type(t), declarationNode(node), isConst(isConst), isStatic(isStatic) {}
 
 	SymbolTable::SymbolTable(ErrorReporter& reporter) : errorReporter(reporter) {
 		enterScope(); // Global scope
@@ -28,7 +28,7 @@ namespace zenith{
 			return false;
 		}
 		auto& currentScope = scopeStack.back();
-		auto [it, success] = currentScope.emplace(name, std::move(info));
+		auto [it, success] = currentScope.symbols.emplace(name, std::move(info));
 
 		if (!success) {
 			const auto& existingSymbol = it->second;
@@ -44,8 +44,8 @@ namespace zenith{
 
 	const SymbolInfo* SymbolTable::lookup(const std::string& name) {
 		for (auto & scope : std::ranges::reverse_view(scopeStack)) {
-				auto found = scope.find(name);
-			if (found != scope.end()) {
+				auto found = scope.symbols.find(name);
+			if (found != scope.symbols.end()) {
 				return &found->second;
 			}
 		}
@@ -55,8 +55,8 @@ namespace zenith{
 	const SymbolInfo* SymbolTable::lookupCurrentScope(const std::string& name) {
 		if (scopeStack.empty()) return nullptr;
 		auto& currentScope = scopeStack.back();
-		auto found = currentScope.find(name);
-		if (found != currentScope.end()) {
+		auto found = currentScope.symbols.find(name);
+		if (found != currentScope.symbols.end()) {
 			return &found->second;
 		}
 		return nullptr;
@@ -64,8 +64,8 @@ namespace zenith{
 
 	const SymbolInfo *SymbolTable::lookup(const std::string &name, SymbolInfo::Kind kind) {
 		for (auto & scope : std::ranges::reverse_view(scopeStack)) {
-				auto found = scope.find(name);
-			if (found != scope.end()) {
+				auto found = scope.symbols.find(name);
+			if (found != scope.symbols.end()) {
 				if(found->second.kind == kind)
 					return &found->second;
 			}
@@ -84,7 +84,7 @@ namespace zenith{
 			ss << pad << "  Scope " << scopeIndex << " {\n";
 
 			// Iterate through symbols in the current scope
-			for (const auto& [name, symbolInfo] : scope) {
+			for (const auto& [name, symbolInfo] : scope.symbols) {
 				ss << pad << "    Symbol: " << name << "\n";
 				ss << pad << "      Kind: ";
 				switch (symbolInfo.kind) {

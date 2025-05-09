@@ -1,0 +1,80 @@
+[
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\main.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\main.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/main.cpp",
+  "output": "CMakeFiles/Zenith.dir/main.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\lexer\\lexer.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\lexer\\lexer.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/lexer/lexer.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/lexer/lexer.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\parser\\parser.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\parser\\parser.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/parser/parser.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/parser/parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\core\\MainNodes.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\core\\MainNodes.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/core/MainNodes.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/core/MainNodes.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\exceptions\\ParseError.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\exceptions\\ParseError.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/exceptions/ParseError.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/exceptions/ParseError.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\utils\\ReadFile.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\utils\\ReadFile.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/utils/ReadFile.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/utils/ReadFile.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\utils\\RemovePadding.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\utils\\RemovePadding.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/utils/RemovePadding.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/utils/RemovePadding.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\exceptions\\LexError.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\exceptions\\LexError.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/exceptions/LexError.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/exceptions/LexError.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\utils\\small_vector.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\utils\\small_vector.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/utils/small_vector.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/utils/small_vector.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\exceptions\\ErrorReporter.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\exceptions\\ErrorReporter.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/exceptions/ErrorReporter.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/exceptions/ErrorReporter.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\SemanticAnalysis\\SemanticAnalyzer.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\SemanticAnalysis\\SemanticAnalyzer.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/SemanticAnalysis/SemanticAnalyzer.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/SemanticAnalysis/SemanticAnalyzer.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\SemanticAnalysis\\SymbolTable.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\SemanticAnalysis\\SymbolTable.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/SemanticAnalysis/SymbolTable.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/SemanticAnalysis/SymbolTable.cpp.obj"
+},
+{
+  "directory": "C:/Users/gogop/CLionProjects/Zenith/build",
+  "command": "Z:\\MinGW\\bin\\g++.exe   -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -std=gnu++23 -o CMakeFiles\\Zenith.dir\\src\\visitor\\Visitor.cpp.obj -c C:\\Users\\gogop\\CLionProjects\\Zenith\\src\\visitor\\Visitor.cpp",
+  "file": "C:/Users/gogop/CLionProjects/Zenith/src/visitor/Visitor.cpp",
+  "output": "CMakeFiles/Zenith.dir/src/visitor/Visitor.cpp.obj"
+}
+]

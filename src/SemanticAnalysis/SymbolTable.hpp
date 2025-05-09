@@ -9,18 +9,18 @@ namespace zenith{
 		enum Kind {
 			VARIABLE, FUNCTION, OBJECT, ACTOR, TYPE_ALIAS, TEMPLATE_PARAM, UNKNOWN
 		} kind = UNKNOWN;
-		std::unique_ptr<TypeNode> type;
+		TypeNode* type = nullptr;
 		ASTNode* declarationNode = nullptr;
 		bool isConst = false;
 		bool isStatic = false;
 
-		SymbolInfo(Kind k, std::unique_ptr<TypeNode> t, ASTNode* node, bool isConst = false, bool isStatic = false);
+		SymbolInfo(Kind k, TypeNode* t, ASTNode* node, bool isConst = false, bool isStatic = false);
 
 		SymbolInfo() = default;
 
 		SymbolInfo(SymbolInfo&& other) noexcept
 				: kind(other.kind),
-				  type(std::move(other.type)),
+				  type(other.type),
 				  declarationNode(other.declarationNode),
 				  isConst(other.isConst),
 				  isStatic(other.isStatic) {
@@ -32,7 +32,7 @@ namespace zenith{
 		SymbolInfo& operator=(SymbolInfo&& other) noexcept {
 			if (this != &other) {
 				kind = other.kind;
-				type = std::move(other.type);
+				type = other.type;
 				declarationNode = other.declarationNode;
 				isConst = other.isConst;
 				isStatic = other.isStatic;
@@ -48,10 +48,14 @@ namespace zenith{
 	};
 
 	using Scope = std::unordered_map<std::string, SymbolInfo>;
+	struct ScopeF {
+		Scope symbols;
+		std::vector<std::unique_ptr<TypeNode>> dynamicNodes;
+	};
 
 	class SymbolTable {
 	private:
-		std::vector<Scope> scopeStack;
+		std::vector<ScopeF> scopeStack;
 		ErrorReporter& errorReporter;
 
 	public:

@@ -8,7 +8,6 @@ namespace zenith {
 	}
 
 	void SemanticAnalyzer::visit(ProgramNode &node) {
-		symbolTable.enterScope();
 		for (auto &x: node.declarations) {
 			x->accept(*this);
 		}
@@ -16,7 +15,7 @@ namespace zenith {
 	}
 
 	void SemanticAnalyzer::visit(ASTNode &node) {
-
+		errorReporter.report(node.loc, "Unhandled node type",{"Internal error", RED_TEXT});
 	}
 
 	void SemanticAnalyzer::visit(ImportNode &node) {
@@ -31,75 +30,65 @@ namespace zenith {
 		symbolTable.exitScope();
 	}
 
-	void SemanticAnalyzer::visit(VarDeclNode &node) {
-		std::unique_ptr<TypeNode> declaredType = nullptr;
-		if (node.type) {
-			declaredType = resolveType(node.type.get());
-		}
+	void SemanticAnalyzer::visit(VarDeclNode& node) {
+		TypeNode* declaredType = node.type ? resolveType(node.type.get()) : nullptr;
+		TypeNode* initializerType = nullptr;
 
-		std::unique_ptr<TypeNode> initializerType = nullptr;
 		if (node.initializer) {
-			initializerType = visitExpression(*node.initializer);
-			if (initializerType == nullptr) {
+			initializerType = visitExpression(*node.initializer).first;
+			if (!initializerType) {
 				errorReporter.report(node.initializer->loc, "Could not evaluate initializer");
 			}
 		}
 
-		std::unique_ptr<TypeNode> finalType = nullptr;
+		TypeNode* finalType = nullptr;
+		static TypeNode dynamicType(node.loc, TypeNode::DYNAMIC);
+		static TypeNode errorType(node.loc, TypeNode::ERROR);
 
-		// --- Check the Kind ---
+		// Handle dynamic variables
 		if (node.kind == VarDeclNode::DYNAMIC) {
-			finalType = std::make_unique<TypeNode>(node.loc, TypeNode::DYNAMIC);
+			finalType = &dynamicType;
 
 			if (declaredType && !declaredType->isDynamic()) {
 				errorReporter.report(node.type->loc,
 				                     "Explicit type conflicts with 'dynamic' keyword.");
 			}
-			// No compatibility check needed for the initializer itself,
-			// as dynamic vars can hold anything.
-
 		}
-		else { // STATIC or CLASS_INIT
-			// Check compatibility if both exist
+			// Handle static/class_init variables
+		else {
 			if (declaredType && initializerType) {
-				if (!areTypesCompatible(declaredType.get(), initializerType.get())) {
+				if (!areTypesCompatible(declaredType, initializerType)) {
 					errorReporter.report(node.initializer->loc,
-					                     "Initializer type '" + typeToString(initializerType.get()) +
-					                     "' is not compatible with declared variable type '" + typeToString(declaredType.get()) + "'.");
-					// Handle error: maybe finalType stays declaredType, or becomes an error type?
-					finalType = std::move(declaredType); // Tentatively keep declared type despite error
-				}
-				else {
-					finalType = std::move(declaredType); // Types are compatible, use declared type
+					                     "Initializer type '" + typeToString(initializerType) +
+					                     "' is not compatible with declared variable type '" +
+					                     typeToString(declaredType) + "'.");
+					finalType = declaredType; // Keep declared type despite error
+				} else {
+					finalType = declaredType;
 				}
 			}
 			else if (declaredType) {
-				finalType = std::move(declaredType);
+				finalType = declaredType;
 			}
-			else if (initializerType) { // (type inference)
-				finalType = std::move(initializerType);
+			else if (initializerType) {
+				finalType = initializerType;
 			}
 			else {
-				// Neither type nor initializer - Error (unless language allows this for static?)
-				errorReporter.report(node.loc, "Variable '" + node.name + "' must have a type or an initializer for static declaration.");
-				return;
+				errorReporter.report(node.loc,
+				                     "Variable '" + node.name +
+				                     "' must have a type or an initializer for static declaration.");
+				finalType = &errorType;
 			}
 		}
 
-		if (!finalType) {
-			errorReporter.report(node.loc, "Could not determine type for variable '" + node.name + "'.");
-			finalType = getErrorTypeNode(node.loc);
-		}
-
-
 		// Declare in symbol table
-		if (finalType) {
-			symbolTable.declare(node.name, SymbolInfo(SymbolInfo::VARIABLE, std::move(finalType), &node, node.isConst));
-		}
+		symbolTable.declare(node.name,
+		                    SymbolInfo(SymbolInfo::VARIABLE, finalType, &node, node.isConst));
 	}
 
-	std::unique_ptr<TypeNode> SemanticAnalyzer::getErrorTypeNode(const SourceLocation &loc) {
-		return std::make_unique<TypeNode>(loc, TypeNode::ERROR);
+	TypeNode* SemanticAnalyzer::getErrorTypeNode(const SourceLocation &loc) {
+		static TypeNode errorNode = TypeNode(loc, TypeNode::ERROR);
+		return &errorNode;
 	}
 
 	void SemanticAnalyzer::visit(MultiVarDeclNode &node) {
@@ -112,7 +101,7 @@ namespace zenith {
 		auto returnType = resolveType(node.returnType.get());
 
 		//Params
-		std::vector<std::unique_ptr<TypeNode>> paramTypes;
+		std::vector<TypeNode*> paramTypes;
 		paramTypes.reserve(node.params.size());
 		for (const auto &param: node.params) {
 			auto pType = resolveType(param.second.get());
@@ -121,15 +110,16 @@ namespace zenith {
 				paramTypes.push_back(getErrorTypeNode(param.second->loc));
 			}
 			else {
-				paramTypes.push_back(std::move(pType));
+				paramTypes.push_back(pType);
 			}
 		}
-		SymbolInfo funcInfo(SymbolInfo::FUNCTION, std::move(returnType), &node);
+		SymbolInfo funcInfo(SymbolInfo::FUNCTION, returnType, &node);
 
 		if (!node.name.empty()) {
 			if (!symbolTable.declare(node.name, std::move(funcInfo))) {
 				// Redeclaration error already reported by symbolTable.declare
 				// Might want to stop processing this function? For now, continue
+				errorReporter.report(node.loc,"[Overloading is unimplemented]Redeclaration of function " + node.name);
 			}
 		}
 		FunctionDeclNode *previousFunction = currentFunction;
@@ -142,17 +132,18 @@ namespace zenith {
 			auto pType = resolveType(param.second.get());
 			if (!pType) {
 				// Error already reported during pre-declaration type resolution
-				pType = std::make_unique<TypeNode>(param.second ? param.second->loc : node.loc, TypeNode::Kind::DYNAMIC); // Assign dynamic as fallback
+				static TypeNode dynamicType(param.second ? param.second->loc : node.loc,TypeNode::DYNAMIC);
+				pType = &dynamicType;
 			}
 
 			if (i < node.defaultValues.size() && node.defaultValues[i]) {
-				auto defaultValueType = visitExpression(*node.defaultValues[i]);
-				if (pType && defaultValueType && !areTypesCompatible(pType.get(), defaultValueType.get())) {
-					errorReporter.report(node.defaultValues[i]->loc, "Default value type '" + typeToString(defaultValueType.get()) + "' is not compatible with parameter type '" + typeToString(pType.get()) + "'.");
+				auto [defaultValueType, dynamicH] = visitExpression(*node.defaultValues[i]);
+				if (defaultValueType && !areTypesCompatible(pType, defaultValueType)) {
+					errorReporter.report(node.defaultValues[i]->loc, "Default value type '" + typeToString(defaultValueType) + "' is not compatible with parameter type '" + typeToString(pType) + "'.");
 				}
 			}
 
-			symbolTable.declare(param.first, SymbolInfo(SymbolInfo::VARIABLE, std::move(pType), param.second.get()));
+			symbolTable.declare(param.first, SymbolInfo(SymbolInfo::VARIABLE, pType, param.second.get()));
 		}
 		if (node.body) {
 			visit(*node.body);
@@ -166,7 +157,7 @@ namespace zenith {
 		exprVR = nullptr;
 
 
-		std::vector<std::unique_ptr<TypeNode>> paramTypes;
+		std::vector<TypeNode*> paramTypes;
 		bool paramError = false;
 		paramTypes.reserve(node.lambda->params.size());
 		for (const auto &param: node.lambda->params) {
@@ -178,7 +169,7 @@ namespace zenith {
 				paramTypes.push_back(getErrorTypeNode(param.second ? param.second->loc : node.loc));
 			}
 			else {
-				paramTypes.push_back(std::move(resolvedParamType));
+				paramTypes.push_back(resolvedParamType);
 			}
 		}
 
@@ -188,7 +179,7 @@ namespace zenith {
 		}
 
 
-		std::unique_ptr<TypeNode> returnType = nullptr;
+		TypeNode* returnType = nullptr;
 		if (node.lambda->returnType) {
 			returnType = resolveType(node.lambda->returnType.get());
 			if (!returnType) {
@@ -223,10 +214,10 @@ namespace zenith {
 				paramTypeForSymbol = getErrorTypeNode(node.loc);
 			}
 			ASTNode *paramDeclNode = node.lambda->params[i].second.get();
-			symbolTable.declare(node.lambda->params[i].first, SymbolInfo(SymbolInfo::VARIABLE, std::move(paramTypeForSymbol), paramDeclNode));
+			symbolTable.declare(node.lambda->params[i].first, SymbolInfo(SymbolInfo::VARIABLE, paramTypeForSymbol, paramDeclNode));
 		}
 
-		TypeNode *expectedReturnType = returnType.get();
+		TypeNode *expectedReturnType = returnType;
 		if (expectedReturnType && expectedReturnType->kind == TypeNode::ERROR) {
 			analysisError = true;
 		}
@@ -246,17 +237,48 @@ namespace zenith {
 			exprVR = getErrorTypeNode(node.loc);
 		}
 		else {
-			exprVR = std::make_unique<FunctionTypeNode>(node.loc, std::move(paramTypes), std::move(returnType));
+			dynamicType = std::make_unique<FunctionTypeNode>(node.loc, std::move(paramTypes), returnType);
+			exprVR = dynamicType.get();
 		}
 	}
 
-	std::unique_ptr<TypeNode> SemanticAnalyzer::visitExpression(ExprNode &expr) {
+	std::pair<TypeNode*, std::unique_ptr<TypeNode>> SemanticAnalyzer::visitExpression(ExprNode &expr) {
 		expr.accept(*this);
-		return std::move(exprVR);
+		return {exprVR,std::move(dynamicType)};
 	}
 
 	void SemanticAnalyzer::visit(ObjectDeclNode &node) {
-		Visitor::visit(node);
+		// Save current class context
+		ObjectDeclNode* previousClass = currentClass;
+		currentClass = &node;
+
+		// Enter class scope
+		symbolTable.enterScope();
+
+		// Handle inheritance if base class is specified
+		if (!node.base.empty()) {
+			// Look up base class in symbol table
+			const SymbolInfo* baseInfo = symbolTable.lookup(node.base, SymbolInfo::OBJECT);
+			if (!baseInfo) {
+				errorReporter.report(node.loc, "Base class '" + node.base + "' not found");
+			}
+		}
+
+		// Process all members
+		for (auto& member : node.members) {
+			member->accept(*this);
+		}
+
+		// Process operator overloads
+		for (auto& op : node.operators) {
+			op->accept(*this);
+		}
+
+		// Exit class scope
+		symbolTable.exitScope();
+
+		// Restore previous class context
+		currentClass = previousClass;
 	}
 
 	void SemanticAnalyzer::visit(ReturnStmtNode &node) {
@@ -276,21 +298,21 @@ namespace zenith {
 				// Expression had an error, cannot check compatibility
 				errorReporter.report(node.loc, "Expression had an error, cannot check compatibility");
 			}
-			else if (!areTypesCompatible(expectedReturnType.get(), actualReturnType.get())) {
+			else if (!areTypesCompatible(expectedReturnType, actualReturnType)) {
 				errorReporter.report(node.value->loc,
-				                     "Return type '" + typeToString(actualReturnType.get()) +
-				                     "' is not compatible with function's declared return type '" + typeToString(expectedReturnType.get()) + "'.");
+				                     "Return type '" + typeToString(actualReturnType) +
+				                     "' is not compatible with function's declared return type '" + typeToString(expectedReturnType) + "'.");
 			}
 		}
 		else {
 			// Return without value
 			if (expectedReturnType) {
 				bool isVoid = false;
-				if (auto *prim = dynamic_cast<PrimitiveTypeNode *>(expectedReturnType.get())) {
+				if (auto *prim = dynamic_cast<PrimitiveTypeNode *>(expectedReturnType)) {
 					isVoid = (prim->type == PrimitiveTypeNode::VOID);
 				}
 				if (!isVoid) {
-					errorReporter.report(node.loc, "Must return a value from a function with declared return type '" + typeToString(expectedReturnType.get()) + "'.");
+					errorReporter.report(node.loc, "Must return a value from a function with declared return type '" + typeToString(expectedReturnType) + "'.");
 				}
 			}
 		}
@@ -492,119 +514,59 @@ namespace zenith {
 		}
 	}
 
-	std::unique_ptr<TypeNode> SemanticAnalyzer::resolveType(TypeNode *typeNode) {
-		if (!typeNode) {
-			return nullptr;
+	void SemanticAnalyzer::visit(LiteralNode &node) {
+		static PrimitiveTypeNode numberType(node.loc, PrimitiveTypeNode::NUMBER);
+		static PrimitiveTypeNode stringType(node.loc, PrimitiveTypeNode::STRING);
+		static PrimitiveTypeNode boolType(node.loc, PrimitiveTypeNode::BOOL);
+		static PrimitiveTypeNode nilType(node.loc, PrimitiveTypeNode::NIL);
+		switch (node.type) {
+			case LiteralNode::NUMBER:
+				exprVR = &numberType; break;
+			case LiteralNode::STRING:
+				exprVR = &stringType; break;
+			case LiteralNode::BOOL:
+				exprVR = &boolType; break;
+			case LiteralNode::NIL:
+				exprVR = &nilType; break;
+		}
+	}
+
+	void SemanticAnalyzer::visit(VarNode &node) {
+		if (auto symbol = symbolTable.lookup(node.name)) {
+			exprVR = symbol->type;
+		} else {
+			errorReporter.report(node.loc, "Undeclared variable '" + node.name + "'");
+			exprVR = getErrorTypeNode(node.loc);
+		}
+	}
+
+	void SemanticAnalyzer::visit(BinaryOpNode &node) {
+		auto leftType = visitExpression(*node.left);
+		auto rightType = visitExpression(*node.right);
+
+		// Check for assignment operations
+		if (node.op >= BinaryOpNode::ASN && node.op <= BinaryOpNode::MOD_ASN) {
+			// For assignments, left must be an lvalue
+			if (!areTypesCompatible(leftType, rightType)) {
+				errorReporter.report(node.loc,
+				                     "Type mismatch in assignment. Left type: " +
+				                     typeToString(leftType) + ", right type: " +
+				                     typeToString(rightType));
+			}
+			exprVR = std::move(leftType);
+			return;
 		}
 
-		switch (typeNode->kind) {
-			case TypeNode::OBJECT: {
-				// Handle named types (classes, structs, unions)
-				auto* namedType = dynamic_cast<NamedTypeNode*>(typeNode);
-				if (!namedType) {
-					errorReporter.report(typeNode->loc, "Invalid object type node");
-					return getErrorTypeNode(typeNode->loc);
-				}
-
-				// Look up the type in the symbol table
-				const SymbolInfo* typeInfo = symbolTable.lookup(namedType->name, SymbolInfo::OBJECT);
-				if (!typeInfo) {
-					errorReporter.report(typeNode->loc, "Unknown type '" + namedType->name + "'");
-					return getErrorTypeNode(typeNode->loc);
-				}
-
-				// Return a clone of the resolved type
-				return typeInfo->type->clone();
-			}
-
-			case TypeNode::ARRAY: {
-				// Recursively resolve element type
-				auto* arrayType = dynamic_cast<ArrayTypeNode*>(typeNode);
-				if (!arrayType) {
-					errorReporter.report(typeNode->loc, "Invalid array type node");
-					return getErrorTypeNode(typeNode->loc);
-				}
-
-				auto resolvedElement = resolveType(arrayType->elementType.get());
-				if (!resolvedElement) {
-					return getErrorTypeNode(typeNode->loc);
-				}
-
-				return std::make_unique<ArrayTypeNode>(
-						arrayType->loc,
-						std::move(resolvedElement),
-						arrayType->sizeExpr ? arrayType->sizeExpr->clone() : nullptr
-				);
-			}
-
-			case TypeNode::TEMPLATE: {
-				// Resolve template arguments
-				auto* templateType = dynamic_cast<TemplateTypeNode*>(typeNode);
-				if (!templateType) {
-					errorReporter.report(typeNode->loc, "Invalid template type node");
-					return getErrorTypeNode(typeNode->loc);
-				}
-
-				std::vector<std::unique_ptr<TypeNode>> resolvedArgs;
-				resolvedArgs.reserve(templateType->templateArgs.size());
-
-				for (auto& arg : templateType->templateArgs) {
-					auto resolvedArg = resolveType(arg.get());
-					if (!resolvedArg) {
-						return getErrorTypeNode(typeNode->loc);
-					}
-					resolvedArgs.push_back(std::move(resolvedArg));
-				}
-
-				return std::make_unique<TemplateTypeNode>(
-						templateType->loc,
-						templateType->baseName,
-						std::move(resolvedArgs)
-				);
-			}
-
-			case TypeNode::FUNCTION: {
-				// Resolve function parameter and return types
-				auto* funcType = dynamic_cast<FunctionTypeNode*>(typeNode);
-				if (!funcType) {
-					errorReporter.report(typeNode->loc, "Invalid function type node");
-					return getErrorTypeNode(typeNode->loc);
-				}
-
-				std::vector<std::unique_ptr<TypeNode>> resolvedParams;
-				resolvedParams.reserve(funcType->parameterTypes.size());
-
-				for (auto& param : funcType->parameterTypes) {
-					auto resolvedParam = resolveType(param.get());
-					if (!resolvedParam) {
-						return getErrorTypeNode(typeNode->loc);
-					}
-					resolvedParams.push_back(std::move(resolvedParam));
-				}
-
-				auto resolvedReturn = funcType->returnType ?
-				                      resolveType(funcType->returnType.get()) :
-				                      std::make_unique<PrimitiveTypeNode>(funcType->loc, PrimitiveTypeNode::VOID);
-
-				return std::make_unique<FunctionTypeNode>(
-						funcType->loc,
-						std::move(resolvedParams),
-						std::move(resolvedReturn)
-				);
-			}
-
-				// For primitive and dynamic types, just clone them
-			case TypeNode::PRIMITIVE:
-			case TypeNode::DYNAMIC:
-				return typeNode->clone();
-
-			case TypeNode::ERROR:
-				return getErrorTypeNode(typeNode->loc);
-
-			default:
-				errorReporter.report(typeNode->loc, "Unsupported type kind in resolveType");
-				return getErrorTypeNode(typeNode->loc);
+		// For other operations, types must be compatible
+		if (!areTypesCompatible(leftType, rightType)) {
+			errorReporter.report(node.loc,
+			                     "Type mismatch in binary operation. Left type: " +
+			                     typeToString(leftType) + ", right type: " +
+			                     typeToString(rightType));
 		}
+
+		// Result type is the more general of the two
+		exprVR = leftType;
 	}
 
 } // namespace zenith

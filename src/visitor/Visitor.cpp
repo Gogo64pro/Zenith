@@ -182,7 +182,7 @@ namespace zenith {
 		visit(static_cast<ASTNode&>(node));
 	}
 
-	std::unique_ptr<TypeNode> Visitor::visitExpression(ExprNode &expr) {
+	std::pair<TypeNode *, std::unique_ptr<TypeNode>> Visitor::visitExpression(ExprNode &expr) {
 		return nullptr;
 	}
 

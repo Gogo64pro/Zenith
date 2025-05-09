@@ -1,4 +1,5 @@
 #include <fstream>
+#include <string>
 #include "ErrorReporter.hpp"
 
 namespace zenith{

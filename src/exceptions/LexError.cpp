@@ -2,6 +2,7 @@
 // Created by gogop on 3/31/2025.
 //
 
+#include <string>
 #include "LexError.hpp"
 
 namespace zenith {

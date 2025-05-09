@@ -71,7 +71,7 @@ namespace zenith {
 		virtual void visit(ASTNode& node);
 		virtual void visit(ExprNode& node);
 		virtual void visit(StmtNode& node);
-		virtual std::unique_ptr<TypeNode> visitExpression(ExprNode& expr);
+		virtual std::pair<TypeNode *, std::unique_ptr<TypeNode>> visitExpression(ExprNode& expr);
 
 		// Specific visitors
 		virtual void visit(ProgramNode& node);

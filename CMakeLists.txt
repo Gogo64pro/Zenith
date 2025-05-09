@@ -37,10 +37,11 @@ add_executable(Zenith
         src/exceptions/ErrorReporter.cpp src/exceptions/ErrorReporter.hpp
         src/core/IAnnotatable.hpp
         #src/SemanticAnalysis/SemanticAnalyzernss.cpp
-        #src/SemanticAnalysis/SemanticAnalyzer.hpp src/SemanticAnalysis/SemanticAnalyzer.cpp
-        #src/SemanticAnalysis/SymbolTable.cpp src/SemanticAnalysis/SymbolTable.hpp
+        src/SemanticAnalysis/SemanticAnalyzer.hpp src/SemanticAnalysis/SemanticAnalyzer.cpp
+        src/SemanticAnalysis/SymbolTable.cpp src/SemanticAnalysis/SymbolTable.hpp
         src/visitor/Visitor.cpp src/visitor/Visitor.hpp
         #src/exceptions/SemanticAnalysisError.cpp src/exceptions/SemanticAnalysisError.hpp
-        src/core/polymorphic.cpp src/core/polymorphic.hpp src/core/indirect_polymorphic.hpp)
+        #src/core/polymorphic.cpp src/core/polymorphic.hpp src/core/indirect_polymorphic.hpp
+        )
 
 #add_compile_options(-fsanitize=address)

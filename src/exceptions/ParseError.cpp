@@ -2,6 +2,7 @@
 // Created by gogop on 3/29/2025.
 //
 
+#include <string>
 #include "ParseError.hpp"
 
 namespace zenith {

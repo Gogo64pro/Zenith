@@ -12,15 +12,15 @@
 
 namespace zenith {
 	struct ProgramNode : ASTNode {
-		std::vector<std_P3019_modified::polymorphic<ASTNode>> declarations;
+		std::vector<std::unique_ptr<ASTNode>> declarations;
 
 		explicit ProgramNode(SourceLocation loc,
-		                     std::vector<std_P3019_modified::polymorphic<ASTNode>> decls)
+		                     std::vector<std::unique_ptr<ASTNode>> decls)
 				: declarations(std::move(decls)) {
 			this->loc = loc;
 		}
 
-		std::string toString(int indent = 0) const {
+		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "Program {\n";
@@ -42,7 +42,7 @@ namespace zenith {
 			this->loc = loc;
 		}
 
-		std::string toString(int indent = 0) const {
+		std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			return pad + "Import " + (isJavaImport ? "Java: " : "") + "\"" + path + "\"";
 		}

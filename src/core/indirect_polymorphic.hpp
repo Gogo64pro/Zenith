@@ -392,86 +392,74 @@ namespace std_P3019_modified {
 	//----------------------------------------------------------------------------
 
 	namespace detail {
-
-		// --- Control Block Base ---
+		// Simplified ControlBlockBase
 		template<typename BaseT, typename BaseAlloc>
 		struct ControlBlockBase {
 			using BasePointer = typename std::allocator_traits<BaseAlloc>::pointer;
-			using ConstBasePointer = typename std::allocator_traits<BaseAlloc>::const_pointer;
-
 			virtual ~ControlBlockBase() = default;
-
-			// Type-erased operations
+			virtual BaseT* get_ptr() noexcept = 0;
+			virtual ControlBlockBase<BaseT, BaseAlloc>* clone(const BaseAlloc& target_cb_alloc) const = 0;
+			virtual BasePointer copy(const BaseAlloc& target_alloc, BasePointer p) const = 0;
 			virtual void destroy(BaseAlloc& alloc, BasePointer p) noexcept = 0;
-			[[nodiscard]] virtual BasePointer copy(BaseAlloc& target_alloc, ConstBasePointer p) const = 0;
-			[[nodiscard]] virtual ControlBlockBase* clone(BaseAlloc& target_cb_alloc) const = 0; // For deep copy
 			[[nodiscard]] virtual const std::type_info& target_type_info() const noexcept = 0;
 		};
 
-		// --- Control Block Derived ---
+		// Simplified ControlBlockDerived
 		template<typename ConcreteDerived, typename BaseT, typename BaseAlloc>
 		struct ControlBlockDerived final : ControlBlockBase<BaseT, BaseAlloc> {
 			using BasePointer = typename ControlBlockBase<BaseT, BaseAlloc>::BasePointer;
-			using ConstBasePointer = typename ControlBlockBase<BaseT, BaseAlloc>::ConstBasePointer;
-			using ControlBlock = ControlBlockBase<BaseT, BaseAlloc>; // Alias for clarity
+			ConcreteDerived derived;
 
-			void destroy(BaseAlloc& base_alloc, BasePointer p_base) noexcept override {
-				using DerivedAlloc = typename std::allocator_traits<BaseAlloc>::template rebind_alloc<ConcreteDerived>;
-				using DerivedAllocTraits = std::allocator_traits<DerivedAlloc>;
-				using DerivedPointer = typename DerivedAllocTraits::pointer;
+			template<typename... Args>
+			explicit ControlBlockDerived(Args&&... args) : derived(std::forward<Args>(args)...) {}
 
-				auto* p_derived_raw = static_cast<ConcreteDerived*>(std::to_address(p_base));
-				DerivedPointer derived_p = std::pointer_traits<DerivedPointer>::pointer_to(*p_derived_raw);
-				DerivedAlloc derived_alloc(base_alloc);
+			BaseT* get_ptr() noexcept override { return &derived; }
 
-				try {
-					DerivedAllocTraits::destroy(derived_alloc, std::to_address(derived_p));
-				} catch (...) {
-					assert(false && "Destructor threw an exception."); std::terminate();
-				}
-				std::allocator_traits<BaseAlloc>::deallocate(base_alloc, p_base, 1);
-			}
-
-			[[nodiscard]] BasePointer copy(BaseAlloc& target_base_alloc, ConstBasePointer p_base_const) const override {
-				using DerivedAlloc = typename std::allocator_traits<BaseAlloc>::template rebind_alloc<ConcreteDerived>;
-				using DerivedAllocTraits = std::allocator_traits<DerivedAlloc>;
-				using DerivedPointer = typename DerivedAllocTraits::pointer;
-
-				const BaseT* p_base_addr = std::to_address(p_base_const);
-				const auto& derived_obj_ref = static_cast<const ConcreteDerived&>(*p_base_addr);
-				DerivedAlloc target_derived_alloc(target_base_alloc);
-
-				DerivedPointer new_derived_p = DerivedAllocTraits::allocate(target_derived_alloc, 1);
-				BasePointer bp_result = nullptr;
-				try {
-					DerivedAllocTraits::construct(target_derived_alloc,
-					                              std::to_address(new_derived_p),
-					                              derived_obj_ref);  // This copies the ConcreteDerived
-					ConcreteDerived* new_derived_raw = std::to_address(new_derived_p);
-					auto* new_base_raw = static_cast<BaseT*>(new_derived_raw);
-					bp_result = std::pointer_traits<BasePointer>::pointer_to(*new_base_raw);
-					return bp_result;
-				} catch (...) {
-					DerivedAllocTraits::deallocate(target_derived_alloc, new_derived_p, 1);
-					throw;
-				}
-			}
-
-			[[nodiscard]] ControlBlock* clone(BaseAlloc& target_cb_alloc) const override {
-				// Allocate memory for the new control block using the target allocator
+			ControlBlockBase<BaseT, BaseAlloc>* clone(const BaseAlloc& target_cb_alloc) const override {
 				using CBDerivedAlloc = typename std::allocator_traits<BaseAlloc>::template rebind_alloc<ControlBlockDerived>;
 				using CBDerivedAllocTraits = std::allocator_traits<CBDerivedAlloc>;
-				CBDerivedAlloc cb_alloc(target_cb_alloc); // Use the provided target allocator
+				CBDerivedAlloc cb_alloc(target_cb_alloc);
 
-				typename CBDerivedAllocTraits::pointer cb_ptr = CBDerivedAllocTraits::allocate(cb_alloc, 1);
+				auto* cb_ptr = CBDerivedAllocTraits::allocate(cb_alloc, 1);
 				try {
-					// Construct the new control block (placement new or construct)
-					CBDerivedAllocTraits::construct(cb_alloc, std::to_address(cb_ptr)); // Default construct CB
-					return std::to_address(cb_ptr);
+					CBDerivedAllocTraits::construct(cb_alloc, cb_ptr, derived);
+					return cb_ptr;
 				} catch (...) {
 					CBDerivedAllocTraits::deallocate(cb_alloc, cb_ptr, 1);
 					throw;
 				}
+			}
+			BasePointer copy(const BaseAlloc& target_alloc, BasePointer p) const override {
+				using DerivedAlloc = typename std::allocator_traits<BaseAlloc>::template rebind_alloc<ConcreteDerived>;
+				using DerivedAllocTraits = std::allocator_traits<DerivedAlloc>;
+
+				DerivedAlloc derived_alloc(target_alloc);
+				auto* new_p = DerivedAllocTraits::allocate(derived_alloc, 1);
+
+				try {
+					DerivedAllocTraits::construct(derived_alloc, new_p,
+					                              *static_cast<ConcreteDerived*>(std::to_address(p)));
+					return std::pointer_traits<BasePointer>::pointer_to(
+							*static_cast<BaseT*>(new_p));
+				} catch (...) {
+					DerivedAllocTraits::deallocate(derived_alloc, new_p, 1);
+					throw;
+				}
+			}
+			void destroy(BaseAlloc& alloc, BasePointer p) noexcept override {
+				using DerivedAlloc = typename std::allocator_traits<BaseAlloc>::template rebind_alloc<ConcreteDerived>;
+				using DerivedAllocTraits = std::allocator_traits<DerivedAlloc>;
+
+				DerivedAlloc derived_alloc(alloc);
+				auto* p_derived = static_cast<ConcreteDerived*>(std::to_address(p));
+
+				try {
+					DerivedAllocTraits::destroy(derived_alloc, p_derived);
+				} catch (...) {
+					assert(false && "Destructor threw an exception");
+					std::terminate();
+				}
+				std::allocator_traits<BaseAlloc>::deallocate(alloc, p, 1);
 			}
 
 			[[nodiscard]] const std::type_info& target_type_info() const noexcept override {
@@ -479,6 +467,59 @@ namespace std_P3019_modified {
 			}
 		};
 
+		// Simplified DelegatingControlBlock
+		template<typename BaseT, typename DerivedT, typename BaseAlloc>
+		struct DelegatingControlBlock final : ControlBlockBase<BaseT, BaseAlloc> {
+			using SourceControlBlock = ControlBlockBase<DerivedT, BaseAlloc>;
+			using BasePointer = typename ControlBlockBase<BaseT, BaseAlloc>::BasePointer;
+			std::unique_ptr<SourceControlBlock> source_cb;
+
+			explicit DelegatingControlBlock(std::unique_ptr<SourceControlBlock>&& src_cb)
+					: source_cb(std::move(src_cb)) {}
+
+			BaseT* get_ptr() noexcept override {
+				return source_cb->get_ptr();
+			}
+
+			ControlBlockBase<BaseT, BaseAlloc>* clone(const BaseAlloc& target_cb_alloc) const override {
+				auto cloned_source = std::unique_ptr<SourceControlBlock>(source_cb->clone(target_cb_alloc));
+
+				using CBDerivedAlloc = typename std::allocator_traits<BaseAlloc>::template rebind_alloc<DelegatingControlBlock>;
+				using CBDerivedAllocTraits = std::allocator_traits<CBDerivedAlloc>;
+				CBDerivedAlloc cb_alloc(target_cb_alloc);
+
+				auto* cb_ptr = CBDerivedAllocTraits::allocate(cb_alloc, 1);
+				try {
+					CBDerivedAllocTraits::construct(cb_alloc, cb_ptr, std::move(cloned_source));
+					return cb_ptr;
+				} catch (...) {
+					CBDerivedAllocTraits::deallocate(cb_alloc, cb_ptr, 1);
+					throw;
+				}
+			}
+
+			BasePointer copy(const BaseAlloc& target_alloc, BasePointer p) const override {
+				auto* p_derived = static_cast<DerivedT*>(std::to_address(p));
+				using DerivedPointer = typename std::allocator_traits<BaseAlloc>::template rebind_traits<DerivedT>::pointer;
+				DerivedPointer p_derived_wrapped = std::pointer_traits<DerivedPointer>::pointer_to(*p_derived);
+				auto copied_derived_ptr = source_cb->copy(target_alloc, p_derived_wrapped);
+
+				return std::pointer_traits<BasePointer>::pointer_to(
+						*static_cast<BaseT*>(std::to_address(copied_derived_ptr)));
+			}
+
+			void destroy(BaseAlloc& alloc, BasePointer p) noexcept override {
+				auto* p_derived = static_cast<DerivedT*>(std::to_address(p));
+				using DerivedPointer = typename std::allocator_traits<BaseAlloc>::template rebind_traits<DerivedT>::pointer;
+				DerivedPointer p_derived_wrapped = std::pointer_traits<DerivedPointer>::pointer_to(*p_derived);
+
+				source_cb->destroy(alloc, p_derived_wrapped);
+			}
+
+			[[nodiscard]] const std::type_info& target_type_info() const noexcept override {
+				return source_cb->target_type_info();
+			}
+		};
 	} // namespace detail
 
 	template <class T, class Allocator = std::allocator<T>>
@@ -540,54 +581,32 @@ namespace std_P3019_modified {
 				p_ = nullptr;
 			}
 			cb_ptr_.reset();
-			if (!cb_ptr_) p_ = nullptr;
 		}
 
 		template<typename ConcreteDerived, typename... Args>
 		requires std::derived_from<ConcreteDerived, T> && std::constructible_from<ConcreteDerived, Args...>
 		void allocate_construct_and_init(Allocator current_alloc, Args&&... args) {
-			using DerivedAlloc = typename BaseAllocTraits::template rebind_alloc<ConcreteDerived>;
-			using DerivedAllocTraits = std::allocator_traits<DerivedAlloc>;
-			DerivedAlloc derived_alloc(current_alloc);
-			typename DerivedAllocTraits::pointer derived_p = nullptr;
-			pointer base_p_new = nullptr;
-			ControlBlock* cb_new = nullptr;
+			using CBDerived = detail::ControlBlockDerived<ConcreteDerived, T, Allocator>;
+			using CBAlloc = typename BaseAllocTraits::template rebind_alloc<CBDerived>;
+			using CBAllocTraits = std::allocator_traits<CBAlloc>;
 
-			derived_p = DerivedAllocTraits::allocate(derived_alloc, 1);
+			CBAlloc cb_alloc(current_alloc);
+			auto* cb_derived = CBAllocTraits::allocate(cb_alloc, 1);
 
 			try {
-				DerivedAllocTraits::construct(derived_alloc, std::to_address(derived_p), std::forward<Args>(args)...);
-				ConcreteDerived* derived_raw = std::to_address(derived_p);
-				T* base_raw = static_cast<T*>(derived_raw);
-				base_p_new = std::pointer_traits<pointer>::pointer_to(*base_raw);
+				// Construct the control block with the derived object
+				CBAllocTraits::construct(cb_alloc, cb_derived, std::forward<Args>(args)...);
 
-				using CBDerived = detail::ControlBlockDerived<ConcreteDerived, T, Allocator>;
-				using CBAlloc = typename BaseAllocTraits::template rebind_alloc<CBDerived>;
-				using CBAllocTraits = std::allocator_traits<CBAlloc>;
-				CBAlloc cb_alloc(current_alloc);
-				typename CBAllocTraits::pointer cb_derived_p = CBAllocTraits::allocate(cb_alloc, 1);
+				// Get the pointer to the derived object
+				auto* derived_ptr = cb_derived->get_ptr();
+				p_ = std::pointer_traits<pointer>::pointer_to(*derived_ptr);
 
-				try {
-					CBAllocTraits::construct(cb_alloc, std::to_address(cb_derived_p));
-					cb_new = std::to_address(cb_derived_p);
-				} catch (...) {
-					CBAllocTraits::deallocate(cb_alloc, cb_derived_p, 1);
-					throw;
-				}
-
-				reset();
-				p_ = base_p_new;
-				cb_ptr_ = ControlBlockPtr(cb_new, ControlBlockDeleter{current_alloc});
-
+				// Create the control block pointer with proper deleter
+				cb_ptr_ = ControlBlockPtr(cb_derived, ControlBlockDeleter{current_alloc});
 			} catch (...) {
-				if (derived_p) {
-					if (base_p_new) {
-						try { DerivedAllocTraits::destroy(derived_alloc, std::to_address(derived_p)); }
-						catch (...) {}
-					}
-					DerivedAllocTraits::deallocate(derived_alloc, derived_p, 1);
+				if (cb_derived) {
+					CBAllocTraits::deallocate(cb_alloc, cb_derived, 1);
 				}
-				reset();
 				throw;
 			}
 		}
@@ -688,6 +707,7 @@ namespace std_P3019_modified {
 			}
 		}
 
+		// Conversion constructor from derived to base
 		template<typename Derived, typename DerivedAlloc>
 		requires std::derived_from<Derived, T> &&
 		         std::is_convertible_v<DerivedAlloc, Allocator>
@@ -695,14 +715,25 @@ namespace std_P3019_modified {
 				: cb_ptr_(nullptr, ControlBlockDeleter{Allocator(std::move(other.get_allocator_ref()))})
 		{
 			if (other.p_) {
-				using CBDerived = detail::ControlBlockDerived<Derived, T, Allocator>;
-				using CBAlloc = typename BaseAllocTraits::template rebind_alloc<CBDerived>;
+				// Create a new delegating control block
+				using DelegatingCB = detail::DelegatingControlBlock<T, Derived, Allocator>;
+				using CBAlloc = typename BaseAllocTraits::template rebind_alloc<DelegatingCB>;
 				using CBAllocTraits = std::allocator_traits<CBAlloc>;
+				using SourceCB = detail::ControlBlockBase<Derived, Allocator>;
+				using SourceCBAlloc = typename BaseAllocTraits::template rebind_alloc<detail::ControlBlockDerived<Derived, Derived, Allocator>>;
+				using SourceCBAllocTraits = std::allocator_traits<SourceCBAlloc>;
 
 				CBAlloc cb_alloc(get_allocator_ref());
 				auto* new_cb = CBAllocTraits::allocate(cb_alloc, 1);
+
 				try {
-					CBAllocTraits::construct(cb_alloc, new_cb);
+					// Clone the source control block with the target allocator
+					SourceCBAlloc source_cb_alloc(get_allocator_ref());
+					auto* source_cb_ptr = other.cb_ptr_->clone(get_allocator_ref());
+					auto source_cb = std::unique_ptr<SourceCB>(source_cb_ptr);
+
+					// Construct the delegating control block
+					CBAllocTraits::construct(cb_alloc, new_cb, std::move(source_cb));
 					cb_ptr_.reset(new_cb);
 					p_ = std::exchange(other.p_, nullptr);
 				} catch (...) {
@@ -711,44 +742,56 @@ namespace std_P3019_modified {
 				}
 			}
 		}
-
-		// Copy version of the conversion constructor
+		// Copy version of the clone ctor
 		template<typename Derived, typename DerivedAlloc>
 		requires std::derived_from<Derived, T> &&
+		         std::is_constructible_v<Allocator, const DerivedAlloc&> &&
 		         std::is_convertible_v<const DerivedAlloc&, Allocator>
-		constexpr polymorphic(const polymorphic<Derived, DerivedAlloc>& other)
+		polymorphic(const polymorphic<Derived, DerivedAlloc>& other)
 				: cb_ptr_(nullptr, ControlBlockDeleter{Allocator(other.get_allocator_ref())})
 		{
-			if (other.p_) {
-				p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
-
-				using CBDerived = detail::ControlBlockDerived<Derived, T, Allocator>;
-				using CBAlloc = typename BaseAllocTraits::template rebind_alloc<CBDerived>;
-				using CBAllocTraits = std::allocator_traits<CBAlloc>;
-
-				CBAlloc cb_alloc(get_allocator_ref());
-				auto* new_cb = CBAllocTraits::allocate(cb_alloc, 1);
+			if (other) {
 				try {
-					CBAllocTraits::construct(cb_alloc, new_cb);  // Fixed line
-					cb_ptr_.reset(new_cb);
+					// Create a new delegating control block to handle the type conversion
+					using SourceCB = detail::ControlBlockBase<Derived, DerivedAlloc>;
+					using DelegatingCB = detail::DelegatingControlBlock<T, Derived, Allocator>;
+					using CBAlloc = typename BaseAllocTraits::template rebind_alloc<DelegatingCB>;
+					using CBAllocTraits = std::allocator_traits<CBAlloc>;
+
+					CBAlloc cb_alloc(get_allocator_ref());
+					auto* new_cb = CBAllocTraits::allocate(cb_alloc, 1);
+
+					// Clone the source control block with its own allocator
+					std::unique_ptr<SourceCB> cloned_source(other.cb_ptr_->clone(other.get_allocator_ref()));
+
+					try {
+						// Construct the delegating control block
+						CBAllocTraits::construct(cb_alloc, new_cb, std::move(cloned_source));
+						cb_ptr_.reset(new_cb);
+						// Copy the pointer, converting it to the base type
+						p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
+					} catch (...) {
+						CBAllocTraits::deallocate(cb_alloc, new_cb, 1);
+						throw;
+					}
 				} catch (...) {
-					CBAllocTraits::deallocate(cb_alloc, new_cb, 1);
+					reset();
 					throw;
 				}
 			}
 		}
 
-		template<typename Derived, typename DerivedAlloc>
-		requires std::derived_from<Derived, T> &&
-		         std::is_convertible_v<DerivedAlloc, Allocator>
-		polymorphic(const polymorphic<Derived, DerivedAlloc>& other)
-				: cb_ptr_(nullptr, ControlBlockDeleter{Allocator(other.get_allocator_ref())})
-		{
-			if (other) {
-				p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
-				cb_ptr_.reset(other.cb_ptr_->clone(get_allocator_ref()));
-			}
-		}
+		//template<typename Derived, typename DerivedAlloc>
+		//requires std::derived_from<Derived, T> &&
+		//         std::is_convertible_v<DerivedAlloc, Allocator>
+		//polymorphic(const polymorphic<Derived, DerivedAlloc>& other)
+		//		: cb_ptr_(nullptr, ControlBlockDeleter{Allocator(other.get_allocator_ref())})
+		//{
+		//	if (other) {
+		//		p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
+		//		cb_ptr_.reset(other.cb_ptr_->clone(get_allocator_ref()));
+		//	}
+		//}
 
 
 		// Move Constructor
@@ -791,15 +834,14 @@ namespace std_P3019_modified {
 
 
 		// Converting copy constructor from derived to base
-		template <class U, class A>
-		requires std::derived_from<U, T>
-		polymorphic(const polymorphic<U, A>& other) {
-			if (other) {
-				p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
-				cb_ptr_.reset(other.cb_ptr_->clone(get_allocator_ref()));
-			}
-		}
-
+		//template <class U, class A>
+		//requires std::derived_from<U, T>
+		//polymorphic(const polymorphic<U, A>& other) {
+		//	if (other) {
+		//		p_ = other.cb_ptr_->copy(get_allocator_ref(), other.p_);
+		//		cb_ptr_.reset(other.cb_ptr_->clone(get_allocator_ref()));
+		//	}
+		//}
 
 		// Destructor
 		constexpr ~polymorphic() {
@@ -900,10 +942,10 @@ namespace std_P3019_modified {
 		}
 
 		// Observers
-		constexpr const T& operator*() const noexcept { assert(has_value()); return *std::to_address(p_); }
-		constexpr T& operator*() noexcept { assert(has_value()); return *std::to_address(p_); }
-		constexpr const_pointer operator->() const noexcept { assert(has_value()); return p_; }
-		constexpr pointer operator->() noexcept { assert(has_value()); return p_; }
+		constexpr const T& operator*() const noexcept { assert(has_value()); return *cb_ptr_->get_ptr(); }
+		constexpr T& operator*() noexcept { assert(has_value()); return *cb_ptr_->get_ptr(); }
+		constexpr const_pointer operator->() const noexcept { assert(has_value()); return std::pointer_traits<const_pointer>::pointer_to(*cb_ptr_->get_ptr()); }
+		constexpr pointer operator->() noexcept { assert(has_value()); return std::pointer_traits<pointer>::pointer_to(*cb_ptr_->get_ptr()); }
 
 		constexpr bool has_value() const noexcept { return p_ != nullptr; }
 		constexpr bool valueless_after_move() const noexcept { return p_ == nullptr; }
@@ -962,19 +1004,19 @@ namespace std_P3019_modified {
 			return polymorphic<Target>(*this); // Uses converting constructor
 		}
 
-        template <typename Target>
-        [[nodiscard]] Target* dynamic_get() noexcept {
-        // First try static_cast if we're sure of the hierarchy
-        if constexpr (std::is_base_of_v<T, Target>) {
-            auto* result = static_cast<Target*>(std::to_address(p_));
-            // Optional: verify with typeid if debug mode
-            assert(typeid(*result) == typeid(Target) && "Static cast violated");
-            return result;
-        }
-        else {
-            return dynamic_cast<Target*>(std::to_address(p_));
-        }
-    }
+		template <typename Target>
+		[[nodiscard]] Target* dynamic_get() noexcept {
+			// First try static_cast if we're sure of the hierarchy
+			if constexpr (std::is_base_of_v<T, Target>) {
+				auto* result = static_cast<Target*>(std::to_address(p_));
+				// Optional: verify with typeid if debug mode
+				assert(typeid(*result) == typeid(Target) && "Static cast violated");
+				return result;
+			}
+			else {
+				return dynamic_cast<Target*>(std::to_address(p_));
+			}
+		}
 
 		template <typename Interface>
 		std::optional<Interface*> try_as_interface() const {
@@ -1069,17 +1111,17 @@ namespace std {
 
 	template<class T, class Allocator>
 	struct hash<std_P3019_modified::indirect < T, Allocator>> {
-		using indirect_type = std_P3019_modified::indirect<T, Allocator>;
-		using is_enabled = std::bool_constant<requires(const T &t) { std::hash<T>{}(t); }>;
+	using indirect_type = std_P3019_modified::indirect<T, Allocator>;
+	using is_enabled = std::bool_constant<requires(const T &t) { std::hash<T>{}(t); }>;
 
-		template<bool E = is_enabled::value, std::enable_if_t<E, int> = 0>
-		std::size_t operator()(const indirect_type &i) const noexcept(noexcept(std::hash<T>{}(*i))) {
-			if (i.has_value()) {
-				return std::hash<T>{}(*i);
-			}
-			else {
-				return static_cast<std::size_t>(0xcbf29ce484222325ULL ^ 0x100000001b3ULL);
-			}
+	template<bool E = is_enabled::value, std::enable_if_t<E, int> = 0>
+	std::size_t operator()(const indirect_type &i) const noexcept(noexcept(std::hash<T>{}(*i))) {
+		if (i.has_value()) {
+			return std::hash<T>{}(*i);
 		}
-	};
+		else {
+			return static_cast<std::size_t>(0xcbf29ce484222325ULL ^ 0x100000001b3ULL);
+		}
+	}
+};
 }

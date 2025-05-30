@@ -1,3 +1,0 @@
-"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E rm -f CMakeFiles\Zenith.dir/objects.a
-Z:\MinGW\bin\ar.exe qc CMakeFiles\Zenith.dir/objects.a @CMakeFiles\Zenith.dir\objects1.rsp
-Z:\MinGW\bin\g++.exe -O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions -Wl,--whole-archive CMakeFiles\Zenith.dir/objects.a -Wl,--no-whole-archive -o Zenith.exe -Wl,--out-implib,libZenith.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Zenith.dir\linkLibs.rsp

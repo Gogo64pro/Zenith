@@ -1,3 +1,8 @@
-.idea
-.cmake-build-debug
-.cmake-build-debug-mingw
+.idea/
+cmake-build*/
+build
+CMakeFiles/
+a.exe
+test_asan.cpp
+test.cpp
+test.cpp

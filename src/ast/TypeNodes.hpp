@@ -26,9 +26,6 @@ namespace zenith {
 		virtual bool isDynamic() const {
 			return kind==DYNAMIC;
 		}
-		virtual std::unique_ptr<TypeNode> clone() const {
-			return std::unique_ptr<TypeNode>();
-		}
 
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
 	};
@@ -55,9 +52,6 @@ namespace zenith {
 			return !basic_types.contains(type);
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		std::unique_ptr<TypeNode> clone() const override {
-			return std::make_unique<PrimitiveTypeNode>(loc, type);
-		}
 	};
 
 	// Class/struct types
@@ -76,10 +70,10 @@ namespace zenith {
 
 	// Array types
 	struct ArrayTypeNode : TypeNode {
-		std::unique_ptr<TypeNode> elementType;
-		std::unique_ptr<ExprNode> sizeExpr;
+		std_P3019_modified::polymorphic<TypeNode> elementType;
+		std_P3019_modified::polymorphic<ExprNode> sizeExpr;
 
-		ArrayTypeNode(SourceLocation loc, std::unique_ptr<TypeNode> elemType, std::unique_ptr<ExprNode> sizeExpr = nullptr)
+		ArrayTypeNode(SourceLocation loc, std_P3019_modified::polymorphic<TypeNode> elemType, std_P3019_modified::polymorphic<ExprNode> sizeExpr = nullptr)
 				: TypeNode(std::move(loc), ARRAY), elementType(std::move(elemType)), sizeExpr(std::move(sizeExpr)) {}
 
 		std::string toString(int indent = 0) const override {
@@ -91,11 +85,11 @@ namespace zenith {
 	};
 	struct TemplateTypeNode : TypeNode {
 		std::string baseName;
-		std::vector<std::unique_ptr<TypeNode>> templateArgs;
+		std::vector<std_P3019_modified::polymorphic<TypeNode>> templateArgs;
 
 		TemplateTypeNode(SourceLocation loc,
 		                 std::string baseName,
-		                 std::vector<std::unique_ptr<TypeNode>> templateArgs)
+		                 std::vector<std_P3019_modified::polymorphic<TypeNode>> templateArgs)
 				: TypeNode(loc, TEMPLATE),
 				  baseName(std::move(baseName)),
 				  templateArgs(std::move(templateArgs)) {}
@@ -123,12 +117,12 @@ namespace zenith {
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
 	};
 	struct FunctionTypeNode : TypeNode{
-		std::vector<std::unique_ptr<TypeNode>> parameterTypes;
-		std::unique_ptr<TypeNode> returnType;
+		std::vector<std_P3019_modified::polymorphic<TypeNode>> parameterTypes;
+		std_P3019_modified::polymorphic<TypeNode> returnType;
 
 		FunctionTypeNode(SourceLocation loc,
-		                 std::vector<std::unique_ptr<TypeNode>> params,
-		                 std::unique_ptr<TypeNode> retType)
+		                 std::vector<std_P3019_modified::polymorphic<TypeNode>> params,
+		                 std_P3019_modified::polymorphic<TypeNode> retType)
 				: TypeNode(std::move(loc), FUNCTION),
 				  parameterTypes(std::move(params)),
 				  returnType(std::move(retType)) {};

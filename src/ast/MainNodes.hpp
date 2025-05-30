@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <utility>
 #include <vector>
 #include <memory>
 #include <sstream>
@@ -12,12 +13,12 @@
 
 namespace zenith {
 	struct ProgramNode : ASTNode {
-		std::vector<std::unique_ptr<ASTNode>> declarations;
+		std::vector<std_P3019_modified::polymorphic<ASTNode>> declarations;
 
 		explicit ProgramNode(SourceLocation loc,
-		                     std::vector<std::unique_ptr<ASTNode>> decls)
+		                     std::vector<std_P3019_modified::polymorphic<ASTNode>> decls)
 				: declarations(std::move(decls)) {
-			this->loc = loc;
+			this->loc = std::move(loc);
 		}
 
 		std::string toString(int indent = 0) const override {
@@ -39,7 +40,7 @@ namespace zenith {
 
 		ImportNode(SourceLocation loc, std::string p, bool java)
 				: path(std::move(p)), isJavaImport(java) {
-			this->loc = loc;
+			this->loc = std::move(loc);
 		}
 
 		std::string toString(int indent = 0) const override {

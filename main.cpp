@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 
 
 	std::ofstream parserOut("parserout.log");
-	std::unique_ptr <ProgramNode> programNode;
+	std_P3019_modified::polymorphic<ProgramNode> programNode;
 	try{
 		//throw ParseError({0,0,0,0},"STEEPEST"); //Debugger test error
 		Parser parser(tokens,flags,parserOut);

@@ -108,6 +108,8 @@ public:
 	void swap_range(size_t pos, small_vector& other, size_t other_pos, size_t count);
 
 	iterator erase_range(const_iterator first, const_iterator last);
+
+	bool invariant() const;
 };
 
 //C++ templates...
@@ -167,23 +169,28 @@ small_vector<T, N>::small_vector(const small_vector& other) {
 template <typename T, size_t N>
 small_vector<T, N>::small_vector(small_vector&& other) noexcept {
 	if (other.data_ == reinterpret_cast<T*>(other.inline_buffer_)) {
-		// Other is using inline storage - move elements one by one
-		reserve(other.size_);
-		size_ = other.size_;
-		for (size_t i = 0; i < size_; ++i) {
-			new (data_ + i) T(std::move(other.data_[i]));
+		// Move elements one by one
+		data_ = reinterpret_cast<T*>(inline_buffer_);
+		capacity_ = N;
+		size_ = 0;
+		for (size_t i = 0; i < other.size_; ++i) {
+			new (data_ + size_) T(std::move(other.data_[i]));
+			++size_;
 		}
+		other.clear();  // Properly clear the source
 	} else {
-		// Other is using heap storage - take ownership
+		// Take ownership of heap memory
 		data_ = other.data_;
 		size_ = other.size_;
 		capacity_ = other.capacity_;
 
-		// Leave other in valid state with inline storage
+		// Reset source to empty inline state
 		other.data_ = reinterpret_cast<T*>(other.inline_buffer_);
 		other.size_ = 0;
 		other.capacity_ = N;
 	}
+	assert(invariant());
+	assert(other.invariant());
 }
 
 template <typename T, size_t N>
@@ -206,67 +213,45 @@ small_vector<T, N>& small_vector<T, N>::operator=(small_vector&& other) noexcept
 
 template <typename T, size_t N>
 void small_vector<T, N>::swap(small_vector& other) noexcept {
-	using std::swap;
-
 	if (this == &other) return;
 
-	// Case 1: Both use inline storage
-	if (data_ == reinterpret_cast<T*>(inline_buffer_) &&
-	    other.data_ == reinterpret_cast<T*>(other.inline_buffer_)) {
+	//std::cout << "this: " << this << " other: " << &other << "\n";
+	//std::cout << "this data: " << data_ << " inline: " << reinterpret_cast<void*>(inline_buffer_) << "\n";
+	//std::cout << "other data: " << other.data_ << " inline: " << reinterpret_cast<void*>(other.inline_buffer_) << "\n";
+	// First handle the simple case where both are using heap
+	if (data_ != reinterpret_cast<T*>(inline_buffer_) &&
+	    other.data_ != reinterpret_cast<T*>(other.inline_buffer_)) {
+		std::swap(data_, other.data_);
+		std::swap(size_, other.size_);
+		std::swap(capacity_, other.capacity_);
+		return;
+	}
 
-		// Swap the active elements
-		for (size_t i = 0; i < std::max(size_, other.size_); ++i) {
-			if (i < size_ && i < other.size_) {
-				swap(data_[i], other.data_[i]);
-			} else if (i < size_) {
-				// This has more elements - move to other
-				new (other.data_ + i) T(std::move(data_[i]));
-				data_[i].~T();
-			} else {
-				// Other has more elements - move to this
-				new (data_ + i) T(std::move(other.data_[i]));
-				other.data_[i].~T();
-			}
-		}
-		swap(size_, other.size_);
-		// Capacity stays N for both
-	}
-		// Case 2: This uses heap, other uses inline
-	else if (other.data_ == reinterpret_cast<T*>(other.inline_buffer_)) {
-		// Move other's elements to this's heap
-		// Then take ownership of this's heap
-		small_vector tmp;
-		tmp.reserve(other.size_);
-		for (size_t i = 0; i < other.size_; ++i) {
-			new (tmp.data_ + i) T(std::move(other.data_[i]));
-			other.data_[i].~T();
-		}
-		tmp.size_ = other.size_;
+	// Otherwise, create a temporary and move elements
+	small_vector tmp;
 
-		// Now put this's heap into other
-		other.data_ = data_;
-		other.size_ = size_;
-		other.capacity_ = capacity_;
+	// Move elements from this to tmp
+	tmp.reserve(other.size_);
+	for (size_t i = 0; i < other.size_; ++i) {
+		tmp.emplace_back(std::move(other.data_[i]));
+	}
+	tmp.size_ = other.size_;
 
-		// And take tmp's inline buffer
-		data_ = reinterpret_cast<T*>(inline_buffer_);
-		size_ = tmp.size_;
-		capacity_ = N;
-		for (size_t i = 0; i < size_; ++i) {
-			new (data_ + i) T(std::move(tmp.data_[i]));
-			tmp.data_[i].~T();
-		}
+	// Move elements from other to this
+	other.clear();
+	other.reserve(size_);
+	for (size_t i = 0; i < size_; ++i) {
+		other.emplace_back(std::move(data_[i]));
 	}
-		// Case 3: Other uses heap, this uses inline
-	else if (data_ == reinterpret_cast<T*>(inline_buffer_)) {
-		other.swap(*this); // Use the previous case
+	other.size_ = size_;
+
+	// Move elements from tmp to this
+	clear();
+	reserve(tmp.size_);
+	for (size_t i = 0; i < tmp.size_; ++i) {
+		emplace_back(std::move(tmp.data_[i]));
 	}
-		// Case 4: Both use heap
-	else {
-		swap(data_, other.data_);
-		swap(size_, other.size_);
-		swap(capacity_, other.capacity_);
-	}
+	size_ = tmp.size_;
 }
 
 template <typename T, size_t N>
@@ -388,14 +373,32 @@ void small_vector<T, N>::shrink_to_fit() {
 
 template <typename T, size_t N>
 void small_vector<T, N>::clear() noexcept {
+	assert(invariant());
+	// Debug checks
+	if (size_ == 0) return;  // Nothing to do
+
+	// Handle invalid states defensively
+	if (data_ == nullptr) {
+		assert(false && "clear() called with null data_ but non-zero size_");
+		size_ = 0;
+		return;
+	}
+
+	// Destroy elements safely
 	for (size_t i = 0; i < size_; ++i) {
-		data_[i].~T();
+		try {
+			data_[i].~T();
+		} catch (...) {
+			// Absorb exceptions in noexcept method
+			assert(false && "Destructor threw in noexcept clear()");
+		}
 	}
 	size_ = 0;
 }
 
 template <typename T, size_t N>
 void small_vector<T, N>::push_back(const T& value) {
+	assert(invariant());
 	if (size_ == capacity_) {
 		grow(capacity_ * 2);
 	}
@@ -405,6 +408,7 @@ void small_vector<T, N>::push_back(const T& value) {
 
 template <typename T, size_t N>
 void small_vector<T, N>::push_back(T&& value) {
+	assert(invariant());
 	if (size_ == capacity_) {
 		grow(capacity_ * 2);
 	}
@@ -414,6 +418,7 @@ void small_vector<T, N>::push_back(T&& value) {
 
 template <typename T, size_t N>
 void small_vector<T, N>::pop_back() {
+	assert(invariant());
 	assert(size_ > 0);
 	data_[size_ - 1].~T();
 	--size_;
@@ -481,6 +486,7 @@ small_vector<T, N>& small_vector<T, N>::operator=(std::vector<T, Allocator>&& ot
 template <typename T, size_t N>
 template <typename InputIt>
 void small_vector<T, N>::append(InputIt first, InputIt last) {
+	assert(invariant());
 	const size_t count = std::distance(first, last);
 	reserve(size_ + count);
 	for (; first != last; ++first) {
@@ -534,6 +540,7 @@ typename small_vector<T, N>::iterator small_vector<T, N>::erase_range(const_iter
 template <typename T, size_t N>
 template <typename... Args>
 typename small_vector<T, N>::reference small_vector<T, N>::emplace_back(Args&&... args) {
+	assert(invariant());
 	if (size_ == capacity_) {
 		grow(capacity_ * 2);
 	}
@@ -546,4 +553,12 @@ template <typename T, size_t N>
 template <typename... Args>
 void small_vector<T, N>::emplace_back_bulk(Args&&... args) {
 	(emplace_back(std::forward<Args>(args)), ...);
+}
+template <typename T, size_t N>
+bool small_vector<T, N>::invariant() const {
+	if (size_ > capacity_) return false;
+	if (data_ == nullptr) return size_ == 0;
+	if (capacity_ == N && data_ != reinterpret_cast<const T*>(inline_buffer_)) return false;
+	if (capacity_ > N && data_ == reinterpret_cast<const T*>(inline_buffer_)) return false;
+	return true;
 }

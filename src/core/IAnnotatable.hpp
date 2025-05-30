@@ -4,11 +4,15 @@
 
 namespace zenith{
 	struct IAnnotatable{
-		small_vector<std::unique_ptr<AnnotationNode>, 2> annotations;
+		small_vector<std_P3019_modified::polymorphic<AnnotationNode>, 2> annotations;
 		virtual ~IAnnotatable() = default;
 		//virtual void setAnnotations(std::vector<polymorphic<AnnotationNode>> annotations) = 0;
-		void setAnnotations(std::vector<std::unique_ptr<AnnotationNode>> ann){
-			annotations = std::move(ann);
-		};
+		void setAnnotations(std::vector<std_P3019_modified::polymorphic<AnnotationNode>> ann) {
+			annotations.clear();
+			annotations.reserve(ann.size());
+			for (auto&& item : ann) {
+				annotations.emplace_back(std::move(item));
+			}
+		}
 	};
 }

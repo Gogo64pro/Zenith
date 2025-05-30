@@ -51,20 +51,20 @@ namespace zenith{
 	// --- Binary Operations ---
 	struct BinaryOpNode : ExprNode {
 		enum Op : uint8_t { ADD, SUB, MUL, DIV, EQ, NEQ, LT, GT, LTE, GTE, ASN, MOD, ADD_ASN, SUB_ASN, MUL_ASN, DIV_ASN, MOD_ASN} op;
-		std::unique_ptr<ExprNode> left;
-		std::unique_ptr<ExprNode> right;
+		std_P3019_modified::polymorphic<ExprNode> left;
+		std_P3019_modified::polymorphic<ExprNode> right;
 
 		BinaryOpNode(SourceLocation loc, TokenType tokenType,
-		             std::unique_ptr<ExprNode> leftExpr,
-		             std::unique_ptr<ExprNode> rightExpr)
+		             std_P3019_modified::polymorphic<ExprNode> leftExpr,
+		             std_P3019_modified::polymorphic<ExprNode> rightExpr)
 				: ExprNode(), op(convertTokenType(tokenType)),
 				  left(std::move(leftExpr)),
 				  right(std::move(rightExpr)) {
 			this->loc = std::move(loc);
 		}
 		BinaryOpNode(SourceLocation loc, Op opType,
-		             std::unique_ptr<ExprNode> leftExpr,
-		             std::unique_ptr<ExprNode> rightExpr)
+		             std_P3019_modified::polymorphic<ExprNode> leftExpr,
+		             std_P3019_modified::polymorphic<ExprNode> rightExpr)
 				: ExprNode(), op(opType),
 				  left(std::move(leftExpr)),
 				  right(std::move(rightExpr)) {
@@ -108,16 +108,16 @@ namespace zenith{
 	// --- Unary Operations ---
 	struct UnaryOpNode : ExprNode{
 		enum Op : uint8_t {INC, DEC } op;
-		std::unique_ptr<ExprNode> right;
+		std_P3019_modified::polymorphic<ExprNode> right;
 		bool prefix = false;
 		UnaryOpNode(SourceLocation loc, TokenType tokenType,
-				std::unique_ptr<ExprNode> rightExpr, bool prefix)
+				std_P3019_modified::polymorphic<ExprNode> rightExpr, bool prefix)
 		: ExprNode(), op(convertTokenType(tokenType)),
 		  right(std::move(rightExpr)), prefix(prefix) {
 			this->loc = std::move(loc);
 		}
 		UnaryOpNode(SourceLocation loc, Op op,
-		            std::unique_ptr<ExprNode> rightExpr, bool prefix)
+		            std_P3019_modified::polymorphic<ExprNode> rightExpr, bool prefix)
 				: ExprNode(), op(op),
 				  right(std::move(rightExpr)), prefix(prefix) {
 			this->loc = std::move(loc);
@@ -143,11 +143,11 @@ namespace zenith{
 
 	// --- Function Calls ---
 	struct CallNode : ExprNode {
-		std::unique_ptr<ExprNode> callee;
-		small_vector<std::unique_ptr<ExprNode>, 4> arguments;
+		std_P3019_modified::polymorphic<ExprNode> callee;
+		small_vector<std_P3019_modified::polymorphic<ExprNode>, 4> arguments;
 
-		CallNode(SourceLocation loc, std::unique_ptr<ExprNode> c,
-		         small_vector<std::unique_ptr<ExprNode>, 4> args)
+		CallNode(SourceLocation loc, std_P3019_modified::polymorphic<ExprNode> c,
+		         small_vector<std_P3019_modified::polymorphic<ExprNode>, 4> args)
 				: ExprNode(), callee(std::move(c)), arguments(std::move(args)) {
 			this->loc = std::move(loc);
 		}
@@ -169,10 +169,10 @@ namespace zenith{
 
 	// --- Member Access ---
 	struct MemberAccessNode : ExprNode {
-		std::unique_ptr<ExprNode> object;
+		std_P3019_modified::polymorphic<ExprNode> object;
 		std::string member;
 
-		MemberAccessNode(SourceLocation loc, std::unique_ptr<ExprNode> obj,
+		MemberAccessNode(SourceLocation loc, std_P3019_modified::polymorphic<ExprNode> obj,
 		                 std::string mem)
 				: ExprNode(), object(std::move(obj)), member(std::move(mem)) {
 			this->loc = std::move(loc);
@@ -190,17 +190,17 @@ namespace zenith{
 
 	// --- Free Objects ---
 	struct FreeObjectNode : ExprNode {
-		small_vector<std::pair<std::string, std::unique_ptr<ExprNode>>, 4> properties;
+		small_vector<std::pair<std::string, std_P3019_modified::polymorphic<ExprNode>>, 4> properties;
 
 		FreeObjectNode(SourceLocation loc,
-		               small_vector<std::pair<std::string, std::unique_ptr<ExprNode>>, 4> props)
+		               small_vector<std::pair<std::string, std_P3019_modified::polymorphic<ExprNode>>, 4> props)
 				: ExprNode(), properties(std::move(props)) {
 			this->loc = std::move(loc);
 		}
 
 		// --- Conversion from std::string -> std::string (and also vector) ---
 		FreeObjectNode(SourceLocation loc,
-		               std::vector<std::pair<std::string, std::unique_ptr<ExprNode>>>&& props)
+		               std::vector<std::pair<std::string, std_P3019_modified::polymorphic<ExprNode>>>&& props)
 				: ExprNode() {
 			this->loc = loc;
 			properties.reserve(props.size());
@@ -229,11 +229,11 @@ namespace zenith{
 
 	// --- Array Access ---
 	struct ArrayAccessNode : ExprNode {
-		std::unique_ptr<ExprNode> array;
-		std::unique_ptr<ExprNode> index;
+		std_P3019_modified::polymorphic<ExprNode> array;
+		std_P3019_modified::polymorphic<ExprNode> index;
 
-		ArrayAccessNode(SourceLocation loc, std::unique_ptr<ExprNode> arr,
-		                std::unique_ptr<ExprNode> idx)
+		ArrayAccessNode(SourceLocation loc, std_P3019_modified::polymorphic<ExprNode> arr,
+		                std_P3019_modified::polymorphic<ExprNode> idx)
 				: ExprNode(), array(std::move(arr)), index(std::move(idx)) {
 			this->loc = loc;
 		}
@@ -251,10 +251,10 @@ namespace zenith{
 	// --- Object Construction ---
 	struct NewExprNode : ExprNode {
 		std::string className;
-		small_vector<std::unique_ptr<ExprNode>, 4> args;
+		small_vector<std_P3019_modified::polymorphic<ExprNode>, 4> args;
 
 		NewExprNode(SourceLocation loc, std::string _class,
-		            small_vector<std::unique_ptr<ExprNode>, 4> args)
+		            small_vector<std_P3019_modified::polymorphic<ExprNode>, 4> args)
 				: ExprNode(), className(_class), args(std::move(args)) {
 			this->loc = loc;
 		}
@@ -278,9 +278,9 @@ namespace zenith{
 
 	// Expression statement wrapper
 	struct ExprStmtNode : StmtNode {
-		std::unique_ptr<ExprNode> expr;
+		std_P3019_modified::polymorphic<ExprNode> expr;
 
-		ExprStmtNode(SourceLocation loc, std::unique_ptr<ExprNode> e)
+		ExprStmtNode(SourceLocation loc, std_P3019_modified::polymorphic<ExprNode> e)
 				: expr(std::move(e)) {
 			this->loc = std::move(loc);
 		}
@@ -306,9 +306,9 @@ namespace zenith{
 
 	// Return statement node
 	struct ReturnStmtNode : StmtNode {
-		std::unique_ptr<ExprNode> value;
+		std_P3019_modified::polymorphic<ExprNode> value;
 
-		ReturnStmtNode(SourceLocation loc, std::unique_ptr<ExprNode> v = nullptr)
+		ReturnStmtNode(SourceLocation loc, std_P3019_modified::polymorphic<ExprNode> v = nullptr)
 				: value(std::move(v)) { this->loc = loc; }
 
 		std::string toString(int indent = 0) const override {
@@ -327,10 +327,10 @@ namespace zenith{
 	};
 	// --- Template Strings ---
 	struct TemplateStringNode : ExprNode {
-		small_vector<std::unique_ptr<ExprNode>, 4> parts;
+		small_vector<std_P3019_modified::polymorphic<ExprNode>, 4> parts;
 
 		TemplateStringNode(SourceLocation loc,
-		                   small_vector<std::unique_ptr<ExprNode>, 4> parts)
+		                   small_vector<std_P3019_modified::polymorphic<ExprNode>, 4> parts)
 				: ExprNode(), parts(std::move(parts)) {
 			this->loc = loc;
 		}
@@ -362,7 +362,7 @@ namespace zenith{
 	struct StructInitializerNode : ExprNode{
 		struct StructFieldInitializer {
 			std::string name; // empty for positional
-			std::unique_ptr<ExprNode> value;
+			std_P3019_modified::polymorphic<ExprNode> value;
 		};
 
 		std::vector<StructFieldInitializer> fields;
@@ -388,7 +388,7 @@ namespace zenith{
 			for(size_t i=0; i<fields.size(); ++i){
 				if(i!=0) ss << ", ";
 				if(!fields[i].name.empty()) ss << fields[i].name << " : ";
-				ss << fields[i].value->toString(indent + 2);
+				ss << fields[i].value->toString();
 			}
 			ss << "}";
 			return ss.str();
@@ -398,9 +398,9 @@ namespace zenith{
 	};
 	// -- Lambda Expression (Holder) Node --
 	struct LambdaExprNode : ExprNode {
-		std::unique_ptr<LambdaNode> lambda;
+		std_P3019_modified::polymorphic<LambdaNode> lambda;
 
-		LambdaExprNode(SourceLocation loc, std::unique_ptr<LambdaNode> l)
+		LambdaExprNode(SourceLocation loc, std_P3019_modified::polymorphic<LambdaNode> l)
 				: lambda(std::move(l)) {
 			this->loc = std::move(loc);
 		}

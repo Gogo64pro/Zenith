@@ -9,19 +9,19 @@ namespace zenith{
 		enum Kind {
 			VARIABLE, FUNCTION, OBJECT, ACTOR, TYPE_ALIAS, TEMPLATE_PARAM, UNKNOWN
 		} kind = UNKNOWN;
-		TypeNode* type = nullptr;
-		ASTNode* declarationNode = nullptr;
+		std_P3019_modified::polymorphic<TypeNode> type = nullptr;
+		std_P3019_modified::polymorphic<ASTNode> declarationNode = nullptr;
 		bool isConst = false;
 		bool isStatic = false;
 
-		SymbolInfo(Kind k, TypeNode* t, ASTNode* node, bool isConst = false, bool isStatic = false);
+		SymbolInfo(Kind k, std_P3019_modified::polymorphic<TypeNode> t, std_P3019_modified::polymorphic<ASTNode> node, bool isConst = false, bool isStatic = false);
 
 		SymbolInfo() = default;
 
 		SymbolInfo(SymbolInfo&& other) noexcept
 				: kind(other.kind),
-				  type(other.type),
-				  declarationNode(other.declarationNode),
+				  type(std::move(other.type)),
+				  declarationNode(std::move(other.declarationNode)),
 				  isConst(other.isConst),
 				  isStatic(other.isStatic) {
 			other.kind = UNKNOWN;
@@ -32,8 +32,8 @@ namespace zenith{
 		SymbolInfo& operator=(SymbolInfo&& other) noexcept {
 			if (this != &other) {
 				kind = other.kind;
-				type = other.type;
-				declarationNode = other.declarationNode;
+				type = std::move(other.type);
+				declarationNode = std::move(other.declarationNode);
 				isConst = other.isConst;
 				isStatic = other.isStatic;
 				other.kind = UNKNOWN;
@@ -48,14 +48,10 @@ namespace zenith{
 	};
 
 	using Scope = std::unordered_map<std::string, SymbolInfo>;
-	struct ScopeF {
-		Scope symbols;
-		std::vector<std::unique_ptr<TypeNode>> dynamicNodes;
-	};
 
 	class SymbolTable {
 	private:
-		std::vector<ScopeF> scopeStack;
+		std::vector<Scope> scopeStack;
 		ErrorReporter& errorReporter;
 
 	public:

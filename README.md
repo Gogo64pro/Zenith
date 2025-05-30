@@ -495,8 +495,7 @@ fun main() {
 }
 ```
 **Structs**
-- Structs aren't the same as classes
-- They still support Inheritance, Constructors, destructors, and method overriding, operator overloading. They don't have automatic getters and setters. They should be used in simpler data structures //Not sure about the getters and setters might remove that req
+- Structs are the same as classes, but have a default access level of public
 ```
  struct Vector3{
      public int x;

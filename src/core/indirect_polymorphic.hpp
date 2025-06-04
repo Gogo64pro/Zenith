@@ -420,6 +420,7 @@ namespace std_P3019_modified {
 			[[nodiscard]] virtual const std::type_info& target_type_info() const noexcept = 0;
 			virtual void increment_ref_count() = 0;
 			virtual bool decrement_ref_count() = 0; // Returns true if this was the last reference
+			virtual bool is_convertible_to(const std::type_info& target) const noexcept = 0;
 			virtual BaseAlloc get_allocator() const noexcept = 0;
 
 		};
@@ -507,6 +508,10 @@ namespace std_P3019_modified {
 
 			BaseAlloc get_allocator() const noexcept override {
 				return alloc;
+			}
+			bool is_convertible_to(const std::type_info& target) const noexcept override {
+				return target == typeid(ConcreteDerived) ||
+				       std::is_base_of_v<std::remove_pointer_t<decltype(target)>, ConcreteDerived>;
 			}
 		};
 
@@ -620,12 +625,16 @@ namespace std_P3019_modified {
 				}
 				return false;
 			}
+			bool is_convertible_to(const std::type_info& target) const noexcept {
+				return source_cb->is_convertible_to(target);
+			}
 		};
 	} // namespace detail
 
 	template <class T, class Allocator = std::allocator<T>>
 	class polymorphic {
-		template<typename, typename> friend class polymorphic; // Allow access for conversions
+		template<typename, typename> friend
+		class polymorphic; // Allow access for conversions
 
 		// Static asserts...
 		static_assert(!std::is_array_v<T>, "polymorphic<T>: T cannot be an array type.");
@@ -649,14 +658,15 @@ namespace std_P3019_modified {
 			using CBAlloc = typename BaseAllocTraits::template rebind_alloc<ControlBlock>;
 			using CBAllocTraits = std::allocator_traits<CBAlloc>;
 
-			void operator()(ControlBlock* cb) const noexcept {
+			void operator()(ControlBlock *cb) const noexcept {
 				if (!cb) return;
 				CBAlloc cb_alloc(alloc);
-				if(!cb->decrement_ref_count()) return;
+				if (!cb->decrement_ref_count()) return;
 				try {
 					CBAllocTraits::destroy(cb_alloc, cb);
 				} catch (...) {
-					assert(false && "Control block destructor threw"); std::terminate();
+					assert(false && "Control block destructor threw");
+					std::terminate();
 				}
 				CBAllocTraits::deallocate(cb_alloc, cb, 1);
 			}
@@ -668,11 +678,11 @@ namespace std_P3019_modified {
 		ControlBlockPtr cb_ptr_ = nullptr;
 
 		// --- Private Helpers ---
-		constexpr Allocator& get_allocator_ref() noexcept {
+		constexpr Allocator &get_allocator_ref() noexcept {
 			return cb_ptr_.get_deleter().alloc;
 		}
 
-		constexpr const Allocator& get_allocator_ref() const noexcept {
+		constexpr const Allocator &get_allocator_ref() const noexcept {
 			return cb_ptr_.get_deleter().alloc;
 		}
 
@@ -687,20 +697,20 @@ namespace std_P3019_modified {
 
 		template<typename ConcreteDerived, typename... Args>
 		requires std::derived_from<ConcreteDerived, T> && std::constructible_from<ConcreteDerived, Args...>
-		void allocate_construct_and_init(Allocator current_alloc, Args&&... args) {
+		void allocate_construct_and_init(Allocator current_alloc, Args &&... args) {
 			using CBDerived = detail::ControlBlockDerived<ConcreteDerived, T, Allocator>;
 			using CBAlloc = typename BaseAllocTraits::template rebind_alloc<CBDerived>;
 			using CBAllocTraits = std::allocator_traits<CBAlloc>;
 
 			CBAlloc cb_alloc(current_alloc);
-			auto* cb_derived = CBAllocTraits::allocate(cb_alloc, 1);
+			auto *cb_derived = CBAllocTraits::allocate(cb_alloc, 1);
 
 			try {
 				// Construct the control block with the derived object
-				new (cb_derived) CBDerived(cb_alloc, std::forward<Args>(args)...);
+				new(cb_derived) CBDerived(cb_alloc, std::forward<Args>(args)...);
 
 				// Get the pointer to the derived object
-				auto* derived_ptr = cb_derived->get_ptr();
+				auto *derived_ptr = cb_derived->get_ptr();
 				p_ = std::pointer_traits<pointer>::pointer_to(*derived_ptr);
 
 				// Create the control block pointer with proper deleter
@@ -715,6 +725,7 @@ namespace std_P3019_modified {
 		}
 
 		pointer release_p() noexcept { return std::exchange(p_, nullptr); }
+
 		ControlBlockPtr release_cb_ptr() noexcept { return std::move(cb_ptr_); }
 
 	public:
@@ -725,30 +736,29 @@ namespace std_P3019_modified {
 		explicit constexpr polymorphic() requires std::default_initializable<Allocator>
 				: p_(nullptr), cb_ptr_(nullptr, ControlBlockDeleter{Allocator{}}) {}
 
-		explicit constexpr polymorphic(std::allocator_arg_t, const Allocator& a) noexcept
+		explicit constexpr polymorphic(std::allocator_arg_t, const Allocator &a) noexcept
 				: p_(nullptr), cb_ptr_(nullptr, ControlBlockDeleter{a}) {}
 
-		constexpr polymorphic(std::nullptr_t) requires std::default_initializable<Allocator> : polymorphic() {}
-		constexpr polymorphic(std::allocator_arg_t, const Allocator& a, std::nullptr_t) noexcept : polymorphic(std::allocator_arg, a) {}
+		constexpr polymorphic(std::nullptr_t) requires std::default_initializable<Allocator>: polymorphic() {}
 
-		template <class U, class... Ts>
-		explicit constexpr polymorphic(std::in_place_type_t<U>, Ts&&... ts) requires std::default_initializable<Allocator> &&
-		                                                                             std::derived_from<U, T> && std::constructible_from<U, Ts...>
-				: polymorphic()
-		{
+		constexpr polymorphic(std::allocator_arg_t, const Allocator &a, std::nullptr_t) noexcept: polymorphic(std::allocator_arg, a) {}
+
+		template<class U, class... Ts>
+		explicit constexpr polymorphic(std::in_place_type_t<U>, Ts &&... ts) requires std::default_initializable<Allocator> &&
+		                                                                              std::derived_from<U, T> && std::constructible_from<U, Ts...>
+				: polymorphic() {
 			allocate_construct_and_init<U>(Allocator{}, std::forward<Ts>(ts)...);
 		}
 
-		template <class U, class... Ts>
-		explicit constexpr polymorphic(std::allocator_arg_t, const Allocator& a, std::in_place_type_t<U>, Ts&&... ts) requires
+		template<class U, class... Ts>
+		explicit constexpr polymorphic(std::allocator_arg_t, const Allocator &a, std::in_place_type_t<U>, Ts &&... ts) requires
 		std::derived_from<U, T> && std::constructible_from<U, Ts...>
-				: polymorphic(std::allocator_arg, a)
-		{
+				: polymorphic(std::allocator_arg, a) {
 			allocate_construct_and_init<U>(a, std::forward<Ts>(ts)...);
 		}
 
-		template <class U>
-		explicit constexpr polymorphic(U&& u) requires std::default_initializable<Allocator> &&
+		template<class U>
+		explicit constexpr polymorphic(U &&u) requires std::default_initializable<Allocator> &&
 		                                               (!std::same_as<std::remove_cvref_t<U>, polymorphic>) &&
 		                                               (!is_polymorphic_v<std::remove_cvref_t<U>>) &&
 		                                               (!std::same_as<std::remove_cvref_t<U>, std::in_place_t>) &&
@@ -758,24 +768,27 @@ namespace std_P3019_modified {
 		                                               std::derived_from<std::remove_cvref_t<U>, T> &&
 		                                               std::constructible_from<std::remove_cvref_t<U>, U> &&
 		                                               std::copy_constructible<std::remove_cvref_t<U>>
-				: polymorphic(std::in_place_type<std::remove_cvref_t<U>>, std::forward<U>(u))
-		{}
+				: polymorphic(std::in_place_type<std::remove_cvref_t<U>>, std::forward<U>(u)) {}
 
-		template <class U>
-		explicit constexpr polymorphic(std::allocator_arg_t, const Allocator& a, U&& u) requires
-		(!std::same_as<std::remove_cvref_t<U>, polymorphic>) &&
+		template<class U>
+		explicit constexpr polymorphic(std::allocator_arg_t, const Allocator &a, U &&u) requires
+		(!std::same_as<std::remove_cvref_t<U>, polymorphic>)
+
+		&&
 		(!is_polymorphic_v<std::remove_cvref_t<U>>) &&
 		(!std::same_as<std::remove_cvref_t<U>, std::in_place_t>) &&
 		(!is_in_place_type_v<std::remove_cvref_t<U>>) &&
 		std::derived_from<std::remove_cvref_t<U>, T> &&
-				std::constructible_from<std::remove_cvref_t<U>, U> &&
+				std::constructible_from<std::remove_cvref_t<U>, U>
+		&&
 		std::copy_constructible<std::remove_cvref_t<U>>
 				: polymorphic(std::allocator_arg, a, std::in_place_type<std::remove_cvref_t<U>>, std::forward<U>(u))
 				{}
 
 		// Copy Constructor
 		[[deprecated("polymorphic performs potentially expensive deep copy; consider moving or using std::optional.")]]
-		polymorphic(const polymorphic& other) : p_(nullptr), cb_ptr_(nullptr) {
+
+		polymorphic(const polymorphic &other) : p_(nullptr), cb_ptr_(nullptr) {
 			//if (other.p_ && other.cb_ptr_) {
 			//	auto& target_alloc = get_allocator_ref();
 			//	cb_ptr_ = std::unique_ptr<detail::ControlBlockBase<T, Allocator>>(other.cb_ptr_->clone(target_alloc));
@@ -783,9 +796,9 @@ namespace std_P3019_modified {
 			//	cb_ptr_->increment_ref_count(); // Increment for this new polymorphic object
 			//}
 			if (other.p_ && other.cb_ptr_) {
-				auto& target_alloc = get_allocator_ref();
+				auto &target_alloc = get_allocator_ref();
 				// Create the new control block with the correct deleter
-				auto* cloned_cb = other.cb_ptr_->clone(target_alloc);
+				auto *cloned_cb = other.cb_ptr_->clone(target_alloc);
 				cb_ptr_.reset(cloned_cb);  // Use reset with the custom deleter
 				p_ = other.cb_ptr_->copy(target_alloc, other.p_);
 				cb_ptr_->increment_ref_count(); // Increment for this new polymorphic object
@@ -794,10 +807,9 @@ namespace std_P3019_modified {
 
 		template<typename Derived, typename DerivedAlloc>
 		requires std::derived_from<Derived, T> &&
-		std::is_constructible_v<Allocator, const DerivedAlloc&>
-		polymorphic(polymorphic<Derived, DerivedAlloc>&& other)
-				: cb_ptr_(nullptr, ControlBlockDeleter{Allocator(other.get_allocator_ref())})
-		{
+		         std::is_constructible_v<Allocator, const DerivedAlloc &>
+		polymorphic(polymorphic<Derived, DerivedAlloc> &&other)
+				: cb_ptr_(nullptr, ControlBlockDeleter{Allocator(other.get_allocator_ref())}) {
 			if (other.p_) {
 				try {
 					using SourceCB = detail::ControlBlockBase<Derived, DerivedAlloc>;
@@ -806,7 +818,7 @@ namespace std_P3019_modified {
 					using CBAllocTraits = std::allocator_traits<CBAlloc>;
 
 					CBAlloc cb_alloc(get_allocator_ref());
-					auto* new_cb = CBAllocTraits::allocate(cb_alloc, 1);
+					auto *new_cb = CBAllocTraits::allocate(cb_alloc, 1);
 
 					// Move the source control block instead of cloning
 					auto source_cb_ptr = other.cb_ptr_.release();
@@ -814,18 +826,18 @@ namespace std_P3019_modified {
 					other.p_ = nullptr;
 
 					try {
-						new (new_cb) detail::DelegatingControlBlock<T, Derived, Allocator, DerivedAlloc>(
+						new(new_cb) detail::DelegatingControlBlock<T, Derived, Allocator, DerivedAlloc>(
 								std::unique_ptr<detail::ControlBlockBase<Derived, DerivedAlloc>>(source_cb_ptr),
 								source_ptr,
 								other.get_allocator_ref(),
 								get_allocator_ref()
 						);
-						cb_ptr_.reset(static_cast<detail::ControlBlockBase<T, Allocator>*>(new_cb));
+						cb_ptr_.reset(static_cast<detail::ControlBlockBase<T, Allocator> *>(new_cb));
 						p_ = std::pointer_traits<pointer>::pointer_to(*source_cb_ptr->get_ptr());
 					} catch (...) {
 						if (source_cb_ptr) {
 							source_cb_ptr->destroy(other.get_allocator_ref(), source_ptr);
-							CBAllocTraits::deallocate(cb_alloc, reinterpret_cast<DelegatingCB*>(source_cb_ptr), 1);
+							CBAllocTraits::deallocate(cb_alloc, reinterpret_cast<DelegatingCB *>(source_cb_ptr), 1);
 						}
 						CBAllocTraits::deallocate(cb_alloc, new_cb, 1);
 						throw;
@@ -840,11 +852,10 @@ namespace std_P3019_modified {
 		// Copy version of the conversion ctor
 		template<typename Derived, typename DerivedAlloc>
 		requires std::derived_from<Derived, T> &&
-		         std::is_constructible_v<Allocator, const DerivedAlloc&>
+		         std::is_constructible_v<Allocator, const DerivedAlloc &>
 		[[deprecated("polymorphic performs potentially expensive deep copy; consider moving or using std::optional.")]]
-		polymorphic(const polymorphic<Derived, DerivedAlloc>& other)
-				: cb_ptr_(nullptr, ControlBlockDeleter{Allocator(other.get_allocator_ref())})
-		{
+		polymorphic(const polymorphic<Derived, DerivedAlloc> &other)
+				: cb_ptr_(nullptr, ControlBlockDeleter{Allocator(other.get_allocator_ref())}) {
 			if (other.p_) {
 				try {
 					// Create a new delegating control block to handle the type conversion
@@ -854,23 +865,23 @@ namespace std_P3019_modified {
 					using CBAllocTraits = std::allocator_traits<CBAlloc>;
 
 					CBAlloc cb_alloc(get_allocator_ref());
-					auto* new_cb = CBAllocTraits::allocate(cb_alloc, 1);
+					auto *new_cb = CBAllocTraits::allocate(cb_alloc, 1);
 
-					SourceCB* cloned_source_ptr = other.cb_ptr_->clone(other.get_allocator_ref());
+					SourceCB *cloned_source_ptr = other.cb_ptr_->clone(other.get_allocator_ref());
 
 					try {
-						new (new_cb) detail::DelegatingControlBlock<T, Derived, Allocator, DerivedAlloc>(
+						new(new_cb) detail::DelegatingControlBlock<T, Derived, Allocator, DerivedAlloc>(
 								std::unique_ptr<detail::ControlBlockBase<Derived, DerivedAlloc>>(cloned_source_ptr),
 								cloned_source_ptr->get_ptr(),
 								other.get_allocator_ref(),
 								get_allocator_ref()
 						);
-						cb_ptr_.reset(static_cast<detail::ControlBlockBase<T, Allocator>*>(new_cb));
-						p_ = reinterpret_cast<T*>(other.p_);
+						cb_ptr_.reset(static_cast<detail::ControlBlockBase<T, Allocator> *>(new_cb));
+						p_ = reinterpret_cast<T *>(other.p_);
 					} catch (...) {
 						if (cloned_source_ptr) {
 							cloned_source_ptr->destroy(other.get_allocator_ref(), cloned_source_ptr->get_ptr());
-							CBAllocTraits::deallocate(cb_alloc, reinterpret_cast<DelegatingCB*>(cloned_source_ptr), 1);
+							CBAllocTraits::deallocate(cb_alloc, reinterpret_cast<DelegatingCB *>(cloned_source_ptr), 1);
 						}
 						CBAllocTraits::deallocate(cb_alloc, new_cb, 1);
 						throw;
@@ -878,37 +889,39 @@ namespace std_P3019_modified {
 				} catch (...) {
 					throw;
 				}
-			} else {
+			}
+			else {
 			}
 		}
 
 		// Move Constructor
-		constexpr polymorphic(polymorphic&& other) noexcept
+		constexpr polymorphic(polymorphic &&other) noexcept
 				: p_(other.release_p()),
-				  cb_ptr_(other.release_cb_ptr())
-		{}
+				  cb_ptr_(other.release_cb_ptr()) {}
 
 		// Allocator-extended Move Constructor
-		constexpr polymorphic(std::allocator_arg_t, const Allocator& a, polymorphic&& other)
+		constexpr polymorphic(std::allocator_arg_t, const Allocator &a, polymorphic &&other)
 		noexcept(BaseAllocTraits::is_always_equal::value)
-				: cb_ptr_(nullptr, ControlBlockDeleter{a})
-		{
+				: cb_ptr_(nullptr, ControlBlockDeleter{a}) {
 			if (!other.p_) { return; }
 
 			if constexpr (BaseAllocTraits::is_always_equal::value) {
 				p_ = other.release_p();
 				cb_ptr_ = other.release_cb_ptr();
 				cb_ptr_.get_deleter().alloc = a;
-			} else {
+			}
+			else {
 				if (get_allocator_ref() == other.get_allocator_ref()) {
 					p_ = other.release_p();
 					cb_ptr_ = other.release_cb_ptr();
-				} else {
+				}
+				else {
 					if (other.p_) {
 						polymorphic temp(std::allocator_arg, get_allocator_ref(), other);
 						swap(temp);
 						other.reset();
-					} else {
+					}
+					else {
 						reset();
 					}
 				}
@@ -932,7 +945,7 @@ namespace std_P3019_modified {
 
 		// Assignment Operators
 		[[deprecated("polymorphic performs potentially expensive deep copy; consider moving or using std::optional.")]]
-		constexpr polymorphic& operator=(const polymorphic& other) {
+		constexpr polymorphic &operator=(const polymorphic &other) {
 			if (this == &other) return *this;
 			polymorphic temp(other);
 			if constexpr (BaseAllocTraits::propagate_on_container_copy_assignment::value) {
@@ -945,10 +958,9 @@ namespace std_P3019_modified {
 			return *this;
 		}
 
-		constexpr polymorphic& operator=(polymorphic&& other) noexcept(
+		constexpr polymorphic &operator=(polymorphic &&other) noexcept(
 		BaseAllocTraits::propagate_on_container_move_assignment::value ||
-		BaseAllocTraits::is_always_equal::value)
-		{
+		BaseAllocTraits::is_always_equal::value) {
 			if (this == &other) return *this;
 			constexpr bool pocma = BaseAllocTraits::propagate_on_container_move_assignment::value;
 			if constexpr (pocma) {
@@ -963,12 +975,14 @@ namespace std_P3019_modified {
 					reset();
 					p_ = other.release_p();
 					cb_ptr_ = other.release_cb_ptr();
-				} else {
+				}
+				else {
 					if (other.p_) {
 						polymorphic temp(std::allocator_arg, get_allocator_ref(), other);
 						swap(temp);
 						other.reset();
-					} else {
+					}
+					else {
 						reset();
 					}
 				}
@@ -976,18 +990,18 @@ namespace std_P3019_modified {
 			return *this;
 		}
 
-		constexpr polymorphic& operator=(std::nullptr_t) noexcept {
+		constexpr polymorphic &operator=(std::nullptr_t) noexcept {
 			reset();
 			return *this;
 		}
 
 		template<typename Derived, typename DerivedAllocator>
 		requires std::derived_from<Derived, T> &&
-		         std::is_constructible_v<Allocator, DerivedAllocator&&> &&
-		         std::is_assignable_v<Allocator&, Allocator&&>
-		constexpr polymorphic& operator=(polymorphic<Derived, DerivedAllocator>&& other)
+		         std::is_constructible_v<Allocator, DerivedAllocator &&> &&
+		         std::is_assignable_v<Allocator &, Allocator &&>
+		constexpr polymorphic &operator=(polymorphic<Derived, DerivedAllocator> &&other)
 		noexcept(
-		std::is_nothrow_constructible_v<Allocator, DerivedAllocator&&> &&  // Converting constructor allocator construction
+		std::is_nothrow_constructible_v<Allocator, DerivedAllocator &&> &&  // Converting constructor allocator construction
 		std::is_nothrow_move_constructible_v<ControlBlockPtr> &&           // Control block move
 		std::is_nothrow_swappable_v<ControlBlockPtr> &&                    // Swap operation
 		(BaseAllocTraits::propagate_on_container_move_assignment::value || // Allocator move assignment
@@ -1000,9 +1014,9 @@ namespace std_P3019_modified {
 
 		template<typename Derived, typename DerivedAllocator>
 		requires std::derived_from<Derived, T> &&
-		         std::is_constructible_v<Allocator, const DerivedAllocator&>
+		         std::is_constructible_v<Allocator, const DerivedAllocator &>
 		[[deprecated("polymorphic performs potentially expensive deep copy; consider moving or using std::optional.")]]
-		constexpr polymorphic& operator=(const polymorphic<Derived, DerivedAllocator>& other) {
+		constexpr polymorphic &operator=(const polymorphic<Derived, DerivedAllocator> &other) {
 			polymorphic temp(other);
 			if constexpr (BaseAllocTraits::propagate_on_container_copy_assignment::value) {
 				if (get_allocator_ref() != other.get_allocator_ref()) {
@@ -1014,7 +1028,7 @@ namespace std_P3019_modified {
 			return *this;
 		}
 
-		template <typename U, typename A>
+		template<typename U, typename A>
 		requires std::derived_from<U, T> &&
 		         std::is_convertible_v<A, Allocator>
 		operator polymorphic<U, A>() const {
@@ -1023,14 +1037,32 @@ namespace std_P3019_modified {
 		}
 
 		// Observers
-		constexpr const T& operator*() const noexcept { assert(has_value()); return *cb_ptr_->get_ptr(); }
-		constexpr T& operator*() noexcept { assert(has_value()); return *cb_ptr_->get_ptr(); }
-		constexpr const_pointer operator->() const noexcept { assert(has_value()); return std::pointer_traits<const_pointer>::pointer_to(*cb_ptr_->get_ptr()); }
-		constexpr pointer operator->() noexcept { assert(has_value()); return std::pointer_traits<pointer>::pointer_to(*cb_ptr_->get_ptr()); }
+		constexpr const T &operator*() const noexcept {
+			assert(has_value());
+			return *cb_ptr_->get_ptr();
+		}
+
+		constexpr T &operator*() noexcept {
+			assert(has_value());
+			return *cb_ptr_->get_ptr();
+		}
+
+		constexpr const_pointer operator->() const noexcept {
+			assert(has_value());
+			return std::pointer_traits<const_pointer>::pointer_to(*cb_ptr_->get_ptr());
+		}
+
+		constexpr pointer operator->() noexcept {
+			assert(has_value());
+			return std::pointer_traits<pointer>::pointer_to(*cb_ptr_->get_ptr());
+		}
 
 		constexpr bool has_value() const noexcept { return p_ != nullptr; }
+
 		constexpr bool valueless_after_move() const noexcept { return p_ == nullptr; }
+
 		constexpr explicit operator bool() const noexcept { return has_value(); }
+
 		constexpr allocator_type get_allocator() const noexcept { return get_allocator_ref(); }
 
 		[[deprecated("Access via operator* or operator-> is preferred.")]]
@@ -1050,12 +1082,11 @@ namespace std_P3019_modified {
 		}
 
 		// Swap
-		constexpr void swap(polymorphic& other) noexcept(
+		constexpr void swap(polymorphic &other) noexcept(
 		BaseAllocTraits::propagate_on_container_swap::value ||
-		BaseAllocTraits::is_always_equal::value)
-		{
+		BaseAllocTraits::is_always_equal::value) {
 			using std::swap;
-			if constexpr(BaseAllocTraits::propagate_on_container_swap::value) {
+			if constexpr (BaseAllocTraits::propagate_on_container_swap::value) {
 				swap(p_, other.p_);
 				swap(cb_ptr_, other.cb_ptr_);
 			}
@@ -1069,7 +1100,7 @@ namespace std_P3019_modified {
 			}
 		}
 
-		friend constexpr void swap(polymorphic& lhs, polymorphic& rhs) noexcept(noexcept(lhs.swap(rhs))) {
+		friend constexpr void swap(polymorphic &lhs, polymorphic &rhs) noexcept(noexcept(lhs.swap(rhs))) {
 			lhs.swap(rhs);
 		}
 
@@ -1113,60 +1144,60 @@ namespace std_P3019_modified {
 
 
 		// Type Checking/Access
-		template <typename Target>
+		template<typename Target>
 		[[nodiscard]] bool is_type() const noexcept {
 			return has_value() && (cb_ptr_->target_type_info() == typeid(Target));
 		}
 
-		template <typename Target>
+		template<typename Target>
 		[[nodiscard]] polymorphic<Target> dynamic_cast_to() const {
 			if (!is_type<Target>()) return nullptr;
 			return polymorphic<Target>(*this); // Uses converting constructor
 		}
 
-		template <typename Target>
-		[[nodiscard]] Target* dynamic_get() const noexcept {
+		template<typename Target>
+		[[nodiscard]] Target *dynamic_get() const noexcept {
 			// First try static_cast if we're sure of the hierarchy
 			if constexpr (std::is_base_of_v<T, Target>) {
-				auto* result = static_cast<Target*>(std::to_address(p_));
+				auto *result = static_cast<Target *>(std::to_address(p_));
 				// Optional: verify with typeid if debug mode
 				assert(typeid(*result) == typeid(Target) && "Static cast violated");
 				return result;
 			}
 			else {
-				return dynamic_cast<Target*>(std::to_address(p_));
+				return dynamic_cast<Target *>(std::to_address(p_));
 			}
 		}
 
-		template <typename Interface>
-		std::optional<Interface*> try_as_interface() const {
+		template<typename Interface>
+		std::optional<Interface *> try_as_interface() const {
 			//So much extra safety because of a Segfault that wasn't even this funcs fault
 			if (!p_) return std::nullopt;
-			auto* ptr = std::to_address(p_);
+			auto *ptr = std::to_address(p_);
 			if (!ptr) return std::nullopt;
-			if (!dynamic_cast<void*>(ptr)) return std::nullopt;
-			if(DEBUG) std::cout << "Attempting cast to Interface, ptr: " << ptr << std::endl;
+			if (!dynamic_cast<void *>(ptr)) return std::nullopt;
+			if (DEBUG) std::cout << "Attempting cast to Interface, ptr: " << ptr << std::endl;
 			if (cb_ptr_) {
-				const auto& target_type = typeid(Interface);
-				const auto& stored_type = cb_ptr_->target_type_info();
-				if(DEBUG) std::cout << "Checking type compatibility before cast" << std::endl;
+				const auto &target_type = typeid(Interface);
+				const auto &stored_type = cb_ptr_->target_type_info();
+				if (DEBUG) std::cout << "Checking type compatibility before cast" << std::endl;
 				// This is a basic check; actual type hierarchy might need more complex logic
 				if (stored_type != target_type && !std::is_base_of_v<Interface, std::remove_pointer_t<decltype(ptr)>>) {
-					if(DEBUG) std::cout << "Type mismatch detected, skipping cast" << std::endl;
+					if (DEBUG) std::cout << "Type mismatch detected, skipping cast" << std::endl;
 					return std::nullopt;
 				}
 			}
 			try {
-				return dynamic_cast<Interface*>(ptr);
+				return dynamic_cast<Interface *>(ptr);
 			} catch (...) {
-				if(DEBUG) std::cout << "Exception caught during cast to Interface" << std::endl;
+				if (DEBUG) std::cout << "Exception caught during cast to Interface" << std::endl;
 				return std::nullopt; // Handle any unexpected issues during cast
 			}
 		}
 
 		// Inside the polymorphic class definition
-		template <typename To>
-		[[nodiscard]] polymorphic<To> cast() && {
+		template<typename To>
+		[[nodiscard]] polymorphic<To> cast() &&{
 			if (!has_value()) return nullptr;
 			if (cb_ptr_->target_type_info() != typeid(To)) {
 				throw std::bad_cast();
@@ -1174,8 +1205,8 @@ namespace std_P3019_modified {
 			return polymorphic<To>(std::move(*this)); // Will use the copy constructor
 		}
 
-		template <typename To>
-		[[nodiscard]] polymorphic<To> cast() const& {
+		template<typename To>
+		[[nodiscard]] polymorphic<To> cast() const &{
 			if (!has_value()) return nullptr;
 			if (cb_ptr_->target_type_info() != typeid(To)) {
 				throw std::bad_cast();
@@ -1183,35 +1214,53 @@ namespace std_P3019_modified {
 			return polymorphic<To>(*this); // Will use the copy constructor
 		}
 
-		template<typename To>
-		[[nodiscard]] std::optional<polymorphic<To>> try_as() const noexcept {
-			if (!has_value()) {
-				return std::nullopt;
-			}
-			if constexpr (std::is_base_of_v<To, T>) {
-				return polymorphic<To>(*this);
-			}
-			else {
-				// For downcasting, verify the type relationship
-				if (cb_ptr_) {
-					const auto& target_type = typeid(To);
-					const auto& stored_type = cb_ptr_->target_type_info();
+		template <typename To>
+		[[nodiscard]] polymorphic<To> unchecked_cast() && {
+			if (!has_value()) return nullptr;
 
-					// Check if stored type is same or derived from target type
-					if (!(stored_type == target_type ||
-					      cb_ptr_->template is_convertible_to<To>())) {
-						return std::nullopt;
-					}
-				}
+			// Create new polymorphic<To> by moving our state
+			polymorphic<To> result;
+			result.p_ = static_cast<typename polymorphic<To>::pointer>(
+					std::pointer_traits<pointer>::pointer_to(
+							*static_cast<To*>(std::to_address(p_))
+					)
+			);
 
-				try {
-					return polymorphic<To>(*this);
-				} catch (...) {
-					return std::nullopt;
-				}
-			}
+			// Rebind the control block deleter to the new type
+			using NewDeleter = typename polymorphic<To>::ControlBlockDeleter;
+			result.cb_ptr_ = typename polymorphic<To>::ControlBlockPtr(
+					cb_ptr_.release(),
+					NewDeleter{get_allocator_ref()}
+			);
+
+			p_ = nullptr;
+			return result;
 		}
 
+		template <typename To>
+		[[nodiscard]] polymorphic<To> unchecked_cast() const& {
+			if (!has_value()) return nullptr;
+
+			// Share ownership (increment ref count)
+			polymorphic<To> result;
+			result.p_ = static_cast<typename polymorphic<To>::pointer>(
+					std::pointer_traits<pointer>::pointer_to(
+							*static_cast<To*>(std::to_address(p_))
+					)
+			);
+
+			if (cb_ptr_) {
+				cb_ptr_->increment_ref_count();
+				// Rebind the control block deleter to the new type
+				using NewDeleter = typename polymorphic<To>::ControlBlockDeleter;
+				result.cb_ptr_ = typename polymorphic<To>::ControlBlockPtr(
+						cb_ptr_.get(),
+						NewDeleter{cb_ptr_.get_deleter().alloc}
+				);
+			}
+
+			return result;
+		}
 	};
 
 	template <typename T>

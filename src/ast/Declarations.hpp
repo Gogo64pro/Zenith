@@ -45,7 +45,7 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor& visitor, const std_P3019_modified::polymorphic<ASTNode> &x) { visitor.visit(x.share<VarDeclNode>()); }
+		void accept(PolymorphicVisitor& visitor, const std_P3019_modified::polymorphic<ASTNode> &x) override { visitor.visit(x.unchecked_cast<VarDeclNode>()); }
 	};
 
 	struct FunctionDeclNode : ASTNode, IAnnotatable {

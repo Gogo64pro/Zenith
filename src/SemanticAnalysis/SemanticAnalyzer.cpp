@@ -92,7 +92,7 @@ namespace zenith {
 	}
 
 	void SemanticAnalyzer::visit(std_P3019_modified::polymorphic<MultiVarDeclNode> node) {
-		for (auto &x: node->.vars) {
+		for (auto &x: node->vars) {
 			x->accept(*this);
 		}
 	}
@@ -136,7 +136,7 @@ namespace zenith {
 				pType = dynamicType.share();
 			}
 
-			if (i < node.defaultValues.size() && node->defaultValues[i]) {
+			if (i < node->defaultValues.size() && node->defaultValues[i]) {
 				auto defaultValueType = visitExpression(*node->defaultValues[i]);
 				if (defaultValueType && !areTypesCompatible(pType, defaultValueType)) {
 					errorReporter.report(node->defaultValues[i]->loc, "Default value type '" + typeToString(defaultValueType) + "' is not compatible with parameter type '" + typeToString(pType) + "'.");

@@ -19,6 +19,7 @@ namespace zenith {
 		SourceLocation loc;
 		virtual std::string toString(int indent = 0) const = 0;
 		virtual void accept(Visitor& visitor) = 0;
+		virtual void accept(PolymorphicVisitor& visitor, const std_P3019_modified::polymorphic<ASTNode> &x) = 0;
 	};
 
 	struct ExprNode : ASTNode {virtual bool isConstructorCall() const { return false; }};

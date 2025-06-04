@@ -1,8 +1,7 @@
 .idea/
 cmake-build*/
-build
+build/
 CMakeFiles/
 a.exe
 test_asan.cpp
-test.cpp
 test.cpp

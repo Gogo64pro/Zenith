@@ -4,64 +4,11 @@
 
 #pragma once
 
+import zenith.ast;
 #include <memory>
 #include "../core/indirect_polymorphic.hpp"
 
-namespace zenith{
-	struct ASTNode;
-	struct ProgramNode;
-	struct ImportNode;
-	struct BlockNode;
-	struct VarDeclNode;
-	struct MultiVarDeclNode;
-	struct FunctionDeclNode;
-	struct ObjectDeclNode;
-	struct UnionDeclNode;
-	struct ActorDeclNode;
-	struct ReturnStmtNode;
-	struct IfNode;
-	struct WhileNode;
-	struct DoWhileNode;
-	struct ForNode;
-	struct ExprStmtNode;
-	struct EmptyStmtNode;
-	struct AnnotationNode;
-	struct TemplateDeclNode;
-	struct OperatorOverloadNode;
-	struct MemberDeclNode;
-	struct LambdaNode;
-	struct UnsafeNode;
-	struct CompoundStmtNode;
-	struct ScopeBlockNode;
-	struct ErrorNode;
-	struct TemplateParameter;
 
-	// Base Expression/Type
-	struct ExprNode;
-	struct StmtNode;
-	struct TypeNode;
-
-	// Specific Expression nodes ARE needed for visit overrides now
-	struct LiteralNode;
-	struct VarNode;
-	struct BinaryOpNode;
-	struct UnaryOpNode;
-	struct CallNode;
-	struct MemberAccessNode;
-	struct ArrayAccessNode;
-	struct NewExprNode;
-	struct ThisNode;
-	struct FreeObjectNode;
-	struct TemplateStringNode;
-	struct StructInitializerNode;
-	struct LambdaExprNode;
-
-	// Specific Type nodes might be needed if visiting them directly
-	struct PrimitiveTypeNode;
-	struct NamedTypeNode;
-	struct ArrayTypeNode;
-	struct TemplateTypeNode;
-}
 
 namespace zenith {
 	class Visitor {
@@ -181,7 +128,6 @@ namespace zenith {
 
 		virtual void visit(std_P3019_modified::polymorphic<ErrorNode> node);
 
-	protected:
 		virtual ~PolymorphicVisitor() = default;
 	};
 

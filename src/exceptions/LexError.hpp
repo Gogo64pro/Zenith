@@ -5,7 +5,8 @@
 #pragma once
 
 #include <stdexcept>
-#include "../core/ASTNode.hpp"
+#include <utility>
+import zenith.ast.ASTNode;
 
 namespace zenith {
 
@@ -13,9 +14,9 @@ namespace zenith {
 		public:
 			SourceLocation location;
 			LexError(SourceLocation loc, const std::string& msg)
-					: std::runtime_error(msg), location(loc) {}
-			const char* what() const noexcept override;
-			std::string format() const;
+					: std::runtime_error(msg), location(std::move(loc)) {}
+			[[nodiscard]] const char* what() const noexcept override;
+			[[nodiscard]] std::string format() const;
 	};
 
 } // zenith

@@ -1,12 +1,11 @@
 // src/lexer/lexer.hpp
 #pragma once
 
+import zenith.ast.ASTNode;
 #include <string>
 #include <utility>
 #include <vector>
 #include <unordered_map>
-#include "../core/ASTNode.hpp"
-
 namespace zenith{
 	enum class TokenType {
 		// Keywords

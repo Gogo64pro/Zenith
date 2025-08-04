@@ -1,21 +1,15 @@
-#pragma once
-
-#include <string>
-#include <utility>
-#include <vector>
-#include <memory>
-#include <sstream>
-#include <algorithm>
-#include "../core/ASTNode.hpp"
-#include "TypeNodes.hpp"
-#include "Statements.hpp"
-#include "Other.hpp"
-#include "../utils/RemovePadding.hpp"
-#include "../utils/small_vector.hpp"
-#include "../core/IAnnotatable.hpp"
+#include "fmt/format.h"
 #include "../core/indirect_polymorphic.hpp"
+#include "../utils/RemovePadding.hpp"
+#include "../utils/Colorize.hpp"
+#include "../core/IAnnotatable.hpp"
+#include "fmt/ranges.h"
+export module zenith.ast.declarations;
+import zenith.ast.ASTNode;
+import zenith.ast.typeNodes;
+import zenith.ast.statements;
 
-namespace zenith {
+export namespace zenith {
 	struct VarDeclNode : StmtNode {
 		enum Kind { STATIC, DYNAMIC, CLASS_INIT } kind;
 		std::string name;
@@ -32,24 +26,30 @@ namespace zenith {
 			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			static const char* kindNames[] = {"STATIC", "DYNAMIC", "CLASS_INIT"};
-			std::stringstream ss;
-			ss << pad;
-			if (isConst) ss << "CONST ";
-			if (isHoisted) ss << "HOIST ";
-			ss << kindNames[kind] << " " << name;
-			if (type) ss << " : " << removePadUntilNewLine(type->toString(indent+2));
-			if (initializer) ss << " = " << removePadUntilNewLine(initializer->toString(indent+2));
-			return ss.str();
+			return fmt::format("{pad}{orange}{isConst} {isHoisted} {light_purple}{kind} {yellow}{name}{init}{reset}",
+			                   fmt::arg("pad", std::string(indent, ' ')),
+			                   fmt::arg("isConst", isConst ? "const" : ""),
+			                   fmt::arg("isHoisted", isHoisted ? "hoist" : ""),
+			                   fmt::arg("kind", kindNames[kind]),
+			                   fmt::arg("name", name),
+			                   fmt::arg("init", initializer ? fmt::format(" {white}= {init}", fmt::arg("init", removePadUntilNewLine(initializer->toString(indent+2))),fmt::arg("white", CL_WHITE)) : ""),
+
+			                   fmt::arg("orange", CL_ORANGE),
+			                   fmt::arg("yellow", CL_YELLOW),
+			                   fmt::arg("light_purple", CL_LIGHT_PURPLE),
+			                   fmt::arg("white", CL_WHITE),
+			                   fmt::arg("reset", RESET_COLOR)
+			);
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor& visitor, const std_P3019_modified::polymorphic<ASTNode> &x) override { visitor.visit(x.unchecked_cast<VarDeclNode>()); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	struct FunctionDeclNode : ASTNode, IAnnotatable {
-		virtual bool isLambda() const { return false; }
+		[[nodiscard]] virtual bool isLambda() const { return false; }
 		std::string name;
 		std::vector<std::pair<std::string, std_P3019_modified::polymorphic<TypeNode>>> params;
 		std_P3019_modified::polymorphic<TypeNode> returnType;
@@ -67,27 +67,53 @@ namespace zenith {
 			this->annotations = std::move(ann);
 		}
 
-		std::string toString(int indent = 0) const override {
-			std::string pad(indent, ' ');
-			std::stringstream ss;
-			ss << pad;
-			if(isAsync) ss << "ASYNC";
-			if (returnType) ss << returnType->toString() << " ";
-			ss << name << "(";
-			if(usingStructSugar) ss << "{";
-			for (size_t i = 0; i < params.size(); ++i) {
-				if (i > 0) ss << ", ";
-				if (params[i].second) ss << params[i].second->toString() << " ";
-				ss << params[i].first;
-				if (i < defaultValues.size() && defaultValues[i]) {
-					ss << " = " << defaultValues[i]->toString(indent+2);
-				}
-			}
-			if(usingStructSugar) ss << "}";
-			ss << ") " << removePadUntilNewLine(body->toString(indent+2));
-			return ss.str();
+		[[nodiscard]] std::string toString(int indent = 0) const override {
+			return fmt::format(
+					"{pad} {async}{returnType}{name}{white}{paren_open}{args}{paren_close}{body}",
+					fmt::arg("pad", std::string(indent, ' ')),
+					fmt::arg("async", isAsync ? fmt::format("{}async{} ", CL_ORANGE, RESET_COLOR) : ""),
+					fmt::arg("returnType", returnType ? returnType->toString() + " " : ""),
+					fmt::arg("name", fmt::format("{}{}{}",
+					                             CL_YELLOW,
+					                             isLambda() ? "[LAMBDA]" : name,
+					                             RESET_COLOR)),
+					fmt::arg("white", CL_WHITE),
+					fmt::arg("paren_open", usingStructSugar ? "({" : "("),
+					fmt::arg("paren_close", usingStructSugar ? "}) " : ") "),
+					fmt::arg("args", [&]() -> std::string {
+						if (params.empty()) return "";
+
+						std::vector<std::string> formatted_params;
+						formatted_params.reserve(params.size());
+
+						for (size_t i = 0; i < params.size(); ++i) {
+							// Start with parameter type (if exists)
+							std::string param_part = params[i].second
+							                         ? fmt::format("{}{} ", RESET_COLOR, params[i].second->toString())
+							                         : "";
+
+							// Add parameter name
+							param_part += fmt::format("{}{}{}", CL_WHITE, params[i].first, RESET_COLOR);
+
+							if (i < defaultValues.size() && defaultValues[i]) {
+								param_part += fmt::format("{} = {}{}",
+								                          CL_WHITE,
+								                          defaultValues[i]->toString(indent + 2),
+								                          RESET_COLOR);
+							}
+
+							formatted_params.push_back(std::move(param_part));
+						}
+
+						return fmt::format("{}", fmt::join(formatted_params,
+						                                   fmt::format("{}, {}", CL_WHITE, RESET_COLOR)));
+					}()),
+					fmt::arg("body", removePadUntilNewLine(body->toString(indent + 2))),
+					fmt::arg("reset", RESET_COLOR)
+			);
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	struct MemberDeclNode : ASTNode, IAnnotatable{
@@ -115,9 +141,9 @@ namespace zenith {
 				Kind kind,
 				Access access,
 				bool isConst,
-				std::string&& name,  // Take ownership of strings
+				std::string&& name,
 				std_P3019_modified::polymorphic<TypeNode> type,
-				std_P3019_modified::polymorphic<ExprNode> initializer = nullptr,  // Unified initializer
+				std_P3019_modified::polymorphic<ExprNode> initializer = nullptr,
 				std::vector<std::pair<std::string, std_P3019_modified::polymorphic<ExprNode>>> ctor_inits = {},
 				std_P3019_modified::polymorphic<BlockNode> body = nullptr,
 				std::vector<std_P3019_modified::polymorphic<AnnotationNode>> ann = {},
@@ -125,10 +151,11 @@ namespace zenith {
 		) : ASTNode(),
 		    name(name),  // Implicitly converts to string_view (removed it anyway)
 		    type(std::move(type)),
-		    body(std::move(body))
+		    body(std::move(body)),
+		    flags{kind, access, isConst, isStatic, 0}
 		{
 			this->loc = std::move(loc);
-			flags = {kind, access, isConst, isStatic, 0};
+
 
 			// Handle initializers
 			if (initializer)
@@ -145,17 +172,19 @@ namespace zenith {
 			}
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			static const char* kindNames[] = {"FIELD", "METHOD", "METHOD_CONSTRUCTOR", "MESSAGE_HANDLER"};
 			static const char* accessNames[] = {"PUBLIC", "PROTECTED", "PRIVATE", "PRIVATEW", "PROTECTEDW"};
+
+			//fmt::format("{ann}{pad}{orange}{access} {isConst} {isStatic} {kind} {name} {type}");
 
 			std::stringstream ss;
 			for (const auto& ann : annotations) {
 				ss << pad << ann->toString() << "\n";
 			}
 			ss << pad << accessNames[flags.access]
-			   << (flags.isConst ? " CONST " : " ")
+			   << (flags.isConst ? " CONST" : "")
 			   << (flags.isStatic ? " STATIC " : " ")
 			   << kindNames[flags.kind] << " " << name;
 			if (type) ss << " : " << type->toString();
@@ -173,19 +202,20 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
-// Lambda
+
 	struct LambdaNode : FunctionDeclNode{
-		bool isLambda() const override { return true; }
+		[[nodiscard]] bool isLambda() const override { return true; }
 		LambdaNode(SourceLocation loc,
 		           std::vector<std::pair<std::string, std_P3019_modified::polymorphic<TypeNode>>> params,
 		           std_P3019_modified::polymorphic<TypeNode> returnType = nullptr,
 		           std_P3019_modified::polymorphic<BlockNode> body = nullptr,
 		           bool async = false)
 				: FunctionDeclNode(std::move(loc), "", std::move(params), std::move(returnType), std::move(body), async, false, {}) {
-			// Additional lambda-specific initialization
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	struct OperatorOverloadNode : ASTNode {
@@ -200,10 +230,10 @@ namespace zenith {
 		                     std_P3019_modified::polymorphic<BlockNode> body)
 				: op(std::move(op)), params(std::move(params)),
 				  returnType(std::move(returnType)), body(std::move(body)) {
-			this->loc = loc;
+			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "operator " << op << "(";
@@ -226,6 +256,7 @@ namespace zenith {
 			});
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 	struct ObjectDeclNode : ASTNode {
 		enum class Kind {CLASS, STRUCT, ACTOR} kind;
@@ -246,7 +277,7 @@ namespace zenith {
 			this->kind = kind;
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << (kind == Kind::CLASS ? "CLASS " :
@@ -271,16 +302,17 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	struct UnionDeclNode : ASTNode{
 		std::string name;
 		std::vector<std_P3019_modified::polymorphic<TypeNode>> types;
 		UnionDeclNode(SourceLocation loc, std::string name, std::vector<std_P3019_modified::polymorphic<TypeNode>> types)
-		: name(std::move(name)), types(std::move(types)){
+				: name(std::move(name)), types(std::move(types)){
 			this->loc = std::move(loc);
 		}
-		std::string toString(int indent = 0) const override{
+		[[nodiscard]] std::string toString(int indent = 0) const override{
 			std::string pad(indent,' ');
 			std::stringstream ss;
 			ss << pad << "UNION" << name << "{\n";
@@ -292,6 +324,7 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	struct ActorDeclNode : ObjectDeclNode {
@@ -302,33 +335,9 @@ namespace zenith {
 				std::string baseActor = ""
 		) : ObjectDeclNode(std::move(loc), ObjectDeclNode::Kind::ACTOR, std::move(name), std::move(baseActor), std::move(members)) {}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
-//	struct StructDeclNode : ASTNode {
-//		std::string name;
-//		std::vector<std::pair<std::string, std_P3019_modified::polymorphic<TypeNode>>> fields;
-//		bool isUnion;
-//
-//		StructDeclNode(SourceLocation loc, std::string n,
-//		               std::vector<std::pair<std::string, std_P3019_modified::polymorphic<TypeNode>>> f,
-//		               bool unionFlag)
-//				: name(std::move(n)), fields(std::move(f)), isUnion(unionFlag) {
-//			this->loc = loc;
-//		}
-//
-//		std::string toString(int indent = 0) const {
-//			std::string pad(indent, ' ');
-//			std::stringstream ss;
-//			ss << pad << (isUnion ? "UNION " : "STRUCT ") << name << " {\n";
-//			for (const auto& field : fields) {
-//				ss << pad << "  " << field.first;
-//				if (field.second) ss << " : " << field.second->toString(indent+2);
-//				ss << "\n";
-//			}
-//			ss << pad << "}";
-//			return ss.str();
-//		}
-//	};
 
 	//Multi-variables
 	struct MultiVarDeclNode : StmtNode {
@@ -337,7 +346,7 @@ namespace zenith {
 		explicit MultiVarDeclNode(SourceLocation loc, std::vector<std_P3019_modified::polymorphic<VarDeclNode>>&& vars ) : vars(std::move(vars)){
 			loc = std::move(loc);
 		}
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "Multi-vars\n";
@@ -346,6 +355,7 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 }

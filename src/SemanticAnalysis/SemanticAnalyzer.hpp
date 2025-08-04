@@ -32,7 +32,7 @@ namespace zenith {
 		// Type system helpers
 		bool areTypesCompatible(std_P3019_modified::polymorphic<TypeNode>& targetType, std_P3019_modified::polymorphic<TypeNode>& valueType);
 		std_P3019_modified::polymorphic<TypeNode> resolveType(std_P3019_modified::polymorphic<TypeNode>& typeNode);
-		std::string typeToString(std_P3019_modified::polymorphic<TypeNode>& type);
+		std::string typeToString(std_P3019_modified::polymorphic<TypeNode> type);
 		std_P3019_modified::polymorphic<TypeNode> getErrorTypeNode(const SourceLocation& loc);
 
 		// Visitor methods
@@ -80,7 +80,7 @@ namespace zenith {
 		explicit SemanticAnalyzer(ErrorReporter& errorReporter)
 				: symbolTable(errorReporter), errorReporter(errorReporter) {}
 
-		SymbolTable&& analyze(ProgramNode& program);
+		SymbolTable&& analyze(std_P3019_modified::polymorphic<ProgramNode>& program);
 	};
 
 } // namespace zenith

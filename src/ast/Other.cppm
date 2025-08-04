@@ -1,18 +1,19 @@
+export module zenith.ast.other;
 //
 // Created by gogop on 3/30/2025.
 //
 
-#pragma once
 
 #include <string>
 #include <memory>
+#include <utility>
 #include <vector>
 #include <sstream>
 #include <variant>
 #include "../core/ASTNode.hpp"
 #include "../core/indirect_polymorphic.hpp"
 
-namespace zenith{
+export namespace zenith{
 	struct AnnotationNode : ASTNode {
 		std::string name;
 		std::vector<std::pair<std::string, std_P3019_modified::polymorphic<ExprNode>>> arguments;
@@ -20,8 +21,8 @@ namespace zenith{
 		AnnotationNode(SourceLocation loc,
 		               std::string name,
 		               std::vector<std::pair<std::string, std_P3019_modified::polymorphic<ExprNode>>> args)
-		: name(std::move(name)), arguments(std::move(args)) {
-			this->loc = loc;
+				: name(std::move(name)), arguments(std::move(args)) {
+			this->loc = std::move(loc);
 		}
 		std::string toString(int indent = 0) const override{
 			std::string pad(indent, ' ');
@@ -47,6 +48,7 @@ namespace zenith{
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 	struct ErrorNode : ASTNode {
 	public:
@@ -59,6 +61,7 @@ namespace zenith{
 		}
 
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 
 	};
 	struct TemplateParameter : ASTNode{
@@ -106,7 +109,7 @@ namespace zenith{
 					break;
 			}
 		}
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string result = std::string(indent, ' ') + "TemplateParameter(" + name;
 			switch (kind) {
 				case TYPE:
@@ -142,6 +145,7 @@ namespace zenith{
 			return result;
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 	struct TemplateDeclNode : ASTNode {
 		std::vector<TemplateParameter> parameters;
@@ -149,13 +153,13 @@ namespace zenith{
 
 		TemplateDeclNode(SourceLocation loc,
 		                 std::vector<TemplateParameter> params,
-		                 std_P3019_modified::polymorphic<ASTNode> decl)
+		                 std_P3019_modified::polymorphic<ASTNode>& decl)
 				: parameters(std::move(params)),
 				  declaration(std::move(decl)) {
-			this->loc = loc;
+			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "template<";
@@ -191,6 +195,7 @@ namespace zenith{
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 } // namespace zenith

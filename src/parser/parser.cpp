@@ -6,6 +6,12 @@
 #include <unordered_set>
 #include "../exceptions/ParseError.hpp"
 
+std::string debug_lexeme_string(const std::vector<Token>& tokens) {
+	std::stringstream ss;
+	for (const auto& item : tokens) ss << item.lexeme << " ";
+	return ss.str();
+}
+
 namespace zenith {
 	// Fixed parseVarDecl to return the node
 	std_P3019_modified::polymorphic<VarDeclNode> Parser::parseVarDecl() {
@@ -1555,7 +1561,7 @@ namespace zenith {
 		return std_P3019_modified::make_polymorphic<TemplateDeclNode>(
 				loc,
 				std::move(params),
-				std::move(declaration)
+				declaration
 		);
 	}
 

@@ -3,10 +3,7 @@
 //
 
 #include "Visitor.hpp"
-#include "../core/ASTNode.hpp"
-#include "../ast/MainNodes.hpp"
-#include "../ast/Declarations.hpp"
-#include "../ast/Expressions.hpp"
+import zenith.ast;
 
 namespace zenith {
 

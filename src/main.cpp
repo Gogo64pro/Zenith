@@ -1,9 +1,10 @@
 #include <iostream>
-#include "src/lexer/lexer.hpp"
-#include "src/parser/parser.hpp"
-#include "src/utils/mainargs.hpp"
-#include "src/exceptions/ParseError.hpp"
-#include "src/utils/ReadFile.hpp"
+#include "lexer/lexer.hpp"
+#include "parser/parser.hpp"
+#include "utils/mainargs.hpp"
+#include "exceptions/ParseError.hpp"
+#include "utils/ReadFile.hpp"
+#include "SemanticAnalysis/SemanticAnalyzer.hpp"
 //#include "src/SemanticAnalysis/SemanticAnalyzer.hpp"
 
 
@@ -41,7 +42,6 @@ int main(int argc, char *argv[]) {
 	std::ofstream parserOut("parserout.log");
 	std_P3019_modified::polymorphic<ProgramNode> programNode;
 	try{
-		//throw ParseError({0,0,0,0},"STEEPEST"); //Debugger test error
 		Parser parser(tokens,flags,parserOut);
 		programNode = parser.parse();
 		parserOut << programNode->toString() << std::endl;
@@ -57,10 +57,10 @@ int main(int argc, char *argv[]) {
 	}
 	std::cout << "Done Parsing \n";
 
-//	ErrorReporter reporter(std::cout);
-//	SemanticAnalyzer semanticAnalyzer(reporter);
-//	std::cout << semanticAnalyzer.analyze(*programNode).toString();
-
+	ErrorReporter reporter(std::cout);
+	SemanticAnalyzer semanticAnalyzer(reporter);
+	std::cout << semanticAnalyzer.analyze(programNode).toString();
+	std::cin.get();
 }
 //	std::string source = R"(
 //		class Example {

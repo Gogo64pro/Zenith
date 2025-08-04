@@ -1,4 +1,4 @@
-//#include "SemanticAnalyzer.hpp"
+#include "SemanticAnalyzer.hpp"
 
 namespace zenith {
 

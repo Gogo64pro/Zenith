@@ -2,13 +2,14 @@
 // Created by gogop on 3/28/2025.
 //
 
-#pragma once
+export module zenith.ast.mainNodes;
+import zenith.ast.ASTNode;
 
 #include <utility>
 #include <vector>
 #include <memory>
 #include <sstream>
-#include "../core/ASTNode.hpp"
+#include "../visitor/Visitor.hpp"
 #include "../core/indirect_polymorphic.hpp"
 
 namespace zenith {
@@ -21,7 +22,7 @@ namespace zenith {
 			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "Program {\n";
@@ -32,6 +33,7 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).template unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	struct ImportNode : ASTNode {
@@ -43,10 +45,11 @@ namespace zenith {
 			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			return pad + "Import " + (isJavaImport ? "Java: " : "") + "\"" + path + "\"";
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 }

@@ -4,9 +4,8 @@
 #include <unordered_map>
 #include <vector>
 #include "../core/ASTNode.hpp"
+#include "../utils/Colorize.hpp"
 
-#define RED_TEXT "[0;31m"
-#define YELLOW_TEXT "[0;33m"
 
 namespace zenith{
 	class ErrorReporter{

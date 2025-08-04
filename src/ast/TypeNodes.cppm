@@ -1,4 +1,8 @@
-#pragma once
+//
+// Created by gogop on 8/4/2025.
+//
+
+export module zenith.ast.typeNodes;
 
 #include <memory>
 #include <utility>
@@ -9,7 +13,7 @@
 #include "../core/indirect_polymorphic.hpp"
 
 
-namespace zenith {
+export namespace zenith {
 	// Base type node
 	struct TypeNode : ASTNode {
 		enum Kind { PRIMITIVE, OBJECT, ARRAY, FUNCTION, DYNAMIC, TEMPLATE, ERROR } kind;
@@ -18,16 +22,17 @@ namespace zenith {
 			this->loc = std::move(loc);
 		}
 
-		virtual std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			static const char* kindNames[] = {"PRIMITIVE", "CLASS", "Object", "FUNCTION", "DYNAMIC", "TEMPLATE", "ERROR"};
 			return pad + "Type(" + kindNames[kind] + ")";
 		}
-		virtual bool isDynamic() const {
+		[[nodiscard]] virtual bool isDynamic() const {
 			return kind==DYNAMIC;
 		}
 
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 
@@ -38,13 +43,13 @@ namespace zenith {
 		PrimitiveTypeNode(SourceLocation loc, Type t)
 				: TypeNode(std::move(loc), PRIMITIVE), type(t) {}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			static const char* typeNames[] = {"INT", "FLOAT", "DOUBLE", "STRING",
 			                                  "BOOL", "NUMBER", "BIGINT", "BIGNUMBER", "SHORT", "LONG", "BYTE", "VOID", "NIL"};
 			return pad + "PrimitiveType(" + typeNames[type] + ")";
 		}
-		bool isDynamic() const override {
+		[[nodiscard]] bool isDynamic() const override {
 			static const std::unordered_set<Type> basic_types = {
 					INT, FLOAT, DOUBLE, BOOL, SHORT, LONG, BYTE, VOID, NIL
 			};
@@ -52,6 +57,7 @@ namespace zenith {
 			return !basic_types.contains(type);
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	// Class/struct types
@@ -59,13 +65,14 @@ namespace zenith {
 		std::string name;
 
 		NamedTypeNode(SourceLocation loc, std::string n)
-				: TypeNode(loc, OBJECT), name(std::move(n)) {}
+				: TypeNode(std::move(loc), OBJECT), name(std::move(n)) {}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			return pad + "NamedType(" + name + ")";
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	// Array types
@@ -76,12 +83,13 @@ namespace zenith {
 		ArrayTypeNode(SourceLocation loc, std_P3019_modified::polymorphic<TypeNode> elemType, std_P3019_modified::polymorphic<ExprNode> sizeExpr = nullptr)
 				: TypeNode(std::move(loc), ARRAY), elementType(std::move(elemType)), sizeExpr(std::move(sizeExpr)) {}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			return pad + "ArrayType\n" +
 			       elementType->toString(indent + 2);
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 	struct TemplateTypeNode : TypeNode {
 		std::string baseName;
@@ -90,11 +98,11 @@ namespace zenith {
 		TemplateTypeNode(SourceLocation loc,
 		                 std::string baseName,
 		                 std::vector<std_P3019_modified::polymorphic<TypeNode>> templateArgs)
-				: TypeNode(loc, TEMPLATE),
+				: TypeNode(std::move(loc), TEMPLATE),
 				  baseName(std::move(baseName)),
 				  templateArgs(std::move(templateArgs)) {}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "TemplateType(" << baseName << "<";
@@ -106,15 +114,13 @@ namespace zenith {
 			return ss.str();
 		}
 
-		bool isDynamic() const override {
+		[[nodiscard]] bool isDynamic() const override {
 			// A template type is dynamic if any of its arguments are dynamic
-			for (const auto& arg : templateArgs) {
-				if (arg->isDynamic()) return true;
-			}
-			return false;
+			return std::ranges::any_of(templateArgs, [](const auto& arg){return arg->isDynamic();});
 		}
 
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 	struct FunctionTypeNode : TypeNode{
 		std::vector<std_P3019_modified::polymorphic<TypeNode>> parameterTypes;
@@ -127,7 +133,7 @@ namespace zenith {
 				  parameterTypes(std::move(params)),
 				  returnType(std::move(retType)) {};
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "FunctionType(";
@@ -143,10 +149,8 @@ namespace zenith {
 			ss << ")";
 			return ss.str();
 		}
-		bool isDynamic() const override { return false; }
+		[[nodiscard]] bool isDynamic() const override { return false; }
 
-		void accept(Visitor& visitor) override{
-			visitor.visit(*this);
-		}
+		void accept(Visitor& visitor) override { visitor.visit(*this); }
 	};
 }

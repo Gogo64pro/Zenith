@@ -2,14 +2,14 @@
 
 namespace zenith {
 
-	SymbolTable&& SemanticAnalyzer::analyze(ProgramNode &program) {
-		visit(program);
+	SymbolTable&& SemanticAnalyzer::analyze(std_P3019_modified::polymorphic<ProgramNode> &program) {
+		visit(program.share());
 		return std::move(symbolTable);
 	}
 
 	void SemanticAnalyzer::visit(std_P3019_modified::polymorphic<ProgramNode> node) {
 		for (auto &x: node->declarations) {
-			x->accept(*this);
+			x->accept(*this, x.share());
 		}
 		symbolTable.exitScope();
 	}
@@ -25,7 +25,7 @@ namespace zenith {
 	void SemanticAnalyzer::visit(std_P3019_modified::polymorphic<BlockNode> node) {
 		symbolTable.enterScope();
 		for (auto &x: node->statements) {
-			x->accept(*this);
+			x->accept(*this, x.share());
 		}
 		symbolTable.exitScope();
 	}
@@ -35,7 +35,7 @@ namespace zenith {
 		std_P3019_modified::polymorphic<TypeNode> initializerType = nullptr;
 
 		if (node->initializer) {
-			initializerType = visitExpression(node->initializer);
+			initializerType = visitExpression(node->initializer.share());
 			if (!initializerType) {
 				errorReporter.report(node->initializer->loc, "Could not evaluate initializer");
 			}
@@ -59,9 +59,9 @@ namespace zenith {
 			if (declaredType && initializerType) {
 				if (!areTypesCompatible(declaredType, initializerType)) {
 					errorReporter.report(node->initializer->loc,
-					                     "Initializer type '" + typeToString(initializerType) +
+					                     "Initializer type '" + typeToString(initializerType.share()) +
 					                     "' is not compatible with declared variable type '" +
-					                     typeToString(declaredType) + "'.");
+					                     typeToString(declaredType.share()) + "'.");
 					finalType = std::move(declaredType); // Keep declared type despite error
 				} else {
 					finalType = std::move(declaredType);
@@ -83,7 +83,7 @@ namespace zenith {
 
 		// Declare in symbol table
 		symbolTable.declare(node->name,
-		                    SymbolInfo(SymbolInfo::VARIABLE, finalType, node.share(), node->isConst));
+		                    SymbolInfo(SymbolInfo::VARIABLE, std::move(finalType), node.share(), node->isConst));
 	}
 
 	std_P3019_modified::polymorphic<TypeNode> SemanticAnalyzer::getErrorTypeNode(const SourceLocation &loc) {
@@ -93,7 +93,7 @@ namespace zenith {
 
 	void SemanticAnalyzer::visit(std_P3019_modified::polymorphic<MultiVarDeclNode> node) {
 		for (auto &x: node->vars) {
-			x->accept(*this);
+			x->accept(*this, x.share());
 		}
 	}
 
@@ -103,17 +103,17 @@ namespace zenith {
 		//Params
 		std::vector<std_P3019_modified::polymorphic<TypeNode>> paramTypes;
 		paramTypes.reserve(node->params.size());
-		for (const auto &param: node->params) {
-			auto pType = resolveType(param->second);
+		for (auto &param: node->params) {
+			auto pType = resolveType(param.second);
 			if (!pType) {
 				errorReporter.report(param.second ? param.second->loc : node->loc, "Invalid type for parameter '" + param.first + "' in function '" + node->name + "'.");
 				paramTypes.push_back(getErrorTypeNode(param.second ? param.second->loc : node->loc));
 			}
 			else {
-				paramTypes.push_back(pType);
+				paramTypes.push_back(std::move(pType));
 			}
 		}
-		SymbolInfo funcInfo(SymbolInfo::FUNCTION, returnType, node.share());
+		SymbolInfo funcInfo(SymbolInfo::FUNCTION, std::move(returnType), node.share());
 
 		if (!node->name.empty()) {
 			if (!symbolTable.declare(node->name, std::move(funcInfo))) {
@@ -128,7 +128,7 @@ namespace zenith {
 		symbolTable.enterScope();
 
 		for (size_t i = 0; i < node->params.size(); ++i) {
-			const auto &param = node->params[i];
+			auto &param = node->params[i];
 			auto pType = resolveType(param.second);
 			if (!pType) {
 				// Error already reported during pre-declaration type resolution
@@ -137,16 +137,16 @@ namespace zenith {
 			}
 
 			if (i < node->defaultValues.size() && node->defaultValues[i]) {
-				auto defaultValueType = visitExpression(*node->defaultValues[i]);
+				auto defaultValueType = visitExpression(node->defaultValues[i].share());
 				if (defaultValueType && !areTypesCompatible(pType, defaultValueType)) {
-					errorReporter.report(node->defaultValues[i]->loc, "Default value type '" + typeToString(defaultValueType) + "' is not compatible with parameter type '" + typeToString(pType) + "'.");
+					errorReporter.report(node->defaultValues[i]->loc, "Default value type '" + typeToString(defaultValueType.share()) + "' is not compatible with parameter type '" + typeToString(pType.share()) + "'.");
 				}
 			}
 
 			symbolTable.declare(param.first, SymbolInfo(SymbolInfo::VARIABLE, std::move(pType), param.second.share()));
 		}
 		if (node->body) {
-			visit(*node->body);
+			visit(node->body.share());
 			//TODO When in current function scope make sure a ReturnNode is found
 		}
 		symbolTable.exitScope();
@@ -159,7 +159,7 @@ namespace zenith {
 		std::vector<std_P3019_modified::polymorphic<TypeNode>> paramTypes;
 		bool paramError = false;
 		paramTypes.reserve(node->lambda->params.size());
-		for (const auto &param: node->lambda->params) {
+		for (auto &param: node->lambda->params) {
 			auto resolvedParamType = resolveType(param.second);
 			if (!resolvedParamType) {
 				errorReporter.report(param.second ? param.second->loc : node->loc,
@@ -168,7 +168,7 @@ namespace zenith {
 				paramTypes.push_back(getErrorTypeNode(param.second ? param.second->loc : node->loc));
 			}
 			else {
-				paramTypes.push_back(resolvedParamType);
+				paramTypes.push_back(std::move(resolvedParamType));
 			}
 		}
 
@@ -204,42 +204,42 @@ namespace zenith {
 		symbolTable.enterScope();
 
 		for (size_t i = 0; i < node->lambda->params.size(); ++i) {
-			auto paramTypeForSymbol =std::move(paramTypes[i]);
+			auto paramTypeForSymbol = std::move(paramTypes[i]);
 			if (!paramTypeForSymbol) {
 				errorReporter.report(node->loc, "Internal error: Failed to clone type for lambda parameter symbol.");
 				analysisError = true;
 				paramTypeForSymbol = getErrorTypeNode(node->loc);
 			}
-			auto paramDeclNode = node->lambda->params[i].second;
+			auto paramDeclNode = node->lambda->params[i].second.share();
 			symbolTable.declare(node->lambda->params[i].first, SymbolInfo(SymbolInfo::VARIABLE, std::move(paramTypeForSymbol), std::move(paramDeclNode)));
 		}
 
-		auto expectedReturnType = returnType;
+		auto expectedReturnType = returnType.share();
 		if (expectedReturnType && expectedReturnType->kind == TypeNode::ERROR) {
 			analysisError = true;
 		}
 
 		if (node->lambda->body) {
-			visit(*node->lambda->body);
+			visit(node->lambda->body.share());
 			// TODO: Check error flags after visiting the body
 			// if (/* check error state */) { analysisError = true; }
 		}
 
 		symbolTable.exitScope();
-		currentFunction = previousFunction;
+		currentFunction = std::move(previousFunction);
 
 		// --- Step 4: Assign Final Type to Member exprVR ---
 		if (analysisError) {
 			exprVR = getErrorTypeNode(node->loc);
 		}
 		else {
-			exprVR = std_P3019_modified::make_polymorphic<FunctionTypeNode>(node->loc, std::move(paramTypes), returnType);
+			exprVR = std_P3019_modified::make_polymorphic<FunctionTypeNode>(node->loc, std::move(paramTypes), std::move(returnType));
 		}
 	}
 
-	std_P3019_modified::polymorphic<TypeNode> SemanticAnalyzer::visitExpression(ExprNode &expr) {
-		expr.accept(*this);
-		return exprVR;
+	std_P3019_modified::polymorphic<TypeNode> SemanticAnalyzer::visitExpression(std_P3019_modified::polymorphic<ExprNode> expr) {
+		expr->accept(*this, expr.share());
+		return std::move(exprVR);
 	}
 
 	void SemanticAnalyzer::visit(std_P3019_modified::polymorphic<ObjectDeclNode> node) {
@@ -261,12 +261,12 @@ namespace zenith {
 
 		// Process all members
 		for (auto& member : node->members) {
-			member->accept(*this);
+			member->accept(*this, member.share());
 		}
 
 		// Process operator overloads
 		for (auto& op : node->operators) {
-			op->accept(*this);
+			op->accept(*this, op.share());
 		}
 
 		// Exit class scope
@@ -284,7 +284,7 @@ namespace zenith {
 
 		auto expectedReturnType = resolveType(currentFunction->returnType);
 		if (node->value) {
-			auto actualReturnType = visitExpression(node->value);
+			auto actualReturnType = visitExpression(node->value.share());
 
 			if (!expectedReturnType) {
 				errorReporter.report(node->loc, "Cannot return a value from a function with no return type (implicitly void).");
@@ -295,8 +295,8 @@ namespace zenith {
 			}
 			else if (!areTypesCompatible(expectedReturnType, actualReturnType)) {
 				errorReporter.report(node->value->loc,
-				                     "Return type '" + typeToString(actualReturnType) +
-				                     "' is not compatible with function's declared return type '" + typeToString(expectedReturnType) + "'.");
+				                     "Return type '" + typeToString(actualReturnType.share()) +
+				                     "' is not compatible with function's declared return type '" + typeToString(expectedReturnType.share()) + "'.");
 			}
 		}
 		else {
@@ -307,7 +307,7 @@ namespace zenith {
 					isVoid = (prim->type == PrimitiveTypeNode::VOID);
 				}
 				if (!isVoid) {
-					errorReporter.report(node->loc, "Must return a value from a function with declared return type '" + typeToString(expectedReturnType) + "'.");
+					errorReporter.report(node->loc, "Must return a value from a function with declared return type '" + typeToString(expectedReturnType.share()) + "'.");
 				}
 			}
 		}
@@ -369,7 +369,7 @@ namespace zenith {
 					if (valueSymbol && valueSymbol->declarationNode) {
 						auto valueDecl = valueSymbol->declarationNode.dynamic_get<ObjectDeclNode>();
 						if (valueDecl && !valueDecl->base.empty()) {
-							auto baseType = std_P3019_modified::make_polymorphic<NamedTypeNode>(valueObj->loc, valueDecl->base);
+							std_P3019_modified::polymorphic<TypeNode> baseType = std_P3019_modified::make_polymorphic<NamedTypeNode>(valueObj->loc, valueDecl->base);
 							return areTypesCompatible(targetType, baseType);
 						}
 					}
@@ -444,12 +444,12 @@ namespace zenith {
 		return false;
 	}
 
-	std::string SemanticAnalyzer::typeToString(std_P3019_modified::polymorphic<TypeNode>& type) {
+	std::string SemanticAnalyzer::typeToString(std_P3019_modified::polymorphic<TypeNode> type) {
 		if (!type) return "<nullptr>";
 
 		switch (type->kind) {
 			case TypeNode::PRIMITIVE: {
-				auto prim = dynamic_cast<const PrimitiveTypeNode*>(type.get());
+				auto prim = std::move(type).unchecked_cast<PrimitiveTypeNode>();
 				if (!prim) return "<invalid primitive>";
 
 				static const char* typeNames[] = {
@@ -460,39 +460,39 @@ namespace zenith {
 			}
 
 			case TypeNode::OBJECT: {
-				auto named = dynamic_cast<const NamedTypeNode*>(type.get());
+				auto named = std::move(type).unchecked_cast<NamedTypeNode>();
 				if (!named) return "<invalid object>";
 				return named->name;
 			}
 
 			case TypeNode::ARRAY: {
-				auto arr = dynamic_cast<const ArrayTypeNode*>(type.get());
+				auto arr = std::move(type).unchecked_cast<ArrayTypeNode>();
 				if (!arr || !arr->elementType) return "<invalid array>";
-				return typeToString(arr->elementType) + "[]";
+				return typeToString(std::move(arr->elementType)) + "[]";
 			}
 
 			case TypeNode::FUNCTION: {
-				auto func = dynamic_cast<const FunctionTypeNode*>(type.get());
+				auto func = std::move(type).unchecked_cast<FunctionTypeNode>();
 				if (!func) return "<invalid function>";
 
 				std::string result = "(";
 				for (size_t i = 0; i < func->parameterTypes.size(); ++i) {
 					if (i > 0) result += ", ";
-					result += typeToString(func->parameterTypes[i]);
+					result += typeToString(func->parameterTypes[i].share());
 				}
 				result += ") -> ";
-				result += typeToString(func->returnType);
+				result += typeToString(std::move(func->returnType));
 				return result;
 			}
 
 			case TypeNode::TEMPLATE: {
-				auto templ = dynamic_cast<const TemplateTypeNode*>(type.get());
+				auto templ = std::move(type).unchecked_cast<TemplateTypeNode>();
 				if (!templ) return "<invalid template>";
 
 				std::string result = templ->baseName + "<";
 				for (size_t i = 0; i < templ->templateArgs.size(); ++i) {
 					if (i > 0) result += ", ";
-					result += typeToString(templ->templateArgs[i]);
+					result += typeToString(templ->templateArgs[i].share());
 				}
 				result += ">";
 				return result;
@@ -528,7 +528,7 @@ namespace zenith {
 
 	void SemanticAnalyzer::visit(std_P3019_modified::polymorphic<VarNode> node) {
 		if (auto symbol = symbolTable.lookup(node->name)) {
-			exprVR = symbol->type;
+			exprVR = symbol->type.share();
 		} else {
 			errorReporter.report(node->loc, "Undeclared variable '" + node->name + "'");
 			exprVR = getErrorTypeNode(node->loc);
@@ -536,19 +536,19 @@ namespace zenith {
 	}
 
 	void SemanticAnalyzer::visit(std_P3019_modified::polymorphic<BinaryOpNode> node) {
-		auto leftType = visitExpression(*node.left);
-		auto rightType = visitExpression(*node.right);
+		auto leftType = visitExpression(node->left.share());
+		auto rightType = visitExpression(node->right.share());
 
 		// Check for assignment operations
-		if (node.op >= BinaryOpNode::ASN && node.op <= BinaryOpNode::MOD_ASN) {
+		if (node->op >= BinaryOpNode::ASN && node->op <= BinaryOpNode::MOD_ASN) {
 			// For assignments, left must be an lvalue
 			if (!areTypesCompatible(leftType, rightType)) {
 				errorReporter.report(node->loc,
 				                     "Type mismatch in assignment. Left type: " +
-				                     typeToString(leftType) + ", right type: " +
-				                     typeToString(rightType));
+				                     typeToString(leftType.share()) + ", right type: " +
+				                     typeToString(rightType.share()));
 			}
-			exprVR = leftType;
+			exprVR = leftType.share();
 			return;
 		}
 
@@ -556,12 +556,12 @@ namespace zenith {
 		if (!areTypesCompatible(leftType, rightType)) {
 			errorReporter.report(node->loc,
 			                     "Type mismatch in binary operation. Left type: " +
-			                     typeToString(leftType) + ", right type: " +
-			                     typeToString(rightType));
+			                     typeToString(leftType.share()) + ", right type: " +
+			                     typeToString(rightType.share()));
 		}
 
 		// Result type is the more general of the two
-		exprVR = leftType;
+		exprVR = leftType.share();
 	}
 
 } // namespace zenith

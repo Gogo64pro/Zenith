@@ -1,17 +1,20 @@
 //
+// Created by gogop on 8/4/2025.
+//
+
+//
 // Created by gogop on 3/28/2025.
 //
 
-#pragma once
-
 #include <memory>
 #include <utility>
+#include <sstream>
 #include <vector>
-#include "../core/ASTNode.hpp"
 #include "../core/indirect_polymorphic.hpp"
-#include "Declarations.hpp"
+export module zenith.ast.statements;
+import zenith.ast.ASTNode;
 
-namespace zenith {
+export namespace zenith {
 	// Block statements { ... }
 	struct BlockNode : StmtNode {
 		std::vector<std_P3019_modified::polymorphic<ASTNode>> statements;
@@ -22,7 +25,7 @@ namespace zenith {
 			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "Block {\n";
@@ -33,6 +36,7 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	struct ScopeBlockNode : BlockNode {
@@ -41,7 +45,7 @@ namespace zenith {
 		                        std::vector<std_P3019_modified::polymorphic<ASTNode>> stmts)
 				: BlockNode(std::move(loc), std::move(stmts)) {}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "Scope Block {\n";
@@ -52,6 +56,7 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	// If statements
@@ -69,7 +74,7 @@ namespace zenith {
 			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "If\n"
@@ -83,6 +88,7 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	// Loops
@@ -93,10 +99,10 @@ namespace zenith {
 		WhileNode(SourceLocation loc, std_P3019_modified::polymorphic<ExprNode> cond,
 		          std_P3019_modified::polymorphic<ASTNode> b)
 				: condition(std::move(cond)), body(std::move(b)) {
-			this->loc = loc;
+			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			return pad + "While\n" +
 			       condition->toString(indent + 2) + "\n" +
@@ -104,6 +110,7 @@ namespace zenith {
 			       body->toString(indent + 2);
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	struct DoWhileNode : StmtNode {
@@ -111,12 +118,12 @@ namespace zenith {
 		std_P3019_modified::polymorphic<ASTNode> body;
 
 		DoWhileNode(SourceLocation loc, std_P3019_modified::polymorphic<ExprNode> cond,
-		          std_P3019_modified::polymorphic<ASTNode> b)
+		            std_P3019_modified::polymorphic<ASTNode> b)
 				: condition(std::move(cond)), body(std::move(b)) {
-			this->loc = loc;
+			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			return pad + "DoWhile\n" +
 			       condition->toString(indent + 2) + "\n" +
@@ -124,6 +131,7 @@ namespace zenith {
 			       body->toString(indent + 2);
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	struct ForNode : StmtNode {
@@ -140,10 +148,10 @@ namespace zenith {
 				  condition(std::move(cond)),
 				  increment(std::move(incr)),
 				  body(std::move(b)) {
-			this->loc = loc;
+			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "For\n";
@@ -156,6 +164,7 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 
 	// Unsafe blocks
@@ -164,7 +173,7 @@ namespace zenith {
 		explicit UnsafeNode(SourceLocation loc, std::vector<std_P3019_modified::polymorphic<ASTNode>> stmts)
 				: BlockNode(std::move(loc), std::move(stmts)) {}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "Unsafe {\n";
@@ -175,6 +184,7 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 	//Multi-statements
 	struct CompoundStmtNode : StmtNode {
@@ -183,7 +193,7 @@ namespace zenith {
 		explicit CompoundStmtNode(SourceLocation loc, std::vector<std_P3019_modified::polymorphic<StmtNode>>&& statements ) : stmts(std::move(statements)){
 			loc = std::move(loc);
 		}
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "Compound statements\n";
@@ -192,5 +202,6 @@ namespace zenith {
 			return ss.str();
 		}
 		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
 	};
 }

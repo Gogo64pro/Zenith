@@ -1,0 +1,357 @@
+Program {
+  Import "templateTest.zn"
+  CLASS EmptyClass {
+    // Auto-generated getters/setters enabled
+  }
+  CLASS Person {
+    // Auto-generated getters/setters enabled
+    PRIVATEW FIELD name : PrimitiveType(STRING);
+    PROTECTEDW FIELD age : PrimitiveType(INT);
+    PUBLIC FIELD height : PrimitiveType(DOUBLE);
+  }
+  CLASS Calculator {
+    // Auto-generated getters/setters enabled
+    PUBLIC METHOD add : PrimitiveType(INT) Block {
+      return BinaryOp(+)
+          Var(a)
+          Var(b)
+    }
+    PROTECTED METHOD sqrt : PrimitiveType(DOUBLE) Block {
+      return BinaryOp(*)
+          Var(num)
+          Var(num)
+    }
+  }
+  CLASS Vehicle {
+    // Auto-generated getters/setters enabled
+    PRIVATEW FIELD model : PrimitiveType(STRING);
+    PUBLIC FIELD year : PrimitiveType(INT);
+    PUBLIC METHOD_CONSTRUCTOR Vehicle Block {
+      ExprStmt
+        BinaryOp(=)
+          MemberAccess(.)
+            This
+            model
+          Var(model)
+      ExprStmt
+        BinaryOp(=)
+          MemberAccess(.)
+            This
+            year
+          Var(year)
+    }
+  }
+  CLASS Animal {
+    // Auto-generated getters/setters enabled
+    PROTECTEDW FIELD species : PrimitiveType(STRING);
+  }
+  CLASS Cat : Animal {
+    // Auto-generated getters/setters enabled
+    PRIVATEW FIELD name : PrimitiveType(STRING);
+    PUBLIC METHOD_CONSTRUCTOR Cat Block {
+      ExprStmt
+        BinaryOp(=)
+          MemberAccess(.)
+            This
+            name
+          Var(name)
+      ExprStmt
+        BinaryOp(=)
+          MemberAccess(.)
+            This
+            species
+          Literal(STRING: "Felis catus")
+    }
+  }
+  CLASS BankAccount {
+    // Auto-generated getters/setters enabled
+    PRIVATEW FIELD balance : PrimitiveType(DOUBLE);
+    PUBLIC CONST FIELD accountNumber : PrimitiveType(STRING);
+    PROTECTEDW FIELD owner : PrimitiveType(STRING);
+    PUBLIC METHOD_CONSTRUCTOR BankAccountaccountNumber = Var(accountNumber) Block {
+      ExprStmt
+        BinaryOp(=)
+          MemberAccess(.)
+            This
+            owner
+          Var(owner)
+      ExprStmt
+        BinaryOp(=)
+          MemberAccess(.)
+            This
+            balance
+          Literal(NUMBER: 0.0)
+    }
+    PUBLIC METHOD deposit : PrimitiveType(VOID) Block {
+      ExprStmt
+        BinaryOp(+=)
+          MemberAccess(.)
+            This
+            balance
+          Var(amount)
+    }
+    PROTECTED METHOD withdraw : PrimitiveType(BOOL) Block {
+      If
+        BinaryOp(<=)
+          Var(amount)
+          Var(balance)
+      Then:
+        Block {
+          ExprStmt
+            BinaryOp(-=)
+              Var(balance)
+              Var(amount)
+          return Literal(BOOL: true)
+        }
+      return Literal(BOOL: false)
+    }
+  }
+  CLASS X {
+    // Auto-generated getters/setters enabled
+  }
+  CLASS StrangeFormatting {
+    // Auto-generated getters/setters enabled
+  }
+  CLASS ProtectionDemo {
+    // Auto-generated getters/setters enabled
+    PUBLIC FIELD a : PrimitiveType(INT);
+    PROTECTED FIELD b : PrimitiveType(INT);
+    PRIVATE FIELD c : PrimitiveType(INT);
+    PRIVATEW FIELD d : PrimitiveType(INT);
+    PROTECTEDW FIELD e : PrimitiveType(INT);
+  }
+  CLASS DuplicateFields {
+    // Auto-generated getters/setters enabled
+    PUBLIC FIELD x : PrimitiveType(INT);
+    PRIVATE FIELD x : PrimitiveType(INT);
+  }
+  [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89mobj [38;2;169;183;198m= FreeObject {
+      x: Literal(NUMBER: 10)
+      y: Literal(NUMBER: 20)
+    }[0m
+  [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89minferredObj [38;2;169;183;198m= FreeObject {
+      name: Literal(STRING: "Zenith")
+      version: Literal(NUMBER: 1.0)
+    }[0m
+   [38;2;255;188;89mmain[0m[38;2;169;183;198m() Block {
+      Unsafe {
+        [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89mptr [38;2;169;183;198m= Call
+            Var(malloc)
+            Arguments:
+            Literal(NUMBER: 1024)[0m
+        EmptyStmt
+        ExprStmt
+          BinaryOp(=)
+            ArrayAccess([])
+              Var(ptr)
+              Literal(NUMBER: 0)
+            Literal(NUMBER: 42)
+        ExprStmt
+          Call
+            Var(free)
+            Arguments:
+            Var(ptr)
+      }
+    }
+  [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89mbuffer [38;2;169;183;198m= Call
+      Var(malloc)
+      Arguments:
+      Literal(NUMBER: 512)[0m
+  [38;2;204;120;50m  [38;2;129;172;226mSTATIC [38;2;255;188;89mx [38;2;169;183;198m= Literal(NUMBER: 10)[0m
+  STRUCT Point {
+    // Auto-generated getters/setters enabled
+    PUBLIC FIELD x : PrimitiveType(INT);
+    PUBLIC FIELD y : PrimitiveType(INT);
+  }
+  [38;2;204;120;50m  [38;2;129;172;226mSTATIC [38;2;255;188;89mp [38;2;169;183;198m= Positional{Literal(NUMBER: 1), Literal(NUMBER: 2)}[0m
+  [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89my [38;2;169;183;198m= Literal(STRING: "dynamic")[0m
+  [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89mz [38;2;169;183;198m= Literal(NUMBER: 3.14)[0m
+  [38;2;204;120;50m  [38;2;129;172;226mSTATIC [38;2;255;188;89mconfig [38;2;169;183;198m= FreeObject {
+      debug: Literal(BOOL: true)
+      log:  [38;2;255;188;89m[LAMBDA][0m[38;2;169;183;198m([38;2;169;183;198mmsg[0m) Block {
+    return Call
+        MemberAccess(.)
+          Var(IO)
+          print
+        Arguments:
+        Var(msg)
+  }
+    }[0m
+  [38;2;204;120;50m  [38;2;129;172;226mSTATIC [38;2;255;188;89mconfig2 [38;2;169;183;198m= FreeObject {
+      debug: Literal(BOOL: true)
+      log:  [38;2;255;188;89m[LAMBDA][0m[38;2;169;183;198m([38;2;169;183;198mmsg[0m) Block {
+    return Call
+        MemberAccess(.)
+          Var(IO)
+          print
+        Arguments:
+        Var(msg)
+  }
+    }[0m
+  CLASS Vehicle {
+    // Auto-generated getters/setters enabled
+    PRIVATEW FIELD model : PrimitiveType(STRING);
+    PUBLIC FIELD year : PrimitiveType(INT);
+    PUBLIC METHOD_CONSTRUCTOR Vehicle Block {
+      ExprStmt
+        BinaryOp(=)
+          MemberAccess(.)
+            This
+            model
+          Var(m)
+      ExprStmt
+        BinaryOp(=)
+          MemberAccess(.)
+            This
+            year
+          Var(y)
+    }
+  }
+  STRUCT Color {
+    // Auto-generated getters/setters enabled
+    PUBLIC FIELD r : PrimitiveType(BYTE);
+    PUBLIC FIELD g : PrimitiveType(BYTE);
+    PUBLIC FIELD b : PrimitiveType(BYTE);
+  }
+  UNIONANumber{
+    PrimitiveType(INT)
+,     PrimitiveType(FLOAT)
+
+}
+   [38;2;204;120;50masync[0m TemplateType(Future<PrimitiveType(STRING)>) [38;2;255;188;89mfetchData[0m[38;2;169;183;198m() Block {
+      [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89mdata [38;2;169;183;198m= Var(await)[0m
+      ExprStmt
+        Call
+          MemberAccess(.)
+            Var(http)
+            get
+          Arguments:
+          Literal(STRING: "example.com")
+      return Var(data)
+    }
+  ACTOR Counter {
+    // Auto-generated getters/setters enabled
+    PRIVATE FIELD value : PrimitiveType(INT)Literal(NUMBER: 0);
+    PUBLIC MESSAGE_HANDLER increment : PrimitiveType(INT) Block {
+      ExprStmt
+        UnaryOp(++)
+          MemberAccess(.)
+            This
+            value
+
+      return MemberAccess(.)
+          This
+          value
+    }
+  }
+  [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89mname [38;2;169;183;198m= Literal(STRING: "World")[0m
+   [38;2;255;188;89mmain[0m[38;2;169;183;198m() Block {
+      ExprStmt
+        Call
+          MemberAccess(.)
+            Var(IO)
+            print
+          Arguments:
+          Literal(STRING: "Hello, ${name}!")
+      If
+        Var(condition)
+      Then:
+        Block {
+          ExprStmt
+            Call
+              MemberAccess(.)
+                Var(IO)
+                print
+              Arguments:
+              Literal(STRING: "No braces needed")
+        }
+    }
+  [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89mx [38;2;169;183;198m= Literal(NUMBER: 10)[0m
+  CLASS RestrictedDemo {
+    // Auto-generated getters/setters enabled
+    PRIVATEW FIELD adminCode : PrimitiveType(INT);
+    PROTECTEDW FIELD auditId : PrimitiveType(INT);
+    PUBLIC CONST FIELD id : PrimitiveType(STRING);
+  }
+  CLASS Database {
+    // Auto-generated getters/setters enabled
+    PRIVATEW FIELD conn : NamedType(Connection);
+    PUBLIC METHOD_CONSTRUCTOR Database Block {
+      ExprStmt
+        BinaryOp(=)
+          MemberAccess(.)
+            This
+            conn
+          new Connection(Var(url))
+    }
+    Annotation @Async
+    PUBLIC METHOD query : TemplateType(Future<TemplateType(Result<Type(DYNAMIC), PrimitiveType(STRING)>)>) Block {
+      ExprStmt
+        Var(try)
+      Block {
+        [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89mresult [38;2;169;183;198m= Var(await)[0m
+        ExprStmt
+          Call
+            MemberAccess(.)
+              Var(conn)
+              execute
+            Arguments:
+            Var(sql)
+        return Call
+            Var(Ok)
+            Arguments:
+            Var(result)
+      }
+      ExprStmt
+        Call
+          Var(catch)
+          Arguments:
+          Var(e)
+      Block {
+        return Call
+            Var(Err)
+            Arguments:
+            MemberAccess(.)
+              Var(e)
+              message
+      }
+    }
+  }
+   [38;2;255;188;89mmain[0m[38;2;169;183;198m() Block {
+      [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89mdb [38;2;169;183;198m= new Database(Literal(STRING: "localhost:5432"))[0m
+      EmptyStmt
+      [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89mresult [38;2;169;183;198m= Var(await)[0m
+      ExprStmt
+        Call
+          MemberAccess(.)
+            Var(db)
+            query
+          Arguments:
+          Literal(STRING: "SELECT * FROM users")
+      ExprStmt
+        Call
+          Var(match)
+          Arguments:
+          Var(result)
+      Block {
+        ExprStmt
+          Call
+            Var(Ok)
+            Arguments:
+            Var(data)
+      }
+    }
+  [38;2;204;120;50m  [38;2;129;172;226mDYNAMIC [38;2;255;188;89mptr [38;2;169;183;198m= Call
+      Var(malloc)
+      Arguments:
+      Literal(NUMBER: 10)[0m
+  STRUCT Point {
+    // Auto-generated getters/setters enabled
+    PUBLIC FIELD x : PrimitiveType(INT);
+    PUBLIC FIELD y : PrimitiveType(INT);
+  }
+  [38;2;204;120;50m  [38;2;129;172;226mSTATIC [38;2;255;188;89mp [38;2;169;183;198m= Positional{Literal(NUMBER: 1.5), Literal(NUMBER: 2)}[0m
+  CLASS Demo {
+    // Auto-generated getters/setters enabled
+  }
+}

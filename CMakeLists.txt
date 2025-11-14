@@ -45,6 +45,7 @@ set(TUs
 )
 
 set(MODULES
+        src/ast/AST.cppm
         src/ast/SourceLocation.cppm
         src/core/polymorphic.cppm
         src/visitor/Visitor.cppm
@@ -56,7 +57,6 @@ set(MODULES
         src/ast/Statements.cppm
         src/ast/TypeNodes.cppm
         src/ast/IAnnotatable.cppm
-        src/ast/AST.cppm
         src/SemanticAnalysis/SymbolTable.cppm
         src/SemanticAnalysis/SemanticAnalyzer.cppm
 )

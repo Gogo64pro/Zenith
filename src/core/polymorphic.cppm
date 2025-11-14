@@ -35,7 +35,7 @@ export namespace std_P3019_modified {
 	namespace detail {
 		template<typename BaseT, typename BaseAlloc>
 		struct ControlBlockBase {
-			using BasePointer = typename std::allocator_traits<BaseAlloc>::pointer;
+			using BasePointer = std::allocator_traits<BaseAlloc>::pointer;
 			virtual ~ControlBlockBase() = default;
 			virtual BaseT* get_ptr() noexcept = 0;
 			virtual void destroy(const BaseAlloc& alloc, BasePointer p) noexcept = 0;
@@ -47,8 +47,8 @@ export namespace std_P3019_modified {
 		};
 
 		template<typename ConcreteDerived, typename BaseT, typename BaseAlloc>
-		struct ControlBlockDerived final : detail::ControlBlockBase<BaseT, BaseAlloc> {
-			using BasePointer = typename detail::ControlBlockBase<BaseT, BaseAlloc>::BasePointer;
+		struct ControlBlockDerived final : ControlBlockBase<BaseT, BaseAlloc> {
+			using BasePointer = ControlBlockBase<BaseT, BaseAlloc>::BasePointer;
 			ConcreteDerived derived;
 			int ref_count = 1;
 			[[no_unique_address]]BaseAlloc alloc;
@@ -60,11 +60,10 @@ export namespace std_P3019_modified {
 
 			void destroy(const BaseAlloc& alloc, BasePointer p) noexcept override {
 				if (p && decrement_ref_count()) {
-					using DerivedAlloc = typename std::allocator_traits<BaseAlloc>::template rebind_alloc<ConcreteDerived>;
+					using DerivedAlloc = std::allocator_traits<BaseAlloc>::template rebind_alloc<ConcreteDerived>;
 					using DerivedAllocTraits = std::allocator_traits<DerivedAlloc>;
 					DerivedAlloc derived_alloc(alloc);
-					auto* p_derived = static_cast<ConcreteDerived*>(std::to_address(p));
-					if (p_derived) {
+					if (auto* p_derived = static_cast<ConcreteDerived*>(std::to_address(p))) {
 						DerivedAllocTraits::destroy(derived_alloc, p_derived);
 						DerivedAllocTraits::deallocate(derived_alloc, p_derived, 1);
 					} else {
@@ -96,8 +95,8 @@ export namespace std_P3019_modified {
 
 		template<typename BaseT, typename SourceT, typename BaseAlloc, typename SourceAlloc>
 		struct DelegatingControlBlock final : detail::ControlBlockBase<BaseT, BaseAlloc> {
-			using BasePointer = typename detail::ControlBlockBase<BaseT, BaseAlloc>::BasePointer;
-			using SourcePointer = typename detail::ControlBlockBase<SourceT, SourceAlloc>::BasePointer;
+			using BasePointer = detail::ControlBlockBase<BaseT, BaseAlloc>::BasePointer;
+			using SourcePointer = detail::ControlBlockBase<SourceT, SourceAlloc>::BasePointer;
 			std::unique_ptr<ControlBlockBase<SourceT, SourceAlloc>> source_cb;
 			SourcePointer source_ptr;
 			int ref_count = 1;
@@ -156,7 +155,7 @@ export namespace std_P3019_modified {
 				}
 				return false;
 			}
-			[[nodiscard]] bool is_convertible_to(const std::type_info& target) const noexcept {
+			[[nodiscard]] bool is_convertible_to(const std::type_info& target) const noexcept override {
 				return source_cb->is_convertible_to(target);
 			}
 		};
@@ -177,14 +176,14 @@ export namespace std_P3019_modified {
 		static_assert(std::same_as<typename BaseAllocTraits::value_type, T>,
 		              "polymorphic<T, Allocator>: allocator_traits<Allocator>::value_type must be T.");
 
-		using pointer = typename BaseAllocTraits::pointer;
-		using const_pointer = typename BaseAllocTraits::const_pointer;
+		using pointer = BaseAllocTraits::pointer;
+		using const_pointer = BaseAllocTraits::const_pointer;
 		using ControlBlock = detail::ControlBlockBase<T, Allocator>;
 
 		struct ControlBlockDeleter {
 			[[no_unique_address]] Allocator alloc;
 
-			using CBAlloc = typename BaseAllocTraits::template rebind_alloc<ControlBlock>;
+			using CBAlloc = BaseAllocTraits::template rebind_alloc<ControlBlock>;
 			using CBAllocTraits = std::allocator_traits<CBAlloc>;
 
 			void operator()(ControlBlock *cb) const noexcept {
@@ -195,7 +194,6 @@ export namespace std_P3019_modified {
 					CBAllocTraits::destroy(cb_alloc, cb);
 				} catch (...) {
 					assert(false && "Control block destructor threw");
-					std::terminate();
 				}
 				CBAllocTraits::deallocate(cb_alloc, cb, 1);
 			}
@@ -227,7 +225,7 @@ export namespace std_P3019_modified {
 		requires std::derived_from<ConcreteDerived, T> && std::constructible_from<ConcreteDerived, Args...>
 		void allocate_construct_and_init(Allocator current_alloc, Args &&... args) {
 			using CBDerived = detail::ControlBlockDerived<ConcreteDerived, T, Allocator>;
-			using CBAlloc = typename BaseAllocTraits::template rebind_alloc<CBDerived>;
+			using CBAlloc = BaseAllocTraits::template rebind_alloc<CBDerived>;
 			using CBAllocTraits = std::allocator_traits<CBAlloc>;
 
 			CBAlloc cb_alloc(current_alloc);
@@ -242,10 +240,7 @@ export namespace std_P3019_modified {
 				cb_ptr_ = ControlBlockPtr(cb_derived, ControlBlockDeleter{current_alloc});
 				cb_ptr_->increment_ref_count();
 			} catch (...) {
-				if (cb_derived) {
-					CBAllocTraits::deallocate(cb_alloc, cb_derived, 1);
-				}
-				throw;
+
 			}
 		}
 
@@ -353,7 +348,7 @@ export namespace std_P3019_modified {
 			if (other.p_) {
 				try {
 					using DelegatingCB = detail::DelegatingControlBlock<T, Derived, Allocator, DerivedAlloc>;
-					using CBAlloc = typename BaseAllocTraits::template rebind_alloc<DelegatingCB>;
+					using CBAlloc = BaseAllocTraits::template rebind_alloc<DelegatingCB>;
 					using CBAllocTraits = std::allocator_traits<CBAlloc>;
 
 					CBAlloc cb_alloc(get_allocator_ref());
@@ -404,8 +399,7 @@ export namespace std_P3019_modified {
 		BaseAllocTraits::propagate_on_container_move_assignment::value ||
 		BaseAllocTraits::is_always_equal::value) {
 			if (this == &other) return *this;
-			constexpr bool pocma = BaseAllocTraits::propagate_on_container_move_assignment::value;
-			if constexpr (pocma) {
+			if constexpr (BaseAllocTraits::propagate_on_container_move_assignment::value) {
 				reset();
 				get_allocator_ref() = std::move(other.get_allocator_ref());
 				cb_ptr_.get_deleter().alloc = get_allocator_ref();
@@ -630,7 +624,7 @@ export namespace std_P3019_modified {
 			if (p_ && cb_ptr_) {
 				using SourceCB = detail::ControlBlockBase<T, Allocator>;
 				using DelegatingCB = detail::DelegatingControlBlock<To, T, typename polymorphic<To>::allocator_type, Allocator>;
-				using CBAlloc = typename std::allocator_traits<typename polymorphic<To>::allocator_type>::template rebind_alloc<DelegatingCB>;
+				using CBAlloc = std::allocator_traits<typename polymorphic<To>::allocator_type>::template rebind_alloc<DelegatingCB>;
 				using CBAllocTraits = std::allocator_traits<CBAlloc>;
 
 				CBAlloc cb_alloc(result.get_allocator_ref());
@@ -669,7 +663,7 @@ export namespace std_P3019_modified {
 				using TargetCB = detail::ControlBlockBase<To, typename polymorphic<To>::allocator_type>;
 				using DelegatingCB = detail::DelegatingControlBlock<To, T, typename polymorphic<To>::allocator_type, Allocator>;
 
-				using CBAlloc = typename std::allocator_traits<typename polymorphic<To>::allocator_type>::template rebind_alloc<DelegatingCB>;
+				using CBAlloc = std::allocator_traits<typename polymorphic<To>::allocator_type>::template rebind_alloc<DelegatingCB>;
 				using CBAllocTraits = std::allocator_traits<CBAlloc>;
 
 				CBAlloc cb_alloc(result.get_allocator_ref());
@@ -698,7 +692,7 @@ export namespace std_P3019_modified {
 		}
 		template<typename To>
 		[[nodiscard]] polymorphic<To> share_static() const {
-			using ToAlloc = typename polymorphic<To>::allocator_type;
+			using ToAlloc = polymorphic<To>::allocator_type;
 			using DelegatingCB = detail::DelegatingControlBlock<To, T, ToAlloc, Allocator>;
 
 			polymorphic<To> result(std::allocator_arg, get_allocator_ref());
@@ -714,7 +708,7 @@ export namespace std_P3019_modified {
 				cb_ptr_->increment_ref_count();
 				result.cb_ptr_.reset(new_cb);
 
-				result.p_ = static_cast<typename polymorphic<To>::pointer>(
+				result.p_ = static_cast<polymorphic<To>::pointer>(
 						std::pointer_traits<pointer>::pointer_to(
 								*static_cast<To*>(std::to_address(p_))
 						));

@@ -1,23 +1,13 @@
-#include <memory>
-#include "../ast/MainNodes.hpp"
+module;
 #include "../exceptions/ErrorReporter.hpp"
-#include <vector>
-#include <unordered_map>
 #include <string>
-#include "../ast/Expressions.hpp"
-#include "../ast/Declarations.hpp"
-#include "../ast/Statements.hpp"
-#include "../ast/MainNodes.hpp"
-#include "../ast/TypeNodes.hpp"
-#include "../ast/Other.hpp"
-#include "../exceptions/ErrorReporter.hpp"
-#include "../utils/small_vector.hpp"
-#include "SymbolTable.hpp"
-#include "../visitor/Visitor.hpp"
+export module zenith.semantic;
+import zenith.ast;
+import zenith.core.polymorphic;
+export import :symbolTable;
 
-namespace zenith {
+export namespace zenith {
 	class SemanticAnalyzer : public PolymorphicVisitor {
-	private:
 		ErrorReporter& errorReporter;
 		SymbolTable symbolTable;
 
@@ -80,7 +70,7 @@ namespace zenith {
 		explicit SemanticAnalyzer(ErrorReporter& errorReporter)
 				: symbolTable(errorReporter), errorReporter(errorReporter) {}
 
-		SymbolTable&& analyze(std_P3019_modified::polymorphic<ProgramNode>& program);
+		SymbolTable&& analyze(const std_P3019_modified::polymorphic<ProgramNode>& program);
 	};
 
 } // namespace zenith

@@ -2,6 +2,3 @@
 cmake-build*/
 build/
 CMakeFiles/
-a.exe
-test_asan.cpp
-test.cpp

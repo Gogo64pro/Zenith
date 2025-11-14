@@ -5,12 +5,10 @@
 #include <string>
 #include <iostream>
 #include "../lexer/lexer.hpp"
-#include "../ast/Declarations.hpp"
-#include "../ast/Expressions.hpp"
-#include "../ast/Statements.hpp"
 #include "../utils/mainargs.hpp"
-#include "../ast/MainNodes.hpp"
 #include "../exceptions/ErrorReporter.hpp"
+import zenith.ast;
+import zenith.core.polymorphic;
 
 namespace zenith {
 	class Parser {

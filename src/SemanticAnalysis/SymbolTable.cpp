@@ -1,7 +1,7 @@
-#include "SymbolTable.hpp"
-
+module;
 #include <ranges>
-
+#include <sstream>
+module zenith.semantic;
 namespace zenith{
 	SymbolInfo::SymbolInfo(Kind k, std_P3019_modified::polymorphic<TypeNode> t, std_P3019_modified::polymorphic<ASTNode> node, bool isConst, bool isStatic)
 			: kind(k), type(std::move(t)), declarationNode(std::move(node)), isConst(isConst), isStatic(isStatic) {}

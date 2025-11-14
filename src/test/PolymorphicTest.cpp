@@ -2,7 +2,7 @@
 // Created by gogop on 7/29/2025.
 //
 
-#include "../core/indirect_polymorphic.hpp"
+#include "../core/polymorphic.cppm"
 #include <gtest/gtest.h>
 
 // Base and derived classes for testing

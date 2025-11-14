@@ -4,6 +4,7 @@
 
 #pragma once
 #include <cmath>
+#include <algorithm>
 // Color utilities for ANSI escape sequences
 #define MAKE_RGB_COLOR(r, g, b) "\033[38;2;" #r ";" #g ";" #b "m"
 #define MAKE_BG_RGB_COLOR(r, g, b) "\033[48;2;" #r ";" #g ";" #b "m"

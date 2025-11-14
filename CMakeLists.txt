@@ -5,8 +5,7 @@ project(Zenith)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions -fno-inline-small-functions")
-
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions")
 # --- Logging ---
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
@@ -39,29 +38,38 @@ set(TUs
         src/exceptions/LexError.cpp
         src/utils/small_vector.cpp
         src/exceptions/ErrorReporter.cpp
-        src/visitor/Visitor.cpp
         src/SemanticAnalysis/SemanticAnalyzer.cpp
         src/SemanticAnalysis/SymbolTable.cpp
-        #AST
+        src/ast/acceptMethods.cpp
+        src/visitor/Visitor.cpp
+)
+
+set(MODULES
+        src/ast/SourceLocation.cppm
+        src/core/polymorphic.cppm
+        src/visitor/Visitor.cppm
+        src/ast/ASTNode.cppm
         src/ast/Declarations.cppm
         src/ast/Expressions.cppm
         src/ast/MainNodes.cppm
         src/ast/Other.cppm
         src/ast/Statements.cppm
         src/ast/TypeNodes.cppm
-        src/core/ASTNode.cppm
+        src/ast/IAnnotatable.cppm
         src/ast/AST.cppm
-        )
-
-set(PCH_HEADERS
-        src/core/indirect_polymorphic.hpp
-        )
-
+        src/SemanticAnalysis/SymbolTable.cppm
+        src/SemanticAnalysis/SemanticAnalyzer.cppm
+)
 add_executable(Zenith ${TUs} src/main.cpp)
-target_precompile_headers(Zenith PRIVATE ${PCH_HEADERS})
+
+target_include_directories(Zenith PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_sources(Zenith
+        PUBLIC
+        FILE_SET cxx_modules TYPE CXX_MODULES FILES
+        ${MODULES}
+        )
+
 target_link_libraries(Zenith PRIVATE fmt::fmt)
-
-
 
 # Testing
 

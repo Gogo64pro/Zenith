@@ -1,18 +1,13 @@
-//
-// Created by gogop on 8/4/2025.
-//
-
-//
-// Created by gogop on 3/28/2025.
-//
-
-#include <memory>
+module;
 #include <utility>
 #include <sstream>
 #include <vector>
-#include "../core/indirect_polymorphic.hpp"
-export module zenith.ast.statements;
-import zenith.ast.ASTNode;
+#include "acceptMethods.hpp"
+import zenith.core.polymorphic;
+export module zenith.ast:statements;
+import :ASTNode;
+import :visitor;
+
 
 export namespace zenith {
 	// Block statements { ... }
@@ -26,7 +21,7 @@ export namespace zenith {
 		}
 
 		[[nodiscard]] std::string toString(int indent = 0) const override {
-			std::string pad(indent, ' ');
+			const std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "Block {\n";
 			for (const auto& stmt : statements) {
@@ -35,8 +30,7 @@ export namespace zenith {
 			ss << pad << "}";
 			return ss.str();
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	struct ScopeBlockNode : BlockNode {
@@ -55,8 +49,7 @@ export namespace zenith {
 			ss << pad << "}";
 			return ss.str();
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	// If statements
@@ -87,8 +80,7 @@ export namespace zenith {
 			}
 			return ss.str();
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	// Loops
@@ -109,8 +101,7 @@ export namespace zenith {
 			       pad + "Body:\n" +
 			       body->toString(indent + 2);
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	struct DoWhileNode : StmtNode {
@@ -130,8 +121,7 @@ export namespace zenith {
 			       pad + "Body:\n" +
 			       body->toString(indent + 2);
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	struct ForNode : StmtNode {
@@ -163,8 +153,7 @@ export namespace zenith {
 			   << pad << "Body:\n" << body->toString(indent + 2);
 			return ss.str();
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	// Unsafe blocks
@@ -183,8 +172,7 @@ export namespace zenith {
 			ss << pad << "}";
 			return ss.str();
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 	//Multi-statements
 	struct CompoundStmtNode : StmtNode {
@@ -201,7 +189,6 @@ export namespace zenith {
 				ss << x->toString(indent + 2);
 			return ss.str();
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 }

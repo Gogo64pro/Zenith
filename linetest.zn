@@ -1,9 +1,0 @@
-let x = "Hello
-World";  // 2-line template literal
-/* Multi-line
-comment */
-let x = "string with\nnewline";
-let x = "string with
-newline";
-"template
-literal"

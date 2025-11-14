@@ -1,11 +1,11 @@
 // src/lexer/lexer.hpp
 #pragma once
 
-import zenith.ast.ASTNode;
 #include <string>
 #include <utility>
 #include <vector>
 #include <unordered_map>
+import zenith.sourceLocation;
 namespace zenith{
 	enum class TokenType {
 		// Keywords
@@ -67,9 +67,9 @@ namespace zenith{
 		void number();
 		void string();
 		void templateString();
-		bool isAtEnd() const;
-		char peekNext() const;
-		char peek() const;
+		[[nodiscard]] bool isAtEnd() const;
+		[[nodiscard]] char peekNext() const;
+		[[nodiscard]] char peek() const;
 
 		const std::string& source;
 		const std::string& fileName;

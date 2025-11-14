@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <unordered_set>
 #include "../exceptions/ParseError.hpp"
+import zenith.ast;
+import zenith.core.polymorphic;
 
 std::string debug_lexeme_string(const std::vector<Token>& tokens) {
 	std::stringstream ss;
@@ -194,13 +196,13 @@ namespace zenith {
 			// Handle chained operations
 			while (true) {
 				if (match(TokenType::LPAREN)) {
-					expr = parseFunctionCall(std::move(expr));  // std::move here
+					expr = parseFunctionCall(std::move(expr));
 				}
 				else if (match(TokenType::DOT)) {
-					expr = parseMemberAccess(std::move(expr));  // std::move here
+					expr = parseMemberAccess(std::move(expr));
 				}
 				else if (match(TokenType::LBRACKET)) {
-					expr = parseArrayAccess(std::move(expr));   // std::move here
+					expr = parseArrayAccess(std::move(expr));
 				}
 				else {
 					break;
@@ -1411,7 +1413,6 @@ namespace zenith {
 				if (match(TokenType::ON)) {
 					members.push_back(parseMessageHandler(std::move(pendingAnnotations)));
 				} else {
-					// Parse regular members (fields, etc.)
 					members.push_back(parseObjectPrimary(name, pendingAnnotations));
 				}
 			} catch (const ParseError& e) {

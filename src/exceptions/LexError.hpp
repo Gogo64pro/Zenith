@@ -6,7 +6,7 @@
 
 #include <stdexcept>
 #include <utility>
-import zenith.ast.ASTNode;
+import zenith.ast;
 
 namespace zenith {
 

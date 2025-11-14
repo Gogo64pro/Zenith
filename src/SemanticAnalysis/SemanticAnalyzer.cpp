@@ -1,8 +1,9 @@
-#include "SemanticAnalyzer.hpp"
+module zenith.semantic;
+#include "utils/Colorize.hpp"
 
 namespace zenith {
 
-	SymbolTable&& SemanticAnalyzer::analyze(std_P3019_modified::polymorphic<ProgramNode> &program) {
+	SymbolTable&& SemanticAnalyzer::analyze(const std_P3019_modified::polymorphic<ProgramNode> &program) {
 		visit(program.share());
 		return std::move(symbolTable);
 	}

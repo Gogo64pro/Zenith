@@ -1,16 +1,15 @@
-//
-// Created by gogop on 8/4/2025.
-//
-
-export module zenith.ast.typeNodes;
-
-#include <memory>
+module;
+#include <algorithm>
+#include "acceptMethods.hpp"
 #include <utility>
 #include <vector>
 #include <sstream>
 #include <unordered_set>
-#include "../core/ASTNode.hpp"
-#include "../core/indirect_polymorphic.hpp"
+import zenith.core.polymorphic;
+export module zenith.ast:typeNodes;
+import :visitor;
+import :ASTNode;
+import :visitor;
 
 
 export namespace zenith {
@@ -31,8 +30,7 @@ export namespace zenith {
 			return kind==DYNAMIC;
 		}
 
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 
@@ -56,8 +54,7 @@ export namespace zenith {
 
 			return !basic_types.contains(type);
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	// Class/struct types
@@ -71,8 +68,7 @@ export namespace zenith {
 			std::string pad(indent, ' ');
 			return pad + "NamedType(" + name + ")";
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	// Array types
@@ -88,8 +84,7 @@ export namespace zenith {
 			return pad + "ArrayType\n" +
 			       elementType->toString(indent + 2);
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 	struct TemplateTypeNode : TypeNode {
 		std::string baseName;
@@ -119,8 +114,7 @@ export namespace zenith {
 			return std::ranges::any_of(templateArgs, [](const auto& arg){return arg->isDynamic();});
 		}
 
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 	struct FunctionTypeNode : TypeNode{
 		std::vector<std_P3019_modified::polymorphic<TypeNode>> parameterTypes;
@@ -151,6 +145,6 @@ export namespace zenith {
 		}
 		[[nodiscard]] bool isDynamic() const override { return false; }
 
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
+		ACCEPT_METHODS
 	};
 }

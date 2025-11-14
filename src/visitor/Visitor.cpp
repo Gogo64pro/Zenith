@@ -2,10 +2,19 @@
 // Created by gogop on 4/25/2025.
 //
 
-#include "Visitor.hpp"
-import zenith.ast;
+module;
+#include <memory>
+#include <stdexcept>
+import zenith.core.polymorphic;
+module zenith.ast;
+//import :declarations;
+//import :expressions;
+//import :mainNodes;
+//import :other;
+//import :statements;
+//import :typeNodes;
 
-namespace zenith {
+namespace zenith{
 
 	void Visitor::visit(ASTNode &node) {
 		throw std::runtime_error("Unhandled AST node type");
@@ -151,6 +160,10 @@ namespace zenith {
 		visit(static_cast<ASTNode&>(node));
 	}
 
+	void Visitor::visit(FunctionTypeNode& node) {
+		visit(static_cast<TypeNode &>(node));
+	}
+
 	void Visitor::visit(PrimitiveTypeNode& node) {
 		visit(static_cast<TypeNode&>(node));
 	}
@@ -179,7 +192,7 @@ namespace zenith {
 		visit(static_cast<ASTNode&>(node));
 	}
 
-	std::pair<TypeNode *, std::unique_ptr<TypeNode>> Visitor::visitExpression(ExprNode &expr) {
+	[[maybe_unused]] std::pair<TypeNode *, std::unique_ptr<TypeNode>> Visitor::visitExpression(ExprNode &expr) {
 		return {nullptr, nullptr};
 	}
 
@@ -373,6 +386,10 @@ namespace zenith {
 	}
 
 	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<PrimitiveTypeNode> node) {
+		visit(node.share<TypeNode>());
+	}
+
+	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<FunctionTypeNode> node) {
 		visit(node.share<TypeNode>());
 	}
 

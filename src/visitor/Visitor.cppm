@@ -1,77 +1,77 @@
 //
-// Created by gogop on 4/25/2025.
+// Created by gogop on 11/9/2025.
 //
-
-#pragma once
-
-import zenith.ast;
+module;
 #include <memory>
-#include "../core/indirect_polymorphic.hpp"
+#include <utility>
+import zenith.core.polymorphic;
+export module zenith.ast:visitor;
 
 
-
-namespace zenith {
+export namespace zenith {
 	class Visitor {
 	public:
 		virtual ~Visitor() = default;
 
 		// Default fallback
-		virtual void visit(ASTNode& node);
-		virtual void visit(ExprNode& node);
-		virtual void visit(StmtNode& node);
-		virtual std::pair<TypeNode *, std::unique_ptr<TypeNode>> visitExpression(ExprNode& expr);
+		virtual void visit(struct ASTNode& node);
+		virtual void visit(struct ExprNode& node);
+		virtual void visit(struct StmtNode& node);
+
+		[[maybe_unused]] virtual std::pair<struct TypeNode *, std::unique_ptr<TypeNode>> visitExpression(ExprNode& expr);
 
 		// Specific visitors
-		virtual void visit(ProgramNode& node);
-		virtual void visit(ImportNode& node);
-		virtual void visit(BlockNode& node);
-		virtual void visit(VarDeclNode& node);
-		virtual void visit(MultiVarDeclNode& node);
-		virtual void visit(FunctionDeclNode& node);
-		virtual void visit(ObjectDeclNode& node);
-		virtual void visit(UnionDeclNode& node);
-		virtual void visit(ActorDeclNode& node);
-		virtual void visit(IfNode& node);
-		virtual void visit(WhileNode& node);
-		virtual void visit(DoWhileNode& node);
-		virtual void visit(ForNode& node);
-		virtual void visit(ExprStmtNode& node);
-		virtual void visit(EmptyStmtNode& node);
-		virtual void visit(AnnotationNode& node);
-		virtual void visit(TemplateDeclNode& node);
-		virtual void visit(LambdaNode& node);
-		virtual void visit(MemberDeclNode& node);
-		virtual void visit(OperatorOverloadNode& node);
-		virtual void visit(UnsafeNode& node);
-		virtual void visit(CompoundStmtNode& node);
-		virtual void visit(ReturnStmtNode& node);
-		virtual void visit(ScopeBlockNode& node);
-		virtual void visit(TemplateParameter& node);
+		virtual void visit(struct ProgramNode& node);
+		virtual void visit(struct ImportNode& node);
+		virtual void visit(struct BlockNode& node);
+		virtual void visit(struct VarDeclNode& node);
+		virtual void visit(struct MultiVarDeclNode& node);
+		virtual void visit(struct FunctionDeclNode& node);
+		virtual void visit(struct ObjectDeclNode& node);
+		virtual void visit(struct UnionDeclNode& node);
+		virtual void visit(struct ActorDeclNode& node);
+		virtual void visit(struct IfNode& node);
+		virtual void visit(struct WhileNode& node);
+		virtual void visit(struct DoWhileNode& node);
+		virtual void visit(struct ForNode& node);
+		virtual void visit(struct ExprStmtNode& node);
+		virtual void visit(struct EmptyStmtNode& node);
+		virtual void visit(struct AnnotationNode& node);
+		virtual void visit(struct TemplateDeclNode& node);
+		virtual void visit(struct LambdaNode& node);
+		virtual void visit(struct MemberDeclNode& node);
+		virtual void visit(struct OperatorOverloadNode& node);
+		virtual void visit(struct UnsafeNode& node);
+		virtual void visit(struct CompoundStmtNode& node);
+		virtual void visit(struct ReturnStmtNode& node);
+		virtual void visit(struct ScopeBlockNode& node);
+		virtual void visit(struct TemplateParameter& node);
 
-		virtual void visit(LiteralNode& node);
-		virtual void visit(VarNode& node);
-		virtual void visit(BinaryOpNode& node);
-		virtual void visit(UnaryOpNode& node);
-		virtual void visit(CallNode& node);
-		virtual void visit(MemberAccessNode& node);
-		virtual void visit(FreeObjectNode& node);
-		virtual void visit(ArrayAccessNode& node);
-		virtual void visit(NewExprNode& node);
-		virtual void visit(TemplateStringNode& node);
-		virtual void visit(ThisNode& node);
-		virtual void visit(StructInitializerNode& node);
-		virtual void visit(LambdaExprNode& node);
+		virtual void visit(struct LiteralNode& node);
+		virtual void visit(struct VarNode& node);
+		virtual void visit(struct BinaryOpNode& node);
+		virtual void visit(struct UnaryOpNode& node);
+		virtual void visit(struct CallNode& node);
+		virtual void visit(struct MemberAccessNode& node);
+		virtual void visit(struct FreeObjectNode& node);
+		virtual void visit(struct ArrayAccessNode& node);
+		virtual void visit(struct NewExprNode& node);
+		virtual void visit(struct TemplateStringNode& node);
+		virtual void visit(struct ThisNode& node);
+		virtual void visit(struct StructInitializerNode& node);
+		virtual void visit(struct LambdaExprNode& node);
 
-		virtual void visit(TypeNode& node);
-		virtual void visit(PrimitiveTypeNode& node);
-		virtual void visit(NamedTypeNode& node);
-		virtual void visit(ArrayTypeNode& node);
-		virtual void visit(TemplateTypeNode& node);
+		virtual void visit(struct TypeNode& node);
+		virtual void visit(struct PrimitiveTypeNode& node);
+		virtual void visit(struct NamedTypeNode& node);
+		virtual void visit(struct ArrayTypeNode& node);
+		virtual void visit(struct TemplateTypeNode& node);
+		virtual void visit(struct FunctionTypeNode& node);
 
-		virtual void visit(ErrorNode& node);
+		virtual void visit(struct ErrorNode& node);
 	};
 
-	class PolymorphicVisitor{
+	class PolymorphicVisitor {
 	public:
 		// Default fallback (optional)
 		virtual void visit(std_P3019_modified::polymorphic<ASTNode> node);
@@ -124,11 +124,11 @@ namespace zenith {
 		virtual void visit(std_P3019_modified::polymorphic<PrimitiveTypeNode> node);
 		virtual void visit(std_P3019_modified::polymorphic<NamedTypeNode> node);
 		virtual void visit(std_P3019_modified::polymorphic<ArrayTypeNode> node);
+		virtual void visit(std_P3019_modified::polymorphic<FunctionTypeNode> node);
 		virtual void visit(std_P3019_modified::polymorphic<TemplateTypeNode> node);
 
 		virtual void visit(std_P3019_modified::polymorphic<ErrorNode> node);
 
 		virtual ~PolymorphicVisitor() = default;
 	};
-
-} // zenith
+}

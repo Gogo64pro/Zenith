@@ -1,8 +1,11 @@
+module;
 #include <vector>
-#include "../ast/Other.hpp"
 #include "../utils/small_vector.hpp"
+import zenith.core.polymorphic;
+export module zenith.ast:IAnnotatable;
+import :other;
 
-namespace zenith{
+export namespace zenith{
 	struct IAnnotatable{
 		small_vector<std_P3019_modified::polymorphic<AnnotationNode>, 2> annotations;
 		virtual ~IAnnotatable() = default;

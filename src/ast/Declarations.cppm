@@ -1,13 +1,17 @@
+module;
 #include "fmt/format.h"
-#include "../core/indirect_polymorphic.hpp"
 #include "../utils/RemovePadding.hpp"
 #include "../utils/Colorize.hpp"
-#include "../core/IAnnotatable.hpp"
 #include "fmt/ranges.h"
-export module zenith.ast.declarations;
-import zenith.ast.ASTNode;
-import zenith.ast.typeNodes;
-import zenith.ast.statements;
+#include "utils/small_vector.hpp"
+#include "acceptMethods.hpp"
+import zenith.core.polymorphic;
+export module zenith.ast:declarations;
+import :ASTNode;
+import :typeNodes;
+import :statements;
+import :IAnnotatable;
+import :other;
 
 export namespace zenith {
 	struct VarDeclNode : StmtNode {
@@ -19,8 +23,8 @@ export namespace zenith {
 		bool isConst : 1;
 
 		VarDeclNode(SourceLocation loc, Kind k, std::string n,
-		            std_P3019_modified::polymorphic<TypeNode> t, std_P3019_modified::polymorphic<ExprNode> i,
-		            bool hoisted = false, bool isConst = false)
+					std_P3019_modified::polymorphic<TypeNode> t, std_P3019_modified::polymorphic<ExprNode> i,
+					bool hoisted = false, bool isConst = false)
 				: StmtNode(), kind(k), name(std::move(n)), type(std::move(t)),
 				  initializer(std::move(i)), isHoisted(hoisted), isConst(isConst) {
 			this->loc = std::move(loc);
@@ -30,22 +34,21 @@ export namespace zenith {
 			std::string pad(indent, ' ');
 			static const char* kindNames[] = {"STATIC", "DYNAMIC", "CLASS_INIT"};
 			return fmt::format("{pad}{orange}{isConst} {isHoisted} {light_purple}{kind} {yellow}{name}{init}{reset}",
-			                   fmt::arg("pad", std::string(indent, ' ')),
-			                   fmt::arg("isConst", isConst ? "const" : ""),
-			                   fmt::arg("isHoisted", isHoisted ? "hoist" : ""),
-			                   fmt::arg("kind", kindNames[kind]),
-			                   fmt::arg("name", name),
-			                   fmt::arg("init", initializer ? fmt::format(" {white}= {init}", fmt::arg("init", removePadUntilNewLine(initializer->toString(indent+2))),fmt::arg("white", CL_WHITE)) : ""),
+							   fmt::arg("pad", std::string(indent, ' ')),
+							   fmt::arg("isConst", isConst ? "const" : ""),
+							   fmt::arg("isHoisted", isHoisted ? "hoist" : ""),
+							   fmt::arg("kind", kindNames[kind]),
+							   fmt::arg("name", name),
+							   fmt::arg("init", initializer ? fmt::format(" {white}= {init}", fmt::arg("init", removePadUntilNewLine(initializer->toString(indent+2))),fmt::arg("white", CL_WHITE)) : ""),
 
-			                   fmt::arg("orange", CL_ORANGE),
-			                   fmt::arg("yellow", CL_YELLOW),
-			                   fmt::arg("light_purple", CL_LIGHT_PURPLE),
-			                   fmt::arg("white", CL_WHITE),
-			                   fmt::arg("reset", RESET_COLOR)
+							   fmt::arg("orange", CL_ORANGE),
+							   fmt::arg("yellow", CL_YELLOW),
+							   fmt::arg("light_purple", CL_LIGHT_PURPLE),
+							   fmt::arg("white", CL_WHITE),
+							   fmt::arg("reset", RESET_COLOR)
 			);
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	struct FunctionDeclNode : ASTNode, IAnnotatable {
@@ -112,8 +115,7 @@ export namespace zenith {
 					fmt::arg("reset", RESET_COLOR)
 			);
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	struct MemberDeclNode : ASTNode, IAnnotatable{
@@ -201,8 +203,7 @@ export namespace zenith {
 			}
 			return ss.str();
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	struct LambdaNode : FunctionDeclNode{
@@ -214,8 +215,8 @@ export namespace zenith {
 		           bool async = false)
 				: FunctionDeclNode(std::move(loc), "", std::move(params), std::move(returnType), std::move(body), async, false, {}) {
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		void accept(Visitor& visitor) override;
+		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override;
 	};
 
 	struct OperatorOverloadNode : ASTNode {
@@ -255,8 +256,7 @@ export namespace zenith {
 				return allowedChars.find(c) != std::string::npos;
 			});
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 	struct ObjectDeclNode : ASTNode {
 		enum class Kind {CLASS, STRUCT, ACTOR} kind;
@@ -301,8 +301,7 @@ export namespace zenith {
 			ss << pad << "}";
 			return ss.str();
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	struct UnionDeclNode : ASTNode{
@@ -323,8 +322,7 @@ export namespace zenith {
 			ss << "\n}";
 			return ss.str();
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	struct ActorDeclNode : ObjectDeclNode {
@@ -334,8 +332,7 @@ export namespace zenith {
 				std::vector<std_P3019_modified::polymorphic<MemberDeclNode>> members,
 				std::string baseActor = ""
 		) : ObjectDeclNode(std::move(loc), ObjectDeclNode::Kind::ACTOR, std::move(name), std::move(baseActor), std::move(members)) {}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 
@@ -354,8 +351,7 @@ export namespace zenith {
 				ss << x->toString(indent + 2);
 			return ss.str();
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 }

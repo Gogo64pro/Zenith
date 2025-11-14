@@ -6,9 +6,9 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <memory>
 #include <type_traits>
+#include <vector>
 
 template <typename T, size_t N>
 class small_vector {

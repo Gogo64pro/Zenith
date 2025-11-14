@@ -1,18 +1,14 @@
-//
-// Created by gogop on 3/28/2025.
-//
-
-export module zenith.ast.mainNodes;
-import zenith.ast.ASTNode;
-
+module;
 #include <utility>
 #include <vector>
-#include <memory>
 #include <sstream>
-#include "../visitor/Visitor.hpp"
-#include "../core/indirect_polymorphic.hpp"
+#include"acceptMethods.hpp"
+import zenith.core.polymorphic;
+export module zenith.ast:mainNodes;
+import :visitor;
+import :ASTNode;
 
-namespace zenith {
+export namespace zenith {
 	struct ProgramNode : ASTNode {
 		std::vector<std_P3019_modified::polymorphic<ASTNode>> declarations;
 
@@ -32,8 +28,7 @@ namespace zenith {
 			ss << pad << "}";
 			return ss.str();
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).template unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 
 	struct ImportNode : ASTNode {
@@ -49,7 +44,6 @@ namespace zenith {
 			std::string pad(indent, ' ');
 			return pad + "Import " + (isJavaImport ? "Java: " : "") + "\"" + path + "\"";
 		}
-		void accept(Visitor& visitor) override { visitor.visit(*this); }
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+		ACCEPT_METHODS
 	};
 }

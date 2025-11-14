@@ -246,10 +246,9 @@ void Lexer::string() {
 
 	if (isAtEnd()) throw LexError( {line,column,0,current} ,"Unterminated string");
 
-	advance();  // Consume closing "
+	advance();
 
 	// Calculate length including quotes
-	//size_t length = current - start;
 	addToken(TokenType::STRING_LIT);
 }
 
@@ -263,7 +262,7 @@ void Lexer::templateString() {
 
 	while (peek() != '`' && !isAtEnd()) {
 		if (peek() == '\\') {
-			// Handle escape sequences...
+			//TODO WONT DO Handle escape sequences...
 		}
 		else if (peek() == '$' && peekNext() == '{') {
 			// Handle interpolation
@@ -298,7 +297,7 @@ void Lexer::templateString() {
 	// Add closing backtick
 	tokens.emplace_back(TokenType::BACKTICK, "`",
 	                    SourceLocation{line, column, 1, current, fileName});
-	advance();  // Consume closing backtick
+	advance();
 }
 
 

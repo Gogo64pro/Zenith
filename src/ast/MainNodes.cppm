@@ -10,10 +10,10 @@ import :ASTNode;
 
 export namespace zenith {
 	struct ProgramNode : ASTNode {
-		std::vector<std_P3019_modified::polymorphic<ASTNode>> declarations;
+		std::vector<polymorphic<ASTNode>> declarations;
 
 		explicit ProgramNode(SourceLocation loc,
-		                     std::vector<std_P3019_modified::polymorphic<ASTNode>> decls)
+		                     std::vector<polymorphic<ASTNode>> decls)
 				: declarations(std::move(decls)) {
 			this->loc = std::move(loc);
 		}

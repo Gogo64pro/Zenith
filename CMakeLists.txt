@@ -4,7 +4,6 @@ project(Zenith)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
-
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fno-omit-frame-pointer -fno-inline -fno-inline-functions")
 # --- Logging ---
 message(STATUS "CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
@@ -48,6 +47,7 @@ set(MODULES
         src/ast/AST.cppm
         src/ast/SourceLocation.cppm
         src/core/polymorphic.cppm
+        src/core/polymorphic_ref.cppm
         src/visitor/Visitor.cppm
         src/ast/ASTNode.cppm
         src/ast/Declarations.cppm
@@ -60,8 +60,8 @@ set(MODULES
         src/SemanticAnalysis/SymbolTable.cppm
         src/SemanticAnalysis/SemanticAnalyzer.cppm
 )
-add_executable(Zenith ${TUs} src/main.cpp)
-
+add_executable(Zenith ${TUs} src/main.cpp
+)
 target_include_directories(Zenith PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_sources(Zenith
         PUBLIC

@@ -1,13 +1,21 @@
 module;
 #include <ranges>
 #include <sstream>
+#include "utils/Colorize.hpp"
+#include "exceptions/ErrorReporter.hpp"
+#include <vector>
 module zenith.semantic;
+import zenith.ast;
+import zenith.core.polymorphic_ref;
 namespace zenith{
-	SymbolInfo::SymbolInfo(Kind k, std_P3019_modified::polymorphic<TypeNode> t, std_P3019_modified::polymorphic<ASTNode> node, bool isConst, bool isStatic)
+	SymbolInfo::SymbolInfo(const Kind k, polymorphic_ref<TypeNode> t, polymorphic_ref<ASTNode> node, const bool isConst, const bool isStatic)
 			: kind(k), type(std::move(t)), declarationNode(std::move(node)), isConst(isConst), isStatic(isStatic) {}
 
+	SymbolInfo::SymbolInfo(const Kind k, TypeNode& t, ASTNode& node, const bool isConst, const bool isStatic)
+			: kind(k), type(make_polymorphic_ref(t)), declarationNode(make_polymorphic_ref(node)), isConst(isConst), isStatic(isStatic) {}
+
 	SymbolTable::SymbolTable(ErrorReporter& reporter) : errorReporter(reporter) {
-		enterScope(); // Global scope
+		enterScope();
 	}
 
 	void SymbolTable::enterScope() {
@@ -18,28 +26,26 @@ namespace zenith{
 		if (!scopeStack.empty()) {
 			scopeStack.pop_back();
 		} else {
-			errorReporter.report(SourceLocation(), "Exiting non-existent scope.", {"Internal error", RED_TEXT});
+			errorReporter.internalError(SourceLocation(), "Exiting non-existent scope.");
 		}
 	}
 
-	bool SymbolTable::declare(const std::string& name, SymbolInfo info) {
+	void SymbolTable::declare(const std::string &name, SymbolInfo info) {
 		if (scopeStack.empty()) {
-			errorReporter.report(info.declarationNode ? info.declarationNode->loc : SourceLocation(), "Internal Error: No current scope for declaration.");
-			return false;
+			errorReporter.internalError(info.declarationNode ? info.declarationNode->loc : SourceLocation(), "No current scope for declaration");
+			return;
 		}
-		auto& currentScope = scopeStack.back();
-		auto [it, success] = currentScope.emplace(name, std::move(info));
 
-		if (!success) {
+		auto& currentScope = scopeStack.back();
+
+		if (auto [it, success] = currentScope.emplace(name, std::move(info)); !success) {
 			const auto& existingSymbol = it->second;
 			errorReporter.report(
 					info.declarationNode ? info.declarationNode->loc : SourceLocation(),
 					"Redeclaration of '" + name + "'. Previously declared at line " +
 					std::to_string(existingSymbol.declarationNode ? existingSymbol.declarationNode->loc.line : 0)
 			);
-			return false;
 		}
-		return true;
 	}
 
 	const SymbolInfo* SymbolTable::lookup(const std::string& name) {
@@ -55,14 +61,14 @@ namespace zenith{
 	const SymbolInfo* SymbolTable::lookupCurrentScope(const std::string& name) {
 		if (scopeStack.empty()) return nullptr;
 		auto& currentScope = scopeStack.back();
-		auto found = currentScope.find(name);
+		const auto found = currentScope.find(name);
 		if (found != currentScope.end()) {
 			return &found->second;
 		}
 		return nullptr;
 	}
 
-	const SymbolInfo *SymbolTable::lookup(const std::string &name, SymbolInfo::Kind kind) {
+	const SymbolInfo *SymbolTable::lookup(const std::string &name, const SymbolInfo::Kind kind) {
 		for (auto & scope : std::ranges::reverse_view(scopeStack)) {
 				auto found = scope.find(name);
 			if (found != scope.end()) {
@@ -73,8 +79,8 @@ namespace zenith{
 		return nullptr;
 	}
 
-	std::string SymbolTable::toString(int indent) const {
-		std::string pad(indent, ' ');
+	std::string SymbolTable::toString(const int indent) const {
+		const std::string pad(indent, ' ');
 		std::stringstream ss;
 		ss << pad << "SymbolTable {\n";
 
@@ -98,18 +104,15 @@ namespace zenith{
 				}
 				ss << "\n";
 
-				// Type
 				if (symbolInfo.type) {
 					ss << pad << "      Type: " << symbolInfo.type->toString(indent + 6) << "\n";
 				} else {
 					ss << pad << "      Type: <none>\n";
 				}
 
-				// Flags
 				ss << pad << "      Const: " << (symbolInfo.isConst ? "true" : "false") << "\n";
 				ss << pad << "      Static: " << (symbolInfo.isStatic ? "true" : "false") << "\n";
 
-				// Declaration Node (optional, only if non-null)
 				if (symbolInfo.declarationNode) {
 					ss << pad << "      Declaration: " << symbolInfo.declarationNode->toString(indent + 6) << "\n";
 				} else {

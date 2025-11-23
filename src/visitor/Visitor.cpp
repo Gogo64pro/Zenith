@@ -3,16 +3,10 @@
 //
 
 module;
-#include <memory>
 #include <stdexcept>
-import zenith.core.polymorphic;
+import zenith.core.polymorphic_ref;
 module zenith.ast;
-//import :declarations;
-//import :expressions;
-//import :mainNodes;
-//import :other;
-//import :statements;
-//import :typeNodes;
+
 
 namespace zenith{
 
@@ -192,8 +186,8 @@ namespace zenith{
 		visit(static_cast<ASTNode&>(node));
 	}
 
-	[[maybe_unused]] std::pair<TypeNode *, std::unique_ptr<TypeNode>> Visitor::visitExpression(ExprNode &expr) {
-		return {nullptr, nullptr};
+	polymorphic_ref<TypeNode> Visitor::visitExpression(polymorphic_ref<ExprNode> expr) {
+		return nullptr;
 	}
 
 	void Visitor::visit(ExprNode &node) {
@@ -210,203 +204,4 @@ namespace zenith{
 	void Visitor::visit(ProgramNode &node) {
 		visit(static_cast<ASTNode&>(node));
 	}
-
-	// Default fallback (optional)
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ASTNode> node) {
-		throw std::runtime_error("Unhandled AST node type");
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ExprNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<StmtNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	std_P3019_modified::polymorphic<TypeNode> PolymorphicVisitor::visitExpression(std_P3019_modified::polymorphic<ExprNode> expr) {
-		return std_P3019_modified::polymorphic<TypeNode>();
-	}
-
-	// Specific visitors
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ProgramNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ImportNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<BlockNode> node) {
-		visit(node.share<StmtNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<VarDeclNode> node) {
-		visit(node.share<StmtNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<MultiVarDeclNode> node) {
-		visit(node.share<StmtNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<FunctionDeclNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ObjectDeclNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<UnionDeclNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ActorDeclNode> node) {
-		visit(node.share<ObjectDeclNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<IfNode> node) {
-		visit(node.share<StmtNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<WhileNode> node) {
-		visit(node.share<StmtNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<DoWhileNode> node) {
-		visit(node.share<StmtNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ForNode> node) {
-		visit(node.share<StmtNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ExprStmtNode> node) {
-		visit(node.share<StmtNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<EmptyStmtNode> node) {
-		visit(node.share<StmtNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<AnnotationNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<TemplateDeclNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<LambdaNode> node) {
-		visit(node.share<FunctionDeclNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<MemberDeclNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<OperatorOverloadNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<UnsafeNode> node) {
-		visit(node.share<BlockNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<CompoundStmtNode> node) {
-		visit(node.share<StmtNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ReturnStmtNode> node) {
-		visit(node.share<StmtNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ScopeBlockNode> node) {
-		visit(node.share<BlockNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<TemplateParameter> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<LiteralNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<VarNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<BinaryOpNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<UnaryOpNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<CallNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<MemberAccessNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<FreeObjectNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ArrayAccessNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<NewExprNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<TemplateStringNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ThisNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<StructInitializerNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<LambdaExprNode> node) {
-		visit(node.share<ExprNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<TypeNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<PrimitiveTypeNode> node) {
-		visit(node.share<TypeNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<FunctionTypeNode> node) {
-		visit(node.share<TypeNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<NamedTypeNode> node) {
-		visit(node.share<TypeNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ArrayTypeNode> node) {
-		visit(node.share<TypeNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<TemplateTypeNode> node) {
-		visit(node.share<TypeNode>());
-	}
-
-	void PolymorphicVisitor::visit(std_P3019_modified::polymorphic<ErrorNode> node) {
-		visit(node.share<ASTNode>());
-	}
-
 } // zenith

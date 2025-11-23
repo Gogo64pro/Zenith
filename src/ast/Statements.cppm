@@ -12,10 +12,10 @@ import :visitor;
 export namespace zenith {
 	// Block statements { ... }
 	struct BlockNode : StmtNode {
-		std::vector<std_P3019_modified::polymorphic<ASTNode>> statements;
+		std::vector<polymorphic<ASTNode>> statements;
 
 		explicit BlockNode(SourceLocation loc,
-		                   std::vector<std_P3019_modified::polymorphic<ASTNode>> stmts)
+		                   std::vector<polymorphic<ASTNode>> stmts)
 				: statements(std::move(stmts)) {
 			this->loc = std::move(loc);
 		}
@@ -36,7 +36,7 @@ export namespace zenith {
 	struct ScopeBlockNode : BlockNode {
 
 		explicit ScopeBlockNode(SourceLocation loc,
-		                        std::vector<std_P3019_modified::polymorphic<ASTNode>> stmts)
+		                        std::vector<polymorphic<ASTNode>> stmts)
 				: BlockNode(std::move(loc), std::move(stmts)) {}
 
 		[[nodiscard]] std::string toString(int indent = 0) const override {
@@ -54,13 +54,13 @@ export namespace zenith {
 
 	// If statements
 	struct IfNode : StmtNode {
-		std_P3019_modified::polymorphic<ExprNode> condition;
-		std_P3019_modified::polymorphic<ASTNode> thenBranch;
-		std_P3019_modified::polymorphic<ASTNode> elseBranch;
+		polymorphic<ExprNode> condition;
+		polymorphic<ASTNode> thenBranch;
+		polymorphic<ASTNode> elseBranch;
 
-		IfNode(SourceLocation loc, std_P3019_modified::polymorphic<ExprNode> cond,
-		       std_P3019_modified::polymorphic<ASTNode> thenBr,
-		       std_P3019_modified::polymorphic<ASTNode> elseBr)
+		IfNode(SourceLocation loc, polymorphic<ExprNode> cond,
+		       polymorphic<ASTNode> thenBr,
+		       polymorphic<ASTNode> elseBr)
 				: condition(std::move(cond)),
 				  thenBranch(std::move(thenBr)),
 				  elseBranch(std::move(elseBr)) {
@@ -85,11 +85,11 @@ export namespace zenith {
 
 	// Loops
 	struct WhileNode : StmtNode {
-		std_P3019_modified::polymorphic<ExprNode> condition;
-		std_P3019_modified::polymorphic<ASTNode> body;
+		polymorphic<ExprNode> condition;
+		polymorphic<ASTNode> body;
 
-		WhileNode(SourceLocation loc, std_P3019_modified::polymorphic<ExprNode> cond,
-		          std_P3019_modified::polymorphic<ASTNode> b)
+		WhileNode(SourceLocation loc, polymorphic<ExprNode> cond,
+		          polymorphic<ASTNode> b)
 				: condition(std::move(cond)), body(std::move(b)) {
 			this->loc = std::move(loc);
 		}
@@ -105,11 +105,11 @@ export namespace zenith {
 	};
 
 	struct DoWhileNode : StmtNode {
-		std_P3019_modified::polymorphic<ExprNode> condition;
-		std_P3019_modified::polymorphic<ASTNode> body;
+		polymorphic<ExprNode> condition;
+		polymorphic<ASTNode> body;
 
-		DoWhileNode(SourceLocation loc, std_P3019_modified::polymorphic<ExprNode> cond,
-		            std_P3019_modified::polymorphic<ASTNode> b)
+		DoWhileNode(SourceLocation loc, polymorphic<ExprNode> cond,
+		            polymorphic<ASTNode> b)
 				: condition(std::move(cond)), body(std::move(b)) {
 			this->loc = std::move(loc);
 		}
@@ -125,15 +125,15 @@ export namespace zenith {
 	};
 
 	struct ForNode : StmtNode {
-		std_P3019_modified::polymorphic<ASTNode> initializer;
-		std_P3019_modified::polymorphic<ExprNode> condition;
-		std_P3019_modified::polymorphic<ExprNode> increment;
-		std_P3019_modified::polymorphic<ASTNode> body;
+		polymorphic<ASTNode> initializer;
+		polymorphic<ExprNode> condition;
+		polymorphic<ExprNode> increment;
+		polymorphic<ASTNode> body;
 
-		ForNode(SourceLocation loc, std_P3019_modified::polymorphic<ASTNode> init,
-		        std_P3019_modified::polymorphic<ExprNode> cond,
-		        std_P3019_modified::polymorphic<ExprNode> incr,
-		        std_P3019_modified::polymorphic<ASTNode> b)
+		ForNode(SourceLocation loc, polymorphic<ASTNode> init,
+		        polymorphic<ExprNode> cond,
+		        polymorphic<ExprNode> incr,
+		        polymorphic<ASTNode> b)
 				: initializer(std::move(init)),
 				  condition(std::move(cond)),
 				  increment(std::move(incr)),
@@ -159,7 +159,7 @@ export namespace zenith {
 	// Unsafe blocks
 	struct UnsafeNode : BlockNode {
 
-		explicit UnsafeNode(SourceLocation loc, std::vector<std_P3019_modified::polymorphic<ASTNode>> stmts)
+		explicit UnsafeNode(SourceLocation loc, std::vector<polymorphic<ASTNode>> stmts)
 				: BlockNode(std::move(loc), std::move(stmts)) {}
 
 		[[nodiscard]] std::string toString(int indent = 0) const override {
@@ -176,9 +176,9 @@ export namespace zenith {
 	};
 	//Multi-statements
 	struct CompoundStmtNode : StmtNode {
-		std::vector<std_P3019_modified::polymorphic<StmtNode>> stmts;
+		std::vector<polymorphic<StmtNode>> stmts;
 
-		explicit CompoundStmtNode(SourceLocation loc, std::vector<std_P3019_modified::polymorphic<StmtNode>>&& statements ) : stmts(std::move(statements)){
+		explicit CompoundStmtNode(SourceLocation loc, std::vector<polymorphic<StmtNode>>&& statements ) : stmts(std::move(statements)){
 			loc = std::move(loc);
 		}
 		[[nodiscard]] std::string toString(int indent = 0) const override {

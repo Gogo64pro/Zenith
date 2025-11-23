@@ -3,8 +3,7 @@ module;
 #include <utility>
 module zenith.ast;
 import zenith.core.polymorphic;
-#define ACCEPT_METHOD(Node) void Node::accept(Visitor& visitor) {visitor.visit(*this);} \
-void Node::accept(PolymorphicVisitor& visitor, std_P3019_modified::polymorphic<ASTNode> x) {visitor.visit(std::move(x).unchecked_cast<std::remove_pointer_t<decltype(this)>>());}
+#define ACCEPT_METHOD(Node) void Node::accept(Visitor& visitor) {visitor.visit(*this);}
 namespace zenith {
 	ACCEPT_METHOD(VarDeclNode)
 	ACCEPT_METHOD(FunctionDeclNode)

@@ -2,75 +2,76 @@ module;
 #include "../exceptions/ErrorReporter.hpp"
 #include <string>
 export module zenith.semantic;
-import zenith.ast;
-import zenith.core.polymorphic;
 export import :symbolTable;
+import zenith.ast;
+import zenith.core.polymorphic_ref;
 
 export namespace zenith {
-	class SemanticAnalyzer : public PolymorphicVisitor {
+	class SemanticAnalyzer : public Visitor {
 		ErrorReporter& errorReporter;
 		SymbolTable symbolTable;
 
 		// Context information
-		std_P3019_modified::polymorphic<FunctionDeclNode> currentFunction = nullptr;
-		std_P3019_modified::polymorphic<ObjectDeclNode> currentClass = nullptr;
+		polymorphic_ref<FunctionDeclNode> currentFunction;
+		polymorphic_ref<ObjectDeclNode> currentClass;
 		bool inLoop = false;
 
 		// Expression result type
-		std_P3019_modified::polymorphic<TypeNode> exprVR = nullptr;
+		polymorphic_ref<TypeNode> exprVR = nullptr;
 
 		// Type system helpers
-		bool areTypesCompatible(std_P3019_modified::polymorphic<TypeNode>& targetType, std_P3019_modified::polymorphic<TypeNode>& valueType);
-		std_P3019_modified::polymorphic<TypeNode> resolveType(std_P3019_modified::polymorphic<TypeNode>& typeNode);
-		std::string typeToString(std_P3019_modified::polymorphic<TypeNode> type);
-		std_P3019_modified::polymorphic<TypeNode> getErrorTypeNode(const SourceLocation& loc);
+		bool areTypesCompatible(polymorphic_ref<TypeNode> targetType, polymorphic_ref<TypeNode> valueType);
+
+		polymorphic_ref<TypeNode> resolveType(polymorphic_ref<TypeNode> typeNode);
+
+		[[nodiscard]] std::string typeToString(polymorphic_ref<TypeNode> type);
 
 		// Visitor methods
-		void visit(std_P3019_modified::polymorphic<ASTNode> node) override;
-		std_P3019_modified::polymorphic<TypeNode> visitExpression(std_P3019_modified::polymorphic<ExprNode> expr) override;
+		void visit(ASTNode& node) override;
+		polymorphic_ref<TypeNode> visitExpression(polymorphic_ref<ExprNode> expr) override;
 
 		// Declaration visitors
-		void visit(std_P3019_modified::polymorphic<ProgramNode> node) override;
-		void visit(std_P3019_modified::polymorphic<ImportNode> node) override;
-		void visit(std_P3019_modified::polymorphic<BlockNode> node) override;
-		void visit(std_P3019_modified::polymorphic<VarDeclNode> node) override;
-		void visit(std_P3019_modified::polymorphic<MultiVarDeclNode> node) override;
-		void visit(std_P3019_modified::polymorphic<FunctionDeclNode> node) override;
-		void visit(std_P3019_modified::polymorphic<LambdaExprNode> node) override;
-		void visit(std_P3019_modified::polymorphic<ReturnStmtNode> node) override;
-		void visit(std_P3019_modified::polymorphic<ObjectDeclNode> node) override;
-		void visit(std_P3019_modified::polymorphic<UnionDeclNode> node) override;
-		void visit(std_P3019_modified::polymorphic<ActorDeclNode> node) override;
-		void visit(std_P3019_modified::polymorphic<IfNode> node) override;
-		void visit(std_P3019_modified::polymorphic<WhileNode> node) override;
-		void visit(std_P3019_modified::polymorphic<DoWhileNode> node) override;
-		void visit(std_P3019_modified::polymorphic<ForNode> node) override;
-		void visit(std_P3019_modified::polymorphic<ExprStmtNode> node) override;
-		void visit(std_P3019_modified::polymorphic<EmptyStmtNode> node) override;
-		void visit(std_P3019_modified::polymorphic<AnnotationNode> node) override;
-		void visit(std_P3019_modified::polymorphic<TemplateDeclNode> node) override;
-		void visit(std_P3019_modified::polymorphic<OperatorOverloadNode> node) override;
-		void visit(std_P3019_modified::polymorphic<MemberDeclNode> node) override;
+		void visit(ProgramNode& node) override;
+		void visit(ImportNode& node) override;
+		void visit(BlockNode& node) override;
+		void visit(VarDeclNode& node) override;
+		void visit(MultiVarDeclNode& node) override;
+		void visit(FunctionDeclNode& node) override;
+		void visit(LambdaExprNode& node) override;
+		void visit(ReturnStmtNode& node) override;
+		void visit(ObjectDeclNode& node) override;
+		void visit(UnionDeclNode& node) override;
+		void visit(ActorDeclNode& node) override;
+		void visit(IfNode& node) override;
+		void visit(WhileNode& node) override;
+		void visit(DoWhileNode& node) override;
+		void visit(ForNode& node) override;
+		void visit(ExprStmtNode& node) override;
+		void visit(EmptyStmtNode& node) override;
+		void visit(AnnotationNode& node) override;
+		void visit(TemplateDeclNode& node) override;
+		void visit(OperatorOverloadNode& node) override;
+		void visit(MemberDeclNode& node) override;
 
 		// Expression visitors
-		void visit(std_P3019_modified::polymorphic<LiteralNode> node) override;               // std_P3019_modified::polymorphic<TypeNode> -> exprVR
-		void visit(std_P3019_modified::polymorphic<VarNode> node) override;                   // std_P3019_modified::polymorphic<TypeNode> -> exprVR
-		void visit(std_P3019_modified::polymorphic<BinaryOpNode> node) override;              // std_P3019_modified::polymorphic<TypeNode> -> exprVR
-		void visit(std_P3019_modified::polymorphic<UnaryOpNode> node) override;               // std_P3019_modified::polymorphic<TypeNode> -> exprVR
-		void visit(std_P3019_modified::polymorphic<CallNode> node) override;                  // std_P3019_modified::polymorphic<TypeNode> -> exprVR
-		void visit(std_P3019_modified::polymorphic<MemberAccessNode> node) override;          // std_P3019_modified::polymorphic<TypeNode> -> exprVR
-		void visit(std_P3019_modified::polymorphic<ArrayAccessNode> node) override;           // std_P3019_modified::polymorphic<TypeNode> -> exprVR
-		void visit(std_P3019_modified::polymorphic<NewExprNode> node) override;               // std_P3019_modified::polymorphic<TypeNode> -> exprVR
-		void visit(std_P3019_modified::polymorphic<ThisNode> node) override;                  // std_P3019_modified::polymorphic<TypeNode> -> exprVR
-		void visit(std_P3019_modified::polymorphic<FreeObjectNode> node) override;            // std_P3019_modified::polymorphic<TypeNode> -> exprVR
-		void visit(std_P3019_modified::polymorphic<TemplateStringNode> node) override;        // std_P3019_modified::polymorphic<TypeNode> -> exprVR
-		void visit(std_P3019_modified::polymorphic<StructInitializerNode> node) override;     // std_P3019_modified::polymorphic<TypeNode> -> exprVR
+		void visit(LiteralNode& node) override;               // polymorphic<TypeNode> -> exprVR
+		void visit(VarNode& node) override;                   // polymorphic<TypeNode> -> exprVR
+		void visit(BinaryOpNode& node) override;              // polymorphic<TypeNode> -> exprVR
+		void visit(UnaryOpNode& node) override;               // polymorphic<TypeNode> -> exprVR
+		void visit(CallNode& node) override;                  // polymorphic<TypeNode> -> exprVR
+		void visit(MemberAccessNode& node) override;          // polymorphic<TypeNode> -> exprVR
+		void visit(ArrayAccessNode& node) override;           // polymorphic<TypeNode> -> exprVR
+		void visit(NewExprNode& node) override;               // polymorphic<TypeNode> -> exprVR
+		void visit(ThisNode& node) override;                  // polymorphic<TypeNode> -> exprVR
+		void visit(FreeObjectNode& node) override;            // polymorphic<TypeNode> -> exprVR
+		void visit(TemplateStringNode& node) override;        // polymorphic<TypeNode> -> exprVR
+		void visit(StructInitializerNode& node) override;     // polymorphic<TypeNode> -> exprVR
 
 	public:
 		explicit SemanticAnalyzer(ErrorReporter& errorReporter)
-				: symbolTable(errorReporter), errorReporter(errorReporter) {}
+				: errorReporter(errorReporter), symbolTable(errorReporter) {}
 
-		SymbolTable&& analyze(const std_P3019_modified::polymorphic<ProgramNode>& program);
+		SymbolTable&& analyze(ProgramNode &program);
 	};
 
 } // namespace zenith

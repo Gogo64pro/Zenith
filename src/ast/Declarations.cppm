@@ -17,13 +17,13 @@ export namespace zenith {
 	struct VarDeclNode : StmtNode {
 		enum Kind { STATIC, DYNAMIC, CLASS_INIT } kind;
 		std::string name;
-		std_P3019_modified::polymorphic<TypeNode> type;
-		std_P3019_modified::polymorphic<ExprNode> initializer;
+		polymorphic<TypeNode> type;
+		polymorphic<ExprNode> initializer;
 		bool isHoisted : 1;
 		bool isConst : 1;
 
 		VarDeclNode(SourceLocation loc, Kind k, std::string n,
-					std_P3019_modified::polymorphic<TypeNode> t, std_P3019_modified::polymorphic<ExprNode> i,
+					polymorphic<TypeNode> t, polymorphic<ExprNode> i,
 					bool hoisted = false, bool isConst = false)
 				: StmtNode(), kind(k), name(std::move(n)), type(std::move(t)),
 				  initializer(std::move(i)), isHoisted(hoisted), isConst(isConst) {
@@ -54,16 +54,16 @@ export namespace zenith {
 	struct FunctionDeclNode : ASTNode, IAnnotatable {
 		[[nodiscard]] virtual bool isLambda() const { return false; }
 		std::string name;
-		std::vector<std::pair<std::string, std_P3019_modified::polymorphic<TypeNode>>> params;
-		std_P3019_modified::polymorphic<TypeNode> returnType;
-		std_P3019_modified::polymorphic<BlockNode> body;
-		std::vector<std_P3019_modified::polymorphic<ExprNode>> defaultValues;
+		std::vector<std::pair<std::string, polymorphic<TypeNode>>> params;
+		polymorphic<TypeNode> returnType;
+		polymorphic<BlockNode> body;
+		std::vector<polymorphic<ExprNode>> defaultValues;
 		bool isAsync;
 		bool usingStructSugar;
 
 		FunctionDeclNode(SourceLocation loc, std::string name,
-		                 std::vector<std::pair<std::string, std_P3019_modified::polymorphic<TypeNode>>> params,
-		                 std_P3019_modified::polymorphic<TypeNode> returnType, std_P3019_modified::polymorphic<BlockNode> body, bool async, bool structSugar = false, std::vector<std_P3019_modified::polymorphic<AnnotationNode>> ann = {})
+		                 std::vector<std::pair<std::string, polymorphic<TypeNode>>> params,
+		                 polymorphic<TypeNode> returnType, polymorphic<BlockNode> body, bool async, bool structSugar = false, std::vector<polymorphic<AnnotationNode>> ann = {})
 				: name(std::move(name)), params(std::move(params)), returnType(std::move(returnType)),
 				  body(std::move(body)), isAsync(async), usingStructSugar(structSugar) {
 			this->loc = std::move(loc);
@@ -134,9 +134,9 @@ export namespace zenith {
 
 		Flags flags;
 		std::string name;
-		std_P3019_modified::polymorphic<TypeNode> type;
-		small_vector<std::pair<std::string, std_P3019_modified::polymorphic<ExprNode>>, 1> initializers;
-		std_P3019_modified::polymorphic<BlockNode> body;
+		polymorphic<TypeNode> type;
+		small_vector<std::pair<std::string, polymorphic<ExprNode>>, 1> initializers;
+		polymorphic<BlockNode> body;
 
 		MemberDeclNode(
 				SourceLocation loc,
@@ -144,11 +144,11 @@ export namespace zenith {
 				Access access,
 				bool isConst,
 				std::string&& name,
-				std_P3019_modified::polymorphic<TypeNode> type,
-				std_P3019_modified::polymorphic<ExprNode> initializer = nullptr,
-				std::vector<std::pair<std::string, std_P3019_modified::polymorphic<ExprNode>>> ctor_inits = {},
-				std_P3019_modified::polymorphic<BlockNode> body = nullptr,
-				std::vector<std_P3019_modified::polymorphic<AnnotationNode>> ann = {},
+				polymorphic<TypeNode> type,
+				polymorphic<ExprNode> initializer = nullptr,
+				std::vector<std::pair<std::string, polymorphic<ExprNode>>> ctor_inits = {},
+				polymorphic<BlockNode> body = nullptr,
+				std::vector<polymorphic<AnnotationNode>> ann = {},
 				bool isStatic = false
 		) : ASTNode(),
 		    name(name),  // Implicitly converts to string_view (removed it anyway)
@@ -209,26 +209,25 @@ export namespace zenith {
 	struct LambdaNode : FunctionDeclNode{
 		[[nodiscard]] bool isLambda() const override { return true; }
 		LambdaNode(SourceLocation loc,
-		           std::vector<std::pair<std::string, std_P3019_modified::polymorphic<TypeNode>>> params,
-		           std_P3019_modified::polymorphic<TypeNode> returnType = nullptr,
-		           std_P3019_modified::polymorphic<BlockNode> body = nullptr,
+		           std::vector<std::pair<std::string, polymorphic<TypeNode>>> params,
+		           polymorphic<TypeNode> returnType = nullptr,
+		           polymorphic<BlockNode> body = nullptr,
 		           bool async = false)
 				: FunctionDeclNode(std::move(loc), "", std::move(params), std::move(returnType), std::move(body), async, false, {}) {
 		}
-		void accept(Visitor& visitor) override;
-		void accept(PolymorphicVisitor &visitor, std_P3019_modified::polymorphic<ASTNode> x) override;
+		ACCEPT_METHODS
 	};
 
 	struct OperatorOverloadNode : ASTNode {
 		std::string op;  // Store the operator as a string literal (e.g., "+", "==")
-		std::vector<std::pair<std::string, std_P3019_modified::polymorphic<TypeNode>>> params;
-		std_P3019_modified::polymorphic<TypeNode> returnType;
-		std_P3019_modified::polymorphic<BlockNode> body;
+		std::vector<std::pair<std::string, polymorphic<TypeNode>>> params;
+		polymorphic<TypeNode> returnType;
+		polymorphic<BlockNode> body;
 
 		OperatorOverloadNode(SourceLocation loc, std::string op,
-		                     std::vector<std::pair<std::string, std_P3019_modified::polymorphic<TypeNode>>> params,
-		                     std_P3019_modified::polymorphic<TypeNode> returnType,
-		                     std_P3019_modified::polymorphic<BlockNode> body)
+		                     std::vector<std::pair<std::string, polymorphic<TypeNode>>> params,
+		                     polymorphic<TypeNode> returnType,
+		                     polymorphic<BlockNode> body)
 				: op(std::move(op)), params(std::move(params)),
 				  returnType(std::move(returnType)), body(std::move(body)) {
 			this->loc = std::move(loc);
@@ -262,13 +261,13 @@ export namespace zenith {
 		enum class Kind {CLASS, STRUCT, ACTOR} kind;
 		std::string name;
 		std::string base;
-		std::vector<std_P3019_modified::polymorphic<MemberDeclNode>> members;
-		std::vector<std_P3019_modified::polymorphic<OperatorOverloadNode>> operators;
+		std::vector<polymorphic<MemberDeclNode>> members;
+		std::vector<polymorphic<OperatorOverloadNode>> operators;
 		bool autoGettersSetters;
 
 		ObjectDeclNode(SourceLocation loc, Kind kind, std::string name, std::string base,
-		               std::vector<std_P3019_modified::polymorphic<MemberDeclNode>> memb,
-		               std::vector<std_P3019_modified::polymorphic<OperatorOverloadNode>> ops = {},
+		               std::vector<polymorphic<MemberDeclNode>> memb,
+		               std::vector<polymorphic<OperatorOverloadNode>> ops = {},
 		               bool autoGS = true)
 				: name(std::move(name)), members(std::move(memb)),
 				  base(std::move(base)), operators(std::move(ops)),
@@ -306,8 +305,8 @@ export namespace zenith {
 
 	struct UnionDeclNode : ASTNode{
 		std::string name;
-		std::vector<std_P3019_modified::polymorphic<TypeNode>> types;
-		UnionDeclNode(SourceLocation loc, std::string name, std::vector<std_P3019_modified::polymorphic<TypeNode>> types)
+		std::vector<polymorphic<TypeNode>> types;
+		UnionDeclNode(SourceLocation loc, std::string name, std::vector<polymorphic<TypeNode>> types)
 				: name(std::move(name)), types(std::move(types)){
 			this->loc = std::move(loc);
 		}
@@ -329,7 +328,7 @@ export namespace zenith {
 		explicit ActorDeclNode(
 				SourceLocation loc,
 				std::string name,
-				std::vector<std_P3019_modified::polymorphic<MemberDeclNode>> members,
+				std::vector<polymorphic<MemberDeclNode>> members,
 				std::string baseActor = ""
 		) : ObjectDeclNode(std::move(loc), ObjectDeclNode::Kind::ACTOR, std::move(name), std::move(baseActor), std::move(members)) {}
 		ACCEPT_METHODS
@@ -338,9 +337,9 @@ export namespace zenith {
 
 	//Multi-variables
 	struct MultiVarDeclNode : StmtNode {
-		std::vector<std_P3019_modified::polymorphic<VarDeclNode>> vars;
+		std::vector<polymorphic<VarDeclNode>> vars;
 
-		explicit MultiVarDeclNode(SourceLocation loc, std::vector<std_P3019_modified::polymorphic<VarDeclNode>>&& vars ) : vars(std::move(vars)){
+		explicit MultiVarDeclNode(SourceLocation loc, std::vector<polymorphic<VarDeclNode>>&& vars ) : vars(std::move(vars)){
 			loc = std::move(loc);
 		}
 		[[nodiscard]] std::string toString(int indent = 0) const override {

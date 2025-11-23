@@ -1,10 +1,10 @@
 module;
-#include <algorithm>
 #include "acceptMethods.hpp"
-#include <utility>
-#include <vector>
+#include <algorithm>
 #include <sstream>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 import zenith.core.polymorphic;
 export module zenith.ast:typeNodes;
 import :visitor;
@@ -13,43 +13,41 @@ import :visitor;
 
 
 export namespace zenith {
-	// Base type node
 	struct TypeNode : ASTNode {
-		enum Kind { PRIMITIVE, OBJECT, ARRAY, FUNCTION, DYNAMIC, TEMPLATE, ERROR } kind;
+		enum class Kind { PRIMITIVE, OBJECT, ARRAY, FUNCTION, DYNAMIC, TEMPLATE, ERROR } kind;
 
-		explicit TypeNode(SourceLocation loc, Kind k) : kind(k) {
+		explicit TypeNode(SourceLocation loc, const Kind k) : kind(k) {
 			this->loc = std::move(loc);
 		}
 
 		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			static const char* kindNames[] = {"PRIMITIVE", "CLASS", "Object", "FUNCTION", "DYNAMIC", "TEMPLATE", "ERROR"};
-			return pad + "Type(" + kindNames[kind] + ")";
+			return pad + "Type(" + kindNames[static_cast<int>(kind)] + ")";
 		}
 		[[nodiscard]] virtual bool isDynamic() const {
-			return kind==DYNAMIC;
+			return kind== Kind::DYNAMIC;
 		}
 
 		ACCEPT_METHODS
 	};
 
 
-	// Primitive types (int, float, etc.)
 	struct PrimitiveTypeNode : TypeNode {
-		enum Type { INT, FLOAT, DOUBLE, STRING, BOOL, NUMBER, BIGINT, BIGNUMBER, SHORT, LONG, BYTE, VOID, NIL } type;
+		enum class Type { INT, FLOAT, DOUBLE, STRING, BOOL, NUMBER, BIGINT, BIGNUMBER, SHORT, LONG, BYTE, VOID, NIL } type;
 
 		PrimitiveTypeNode(SourceLocation loc, Type t)
-				: TypeNode(std::move(loc), PRIMITIVE), type(t) {}
+				: TypeNode(std::move(loc), Kind::PRIMITIVE), type(t) {}
 
 		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			static const char* typeNames[] = {"INT", "FLOAT", "DOUBLE", "STRING",
 			                                  "BOOL", "NUMBER", "BIGINT", "BIGNUMBER", "SHORT", "LONG", "BYTE", "VOID", "NIL"};
-			return pad + "PrimitiveType(" + typeNames[type] + ")";
+			return pad + "PrimitiveType(" + typeNames[static_cast<int>(type)] + ")";
 		}
 		[[nodiscard]] bool isDynamic() const override {
-			static const std::unordered_set<Type> basic_types = {
-					INT, FLOAT, DOUBLE, BOOL, SHORT, LONG, BYTE, VOID, NIL
+			static const std::unordered_set basic_types = {
+				Type::INT, Type::FLOAT, Type::DOUBLE, Type::BOOL, Type::SHORT, Type::LONG, Type::BYTE, Type::VOID, Type::NIL
 			};
 
 			return !basic_types.contains(type);
@@ -62,7 +60,7 @@ export namespace zenith {
 		std::string name;
 
 		NamedTypeNode(SourceLocation loc, std::string n)
-				: TypeNode(std::move(loc), OBJECT), name(std::move(n)) {}
+				: TypeNode(std::move(loc), Kind::OBJECT), name(std::move(n)) {}
 
 		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
@@ -73,11 +71,11 @@ export namespace zenith {
 
 	// Array types
 	struct ArrayTypeNode : TypeNode {
-		std_P3019_modified::polymorphic<TypeNode> elementType;
-		std_P3019_modified::polymorphic<ExprNode> sizeExpr;
+		polymorphic<TypeNode> elementType;
+		polymorphic<ExprNode> sizeExpr;
 
-		ArrayTypeNode(SourceLocation loc, std_P3019_modified::polymorphic<TypeNode> elemType, std_P3019_modified::polymorphic<ExprNode> sizeExpr = nullptr)
-				: TypeNode(std::move(loc), ARRAY), elementType(std::move(elemType)), sizeExpr(std::move(sizeExpr)) {}
+		ArrayTypeNode(SourceLocation loc, polymorphic<TypeNode> elemType, polymorphic<ExprNode> sizeExpr = nullptr)
+				: TypeNode(std::move(loc), Kind::ARRAY), elementType(std::move(elemType)), sizeExpr(std::move(sizeExpr)) {}
 
 		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
@@ -88,12 +86,12 @@ export namespace zenith {
 	};
 	struct TemplateTypeNode : TypeNode {
 		std::string baseName;
-		std::vector<std_P3019_modified::polymorphic<TypeNode>> templateArgs;
+		std::vector<polymorphic<TypeNode>> templateArgs;
 
 		TemplateTypeNode(SourceLocation loc,
 		                 std::string baseName,
-		                 std::vector<std_P3019_modified::polymorphic<TypeNode>> templateArgs)
-				: TypeNode(std::move(loc), TEMPLATE),
+		                 std::vector<polymorphic<TypeNode>> templateArgs)
+				: TypeNode(std::move(loc), Kind::TEMPLATE),
 				  baseName(std::move(baseName)),
 				  templateArgs(std::move(templateArgs)) {}
 
@@ -117,13 +115,13 @@ export namespace zenith {
 		ACCEPT_METHODS
 	};
 	struct FunctionTypeNode : TypeNode{
-		std::vector<std_P3019_modified::polymorphic<TypeNode>> parameterTypes;
-		std_P3019_modified::polymorphic<TypeNode> returnType;
+		std::vector<polymorphic<TypeNode>> parameterTypes;
+		polymorphic<TypeNode> returnType;
 
 		FunctionTypeNode(SourceLocation loc,
-		                 std::vector<std_P3019_modified::polymorphic<TypeNode>> params,
-		                 std_P3019_modified::polymorphic<TypeNode> retType)
-				: TypeNode(std::move(loc), FUNCTION),
+		                 std::vector<polymorphic<TypeNode>> params,
+		                 polymorphic<TypeNode> retType)
+				: TypeNode(std::move(loc), Kind::FUNCTION),
 				  parameterTypes(std::move(params)),
 				  returnType(std::move(retType)) {};
 

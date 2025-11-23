@@ -1,19 +1,20 @@
 module;
 #include "../exceptions/ErrorReporter.hpp"
-import zenith.ast;
-import zenith.core.polymorphic;
 export module zenith.semantic:symbolTable;
+import zenith.core.polymorphic_ref;
+import zenith.ast;
 export namespace zenith{
 	struct SymbolInfo {
 		enum Kind {
 			VARIABLE, FUNCTION, OBJECT, ACTOR, TYPE_ALIAS, TEMPLATE_PARAM, UNKNOWN
 		} kind = UNKNOWN;
-		std_P3019_modified::polymorphic<TypeNode> type = nullptr;
-		std_P3019_modified::polymorphic<ASTNode> declarationNode = nullptr;
+		polymorphic_ref<TypeNode> type = nullptr;
+		polymorphic_ref<ASTNode> declarationNode = nullptr;
 		bool isConst = false;
 		bool isStatic = false;
 
-		SymbolInfo(Kind k, std_P3019_modified::polymorphic<TypeNode> t, std_P3019_modified::polymorphic<ASTNode> node, bool isConst = false, bool isStatic = false);
+		SymbolInfo(Kind k, polymorphic_ref<TypeNode> t, polymorphic_ref<ASTNode> node, bool isConst = false, bool isStatic = false);
+		SymbolInfo(Kind k, TypeNode& t, ASTNode& node, bool isConst = false, bool isStatic = false);
 
 		SymbolInfo() = default;
 
@@ -49,7 +50,6 @@ export namespace zenith{
 	using Scope = std::unordered_map<std::string, SymbolInfo>;
 
 	class SymbolTable {
-	private:
 		std::vector<Scope> scopeStack;
 		ErrorReporter& errorReporter;
 
@@ -60,7 +60,7 @@ export namespace zenith{
 
 		void exitScope();
 
-		bool declare(const std::string& name, SymbolInfo info);
+		void declare(const std::string &name, SymbolInfo info);
 
 		const SymbolInfo* lookup(const std::string& name);
 		const SymbolInfo* lookup(const std::string& name, SymbolInfo::Kind kind);

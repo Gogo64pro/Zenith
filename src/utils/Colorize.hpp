@@ -1,9 +1,11 @@
+
 //
 // Created by gogop on 8/2/2025.
 //
 
 #pragma once
 #include <cmath>
+#include <cstdint>
 #include <algorithm>
 // Color utilities for ANSI escape sequences
 #define MAKE_RGB_COLOR(r, g, b) "\033[38;2;" #r ";" #g ";" #b "m"

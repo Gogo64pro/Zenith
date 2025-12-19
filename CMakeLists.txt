@@ -59,6 +59,7 @@ set(MODULES
         src/ast/IAnnotatable.cppm
         src/SemanticAnalysis/SymbolTable.cppm
         src/SemanticAnalysis/SemanticAnalyzer.cppm
+        src/core/polymorphic_variant.cppm
 )
 add_executable(Zenith ${TUs} src/main.cpp
 )

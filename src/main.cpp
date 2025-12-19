@@ -38,19 +38,19 @@ int main(int argc, char *argv[]) {
 
 
 	std::ofstream parserOut("parserout.log");
-	std_P3019_modified::polymorphic<ProgramNode> programNode;
+	polymorphic<ProgramNode> programNode;
 	try{
 		Parser parser(tokens,flags,parserOut);
 		programNode = parser.parse();
 		parserOut << programNode->toString() << std::endl;
 	}catch (const ParseError &e) {
-		parserOut << "Parser error (ParseError): " << e.format() << std::endl;
+		std::cout << "Parser error (ParseError): " << e.format() << std::endl;
 		return 1;
 	} catch (const std::exception &e) {
-		parserOut << "Parser error (std::exception): " << e.what() << std::endl;
+		std::cout << "Parser error (std::exception): " << e.what() << std::endl;
 		return 1;
 	} catch (...) {
-		parserOut << "Parser error (unknown type)" << std::endl;
+		std::cout << "Parser error (unknown type)" << std::endl;
 		return 1;
 	}
 	std::cout << "Done Parsing \n";

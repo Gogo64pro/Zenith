@@ -48,11 +48,11 @@ namespace zenith{
 		}
 	}
 
-	const SymbolInfo* SymbolTable::lookup(const std::string& name) {
+	polymorphic_ref<SymbolInfo> SymbolTable::lookup(const std::string &name) {
 		for (auto & scope : std::ranges::reverse_view(scopeStack)) {
 				auto found = scope.find(name);
 			if (found != scope.end()) {
-				return &found->second;
+				return make_polymorphic_ref(found->second);
 			}
 		}
 		return nullptr;

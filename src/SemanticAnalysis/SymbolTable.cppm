@@ -62,7 +62,7 @@ export namespace zenith{
 
 		void declare(const std::string &name, SymbolInfo info);
 
-		const SymbolInfo* lookup(const std::string& name);
+		polymorphic_ref<SymbolInfo> lookup(const std::string &name);
 		const SymbolInfo* lookup(const std::string& name, SymbolInfo::Kind kind);
 		const SymbolInfo* lookupCurrentScope(const std::string& name);
 

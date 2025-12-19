@@ -9,8 +9,8 @@ namespace zenith{
 
 		// Format the error message
 		errStream << "\033[1m" << loc.file << ":" << loc.line << ":" << loc.column << ": "
-		          << "\033" << errorType.second << errorType.first << ": \033[0m"
-		          << message << "\n";
+		  << errorType.second << errorType.first << ": " << RESET_COLOR
+		  << message << "\n";
 
 		// Show the problematic line
 		errStream << "  " << loc.line << " | " << line << "\n";
@@ -20,7 +20,7 @@ namespace zenith{
 		for (size_t i = 0; i < loc.column + std::to_string(loc.line).size() + 3; ++i) {
 			errStream << " ";
 		}
-		errStream << "\033" << errorType.second << "^";
+		errStream << errorType.second << "^";
 		for (size_t i = 1; i < loc.length; ++i) {
 			errStream << "~";
 		}

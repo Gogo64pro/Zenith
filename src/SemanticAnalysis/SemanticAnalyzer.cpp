@@ -1,18 +1,19 @@
 module;
 #include <ranges>
-
-#include "utils/Colorize.hpp"
 #include "exceptions/ErrorReporter.hpp"
 #include <string>
 #include <vector>
 #include <unordered_set>
-#define CREATE_ERROR_TYPE(loc) make_polymorphic_ref<TypeNode>(loc, TypeNode::Kind::ERROR)
+#define CREATE_ERROR_TYPE(loc) std::move(make_polymorphic_ref_owns<TypeNode>(loc, TypeNode::Kind::ERROR))
 import zenith.core.polymorphic_ref;
+import zenith.core.polymorphic;
 import zenith.ast;
 module zenith.semantic;
 namespace zenith {
-	SymbolTable &&SemanticAnalyzer::analyze(ProgramNode &program) {
-		visit(program);
+
+
+	SymbolTable &&SemanticAnalyzer::analyze(polymorphic_ref<ProgramNode> program) {
+		program->accept(*this);
 		return std::move(symbolTable);
 	}
 
@@ -55,7 +56,7 @@ namespace zenith {
 
 		// Handle dynamic variables
 		if (node.kind == VarDeclNode::DYNAMIC) {
-			finalType = make_polymorphic_ref_owns<TypeNode>(node.loc, VarDeclNode::DYNAMIC);
+			finalType = make_polymorphic_ref_owns<TypeNode>(node.loc, TypeNode::Kind::DYNAMIC);
 
 			if (declaredType && !declaredType->isDynamic()) {
 				errorReporter.report(node.type->loc,
@@ -69,7 +70,7 @@ namespace zenith {
 					errorReporter.report(node.initializer->loc,
 					                     std::string("Initializer type '") + typeToString(initializerType) +
 					                     std::string("' is not compatible with declared variable type '") +
-					                     typeToString(declaredType));
+					                     typeToString(declaredType) + "'");
 					finalType = std::move(declaredType); // Keep declared type despite error
 				}
 				else {
@@ -165,8 +166,7 @@ namespace zenith {
 		bool paramError = false;
 		paramTypes.reserve(node.lambda->params.size());
 		for (auto &[name, param]: node.lambda->params) {
-			auto resolvedParamType = resolveType(param);
-			if (!resolvedParamType) {
+			if (auto resolvedParamType = resolveType(param); !resolvedParamType) {
 				errorReporter.report(param ? param->loc : node.loc,
 				                     "Could not resolve type for lambda parameter '" + name);
 				paramError = true;
@@ -190,7 +190,7 @@ namespace zenith {
 			if (!returnType) {
 				errorReporter.report(node.lambda->returnType->loc,
 				                     "Could not resolve explicit return type for lambda");
-				exprVR = make_polymorphic_ref_owns<TypeNode>(node.lambda->returnType->loc);
+				exprVR = make_polymorphic_ref_owns<TypeNode>(node.lambda->returnType->loc, TypeNode::Kind::ERROR);
 				return; // Early exit
 			}
 		}
@@ -198,11 +198,11 @@ namespace zenith {
 			// TODO: Implement robust return type inference.
 			errorReporter.report(
 				node.loc, "Lambda return type inference not yet implemented. Please provide an explicit return type.");
-			returnType = getErrorTypeNode(node.loc); // Use error type for now
+			returnType = CREATE_ERROR_TYPE(node.loc); // Use error type for now
 		}
 		else {
 			errorReporter.report(node.loc, "Lambda must have an explicit return type or a body for inference.");
-			exprVR = getErrorTypeNode(node.loc);
+			exprVR = CREATE_ERROR_TYPE(node.loc);
 			return;
 		}
 
@@ -219,7 +219,7 @@ namespace zenith {
 			if (!paramTypeForSymbol) {
 				errorReporter.internalError(node.loc, "Failed to clone type for lambda parameter symbol");
 				analysisError = true;
-				paramTypeForSymbol = getErrorTypeNode(node.loc);
+				paramTypeForSymbol = CREATE_ERROR_TYPE(node.loc);
 			}
 
 			const polymorphic_ref<ASTNode> paramDeclNode = param;
@@ -244,12 +244,11 @@ namespace zenith {
 		symbolTable.exitScope();
 		currentFunction = std::move(previousFunction);
 
-		// --- Step 4: Assign Final Type to Member exprVR ---
 		if (analysisError) {
-			exprVR = getErrorTypeNode(node.loc);
+			exprVR = CREATE_ERROR_TYPE(node.loc);
 		}
 		else {
-			exprVR = make_polymorphic<FunctionTypeNode>(
+			exprVR = make_polymorphic_ref_owns<FunctionTypeNode>(
 				node.loc, std::move(paramTypes), std::move(returnType));
 		}
 	}
@@ -263,7 +262,7 @@ namespace zenith {
 	void SemanticAnalyzer::visit(ObjectDeclNode& node) {
 		// Save current class context
 		auto previousClass = std::move(currentClass);
-		currentClass = node.share();
+		currentClass = node;
 
 		// Enter class scope
 		symbolTable.enterScope();
@@ -302,7 +301,7 @@ namespace zenith {
 
 		auto expectedReturnType = resolveType(currentFunction->returnType);
 		if (node.value) {
-			auto actualReturnType = visitExpression(node.value.share());
+			auto actualReturnType = visitExpression(node.value);
 
 			if (!expectedReturnType) {
 				errorReporter.report(
@@ -314,9 +313,9 @@ namespace zenith {
 			}
 			else if (!areTypesCompatible(expectedReturnType, actualReturnType)) {
 				errorReporter.report(node.value->loc,
-				                     "Return type '" + typeToString(actualReturnType.share()) +
+				                     "Return type '" + typeToString(actualReturnType) +
 				                     "' is not compatible with function's declared return type '" + typeToString(
-					                     expectedReturnType.share()));
+					                     expectedReturnType));
 			}
 		}
 		else {
@@ -330,14 +329,14 @@ namespace zenith {
 					errorReporter.report(
 						node.loc,
 						"Must return a value from a function with declared return type '" + typeToString(
-							expectedReturnType.share()));
+							expectedReturnType));
 				}
 			}
 		}
 	}
 
-	bool SemanticAnalyzer::areTypesCompatible(polymorphic<TypeNode> &targetType,
-	                                          polymorphic<TypeNode> &valueType) {
+	bool SemanticAnalyzer::areTypesCompatible(polymorphic_ref<TypeNode> targetType,
+	                                          polymorphic_ref<TypeNode> valueType) {
 		if (!targetType || !valueType) return false;
 		if (targetType->kind == TypeNode::Kind::ERROR || valueType->kind == TypeNode::Kind::ERROR) return false;
 		if (targetType->isDynamic() || valueType->isDynamic()) return true;
@@ -394,8 +393,8 @@ namespace zenith {
 					// Check inheritance
 					if (const SymbolInfo *valueSymbol = symbolTable.lookup(valueObj->name, SymbolInfo::OBJECT); valueSymbol && valueSymbol->declarationNode) {
 						if (auto valueDecl = valueSymbol->declarationNode.cast().non_throwing().to<ObjectDeclNode>(); valueDecl && !valueDecl->base.empty()) {
-							polymorphic<TypeNode> baseType = make_polymorphic<
-								NamedTypeNode>(valueObj.loc, valueDecl->base);
+							polymorphic_ref<TypeNode> baseType = make_polymorphic_ref_owns<
+								NamedTypeNode>(valueObj->loc, valueDecl->base);
 							return areTypesCompatible(targetType, baseType);
 						}
 					}
@@ -407,7 +406,7 @@ namespace zenith {
 					auto valueArr = valueType.cast().non_throwing().to<ArrayTypeNode>();
 					if (!targetArr || !valueArr) return false;
 
-					return areTypesCompatible(targetArr->elementType, valueArr->elementType);
+					return areTypesCompatible(targetArr->elementType.get_ref(), valueArr->elementType.get_ref());
 				}
 
 				case TypeNode::Kind::FUNCTION: {
@@ -447,7 +446,7 @@ namespace zenith {
 
 					// Check compatibility of each template argument
 					for (size_t i = 0; i < targetTemp->templateArgs.size(); ++i) {
-						if (!areTypesCompatible(targetTemp->templateArgs[i], valueTemp->templateArgs[i])) {
+						if (!areTypesCompatible(targetTemp->templateArgs[i].get_ref(), valueTemp->templateArgs[i].get_ref())) {
 							return false;
 						}
 					}
@@ -459,7 +458,6 @@ namespace zenith {
 			}
 		}
 
-		// Special case: Allow null (NIL) to be assigned to object types
 		if (targetType->kind == TypeNode::Kind::OBJECT && valueType->kind == TypeNode::Kind::PRIMITIVE) {
 			if (auto valuePrim = valueType.cast().non_throwing().to<PrimitiveTypeNode>(); valuePrim && valuePrim->type == PrimitiveTypeNode::Type::NIL) {
 				return true;
@@ -469,7 +467,7 @@ namespace zenith {
 		return false;
 	}
 
-	std::string SemanticAnalyzer::typeToString(const polymorphic<TypeNode> &type) {
+	std::string SemanticAnalyzer::typeToString(const polymorphic_ref<TypeNode> &type) {
 		if (!type) return "<nullptr>";
 
 		switch (type->kind) {
@@ -481,7 +479,7 @@ namespace zenith {
 					"int", "float", "double", "string", "bool", "number",
 					"bigint", "bignumber", "short", "long", "byte", "void", "nil"
 				};
-				return typeNames[prim->type];
+				return typeNames[static_cast<int>(prim->type)];
 			}
 
 			case TypeNode::Kind::OBJECT: {
@@ -493,7 +491,7 @@ namespace zenith {
 			case TypeNode::Kind::ARRAY: {
 				auto arr = type.cast().non_throwing().unchecked().to<ArrayTypeNode>();
 				if (!arr || !arr->elementType) return "<invalid array>";
-				return typeToString(std::move(arr->elementType)) + "[]";
+				return typeToString(arr->elementType.get_ref()) + "[]";
 			}
 
 			case TypeNode::Kind::FUNCTION: {
@@ -503,10 +501,10 @@ namespace zenith {
 				std::string result = "(";
 				for (size_t i = 0; i < func->parameterTypes.size(); ++i) {
 					if (i > 0) result += ", ";
-					result += typeToString(func->parameterTypes[i].share());
+					result += typeToString(func->parameterTypes[i]);
 				}
 				result += ") -> ";
-				result += typeToString(std::move(func->returnType));
+				result += typeToString(func->returnType);
 				return result;
 			}
 
@@ -517,7 +515,7 @@ namespace zenith {
 				std::string result = templ->baseName + "<";
 				for (size_t i = 0; i < templ->templateArgs.size(); ++i) {
 					if (i > 0) result += ", ";
-					result += typeToString(templ->templateArgs[i].share());
+					result += typeToString(templ->templateArgs[i].get_ref());
 				}
 				result += ">";
 				return result;
@@ -535,118 +533,105 @@ namespace zenith {
 	}
 
 	void SemanticAnalyzer::visit(LiteralNode& node) {
-		const auto numberType = make_polymorphic<PrimitiveTypeNode>(node.loc, PrimitiveTypeNode::Type::NUMBER);
-		const auto stringType = make_polymorphic<PrimitiveTypeNode>(node.loc, PrimitiveTypeNode::Type::STRING);
-		const auto boolType = make_polymorphic<PrimitiveTypeNode>(node.loc, PrimitiveTypeNode::Type::BOOL);
-		const auto nilType = make_polymorphic<PrimitiveTypeNode>(node.loc, PrimitiveTypeNode::Type::NIL);
-		switch (node->type) {
+		switch (node.type) {
 			case LiteralNode::NUMBER:
-				exprVR = numberType.share();
+				exprVR = std::move(make_polymorphic_ref_owns<PrimitiveTypeNode>(node.loc, PrimitiveTypeNode::Type::NUMBER));
 				break;
 			case LiteralNode::STRING:
-				exprVR = stringType.share();
+				exprVR = std::move(make_polymorphic_ref_owns<PrimitiveTypeNode>(node.loc, PrimitiveTypeNode::Type::STRING));
 				break;
 			case LiteralNode::BOOL:
-				exprVR = boolType.share();
+				exprVR = std::move(make_polymorphic_ref_owns<PrimitiveTypeNode>(node.loc, PrimitiveTypeNode::Type::BOOL));
 				break;
 			case LiteralNode::NIL:
-				exprVR = nilType.share();
+				exprVR = std::move(make_polymorphic_ref_owns<PrimitiveTypeNode>(node.loc, PrimitiveTypeNode::Type::NIL));
 				break;
 		}
 	}
 
 	void SemanticAnalyzer::visit(VarNode& node) {
-		if (const auto symbol = symbolTable.lookup(node->name)) {
-			exprVR = symbol->type.share();
+		if (const auto symbol = symbolTable.lookup(node.name)) {
+			exprVR = symbol->type;
 		}
 		else {
-			errorReporter.report(node.loc, "Undeclared variable '" + node->name + "'");
-			exprVR = getErrorTypeNode(node.loc);
+			errorReporter.error(node.loc, "Undeclared variable '" + node.name + "'");
+			exprVR = CREATE_ERROR_TYPE(node.loc);
 		}
 	}
 
 	void SemanticAnalyzer::visit(BinaryOpNode& node) {
-		auto leftType = visitExpression(node.left);
-		auto rightType = visitExpression(node.right);
+		const auto leftType = visitExpression(node.left);
+		const auto rightType = visitExpression(node.right);
 
-		// Check for assignment operations
 		if (node.op >= BinaryOpNode::ASN && node.op <= BinaryOpNode::MOD_ASN) {
-			// For assignments, left must be a lvalue
 			if (!areTypesCompatible(leftType, rightType)) {
 				errorReporter.report(node.loc,
 				                     "Type mismatch in assignment. Left type: " +
-				                     typeToString(leftType.share()) + ", right type: " +
-				                     typeToString(rightType.share()));
+				                     typeToString(leftType) + ", right type: " +
+				                     typeToString(rightType));
 			}
 			exprVR = leftType;
 			return;
 		}
 
-		// For other operations, types must be compatible
 		if (!areTypesCompatible(leftType, rightType)) {
 			errorReporter.report(node.loc,
 			                     "Type mismatch in binary operation. Left type: " +
-			                     typeToString(leftType.share()) + ", right type: " +
-			                     typeToString(rightType.share()));
+			                     typeToString(leftType) + ", right type: " +
+			                     typeToString(rightType));
 		}
 
-		// Result type is the more general of the two
-		exprVR = leftType.share();
+		exprVR = leftType;
 	}
 
-	polymorphic<TypeNode> resolveType(polymorphic<TypeNode> typeNode,
-	                                                      SymbolTable &symbols, ErrorReporter &reporter,
-	                                                      const SourceLocation &usageLoc) {
+	polymorphic_ref<TypeNode> SemanticAnalyzer::resolveType(polymorphic_ref<TypeNode> typeNode) {
 		if (!typeNode) {
-			reporter.report(usageLoc, "Attempting to resolve null type");
-			return make_polymorphic<PrimitiveTypeNode>(
-				usageLoc, PrimitiveTypeNode::Type::NIL);
+			errorReporter.error(SourceLocation{}, "Attempting to resolve null type");
+			return make_polymorphic_ref_owns<PrimitiveTypeNode>(
+				SourceLocation{}, PrimitiveTypeNode::Type::NIL);
 		}
 
 		switch (typeNode->kind) {
 			case TypeNode::Kind::PRIMITIVE:
 			case TypeNode::Kind::DYNAMIC:
 			case TypeNode::Kind::ERROR:
-				return std::move(typeNode);
+				return typeNode;
 
 			case TypeNode::Kind::OBJECT: {
 				auto named = typeNode.cast().non_throwing().to<NamedTypeNode>();
 				if (!named) {
-					reporter.report(typeNode.loc, "TypeNode::OBJECT is not a NamedTypeNode",
-					                {"Internal Error", RED_TEXT});
-					return std::move(typeNode);
+					errorReporter.internalError(typeNode->loc, "TypeNode::OBJECT is not a NamedTypeNode");
+					return typeNode;
 				}
 
-				const SymbolInfo *sym = symbols.lookup(named->name);
+				auto sym = symbolTable.lookup(named->name);
 				if (!sym || (sym->kind != SymbolInfo::TYPE_ALIAS && sym->kind != SymbolInfo::OBJECT)) {
-					reporter.error(usageLoc,
+					errorReporter.error(sym->declarationNode->loc,
 					               "Unknown or non-type identifier used as type: '" + named->name + "'");
-					return make_polymorphic<PrimitiveTypeNode>(
-						named.loc, PrimitiveTypeNode::Type::NIL);
+					return make_polymorphic_ref_owns<PrimitiveTypeNode>(
+						named->loc, PrimitiveTypeNode::Type::NIL);
 				}
 
 				if (!sym->type) {
-					reporter.internalError(named.loc, "Type symbol '" + named->name + "' has no associated type");
-					return make_polymorphic<PrimitiveTypeNode>(
-						named.loc, PrimitiveTypeNode::Type::NIL);
+					errorReporter.internalError(named->loc, "Type symbol '" + named->name + "' has no associated type");
+					return make_polymorphic_ref_owns<PrimitiveTypeNode>(
+						named->loc, PrimitiveTypeNode::Type::NIL);
 				}
 
 				// Recursively resolve the underlying type
-				return resolveType(sym->type.share(), symbols, reporter,
-				                   usageLoc);
+				return resolveType(sym->type);
 			}
 
 			case TypeNode::Kind::ARRAY: {
 				auto arr = typeNode.cast().non_throwing().to<ArrayTypeNode>();
 				if (!arr) goto invalid;
 
-				auto resolvedElem = resolveType(arr->elementType.share(), symbols, reporter,
-				                                usageLoc);
+				auto resolvedElem = resolveType(arr->elementType.get_ref());
 
-				return make_polymorphic<ArrayTypeNode>(
-					arr.loc,
+				return make_polymorphic_ref_owns<ArrayTypeNode>(
+					arr->loc,
 					std::move(resolvedElem),
-					arr->sizeExpr ? arr->sizeExpr.share() : nullptr
+					arr->sizeExpr ? arr->sizeExpr.copy_or_share() : nullptr
 				);
 			}
 
@@ -654,21 +639,19 @@ namespace zenith {
 				auto fn = typeNode.cast().non_throwing().to<FunctionTypeNode>();
 				if (!fn) goto invalid;
 
-				std::vector<polymorphic<TypeNode> > resolvedParams;
+				std::vector<polymorphic_ref<TypeNode>> resolvedParams;
 				resolvedParams.reserve(fn->parameterTypes.size());
 
 				for (auto &param: fn->parameterTypes) {
-					resolvedParams.push_back(resolveType(param.share(), symbols, reporter,
-					                                     usageLoc));
+					resolvedParams.push_back(resolveType(param));
 				}
 
 				auto resolvedRet = fn->returnType
-					                   ? resolveType(fn->returnType.share(), symbols, reporter,
-					                                 usageLoc)
-					                   : polymorphic<TypeNode>{nullptr};
+					                   ? resolveType(fn->returnType)
+					                   : polymorphic_ref<TypeNode>{nullptr};
 
-				return make_polymorphic<FunctionTypeNode>(
-					fn.loc,
+				return make_polymorphic_ref_owns<FunctionTypeNode>(
+					fn->loc,
 					std::move(resolvedParams),
 					std::move(resolvedRet)
 				);
@@ -678,16 +661,15 @@ namespace zenith {
 				auto tmpl = typeNode.cast().non_throwing().to<TemplateTypeNode>();
 				if (!tmpl) goto invalid;
 
-				std::vector<polymorphic<TypeNode> > resolvedArgs;
+				std::vector<polymorphic_ref<TypeNode>> resolvedArgs;
 				resolvedArgs.reserve(tmpl->templateArgs.size());
 
 				for (auto &arg: tmpl->templateArgs) {
-					resolvedArgs.push_back(resolveType(arg.share(), symbols, reporter,
-					                                   usageLoc));
+					resolvedArgs.push_back(resolveType(arg.get_ref()));
 				}
 
-				return make_polymorphic<TemplateTypeNode>(
-					tmpl.loc,
+				return make_polymorphic_ref_owns<TemplateTypeNode>(
+					tmpl->loc,
 					tmpl->baseName,
 					std::move(resolvedArgs)
 				);
@@ -695,9 +677,53 @@ namespace zenith {
 
 			invalid:
 			default:
-				reporter.internalError(typeNode.loc, "Invalid or corrupted TypeNode during resolution");
-				return make_polymorphic<PrimitiveTypeNode>(
-					typeNode.loc, PrimitiveTypeNode::Type::NIL);
+				errorReporter.internalError(typeNode->loc, "Invalid or corrupted TypeNode during resolution");
+				return make_polymorphic_ref_owns<PrimitiveTypeNode>(
+					typeNode->loc, PrimitiveTypeNode::Type::NIL);
 		}
+	}
+
+	void SemanticAnalyzer::visit(UnaryOpNode& node) {
+		errorReporter.warning(node.loc,"idk brotein shake");
+	}
+	void SemanticAnalyzer::visit(CallNode& node) {
+		polymorphic_ref<TypeNode> calleeType = visitExpression(node.callee);
+
+		if (!calleeType) {
+			errorReporter.report(node.loc, "Cannot determine type of callee.");
+			exprVR = nullptr;
+			return;
+		}
+		if (calleeType->kind != TypeNode::Kind::FUNCTION) {
+			errorReporter.report(node.loc, "Attempted to call a non-function type: " + typeToString(calleeType));
+			exprVR = nullptr;
+			return;
+		}
+		auto funcType = calleeType.cast().unchecked().to<FunctionTypeNode>();
+		if (node.arguments.size() != funcType->parameterTypes.size()) {
+			errorReporter.report(node.loc, "Incorrect number of arguments: expected " +
+												 std::to_string(funcType->parameterTypes.size()) +
+												 ", got " + std::to_string(node.arguments.size()));
+		}
+		for (auto [i, arg] : std::ranges::views::enumerate(node.arguments)) {
+			if (polymorphic_ref<TypeNode> argType = visitExpression(arg); i < funcType->parameterTypes.size() &&
+			                                                              !areTypesCompatible(funcType->parameterTypes[i], argType)) {
+				errorReporter.report(arg->loc,
+									 "Argument type mismatch: expected " +
+									 typeToString(funcType->parameterTypes[i]) +
+									 ", got " + typeToString(argType));
+				}
+		}
+
+		exprVR = funcType->returnType;
+	}
+	void SemanticAnalyzer::visit(IfNode& node) {
+		const polymorphic_ref<ExprNode> condition = node.condition;
+		bool areCompatible = areTypesCompatible(visitExpression(condition), make_polymorphic_ref_owns<PrimitiveTypeNode>(condition->loc,PrimitiveTypeNode::Type::BOOL));
+		if (!areCompatible) {
+			errorReporter.error(condition->loc, "Expression is not convertible to bool");
+		}
+		node.thenBranch->accept(*this);
+		if (node.elseBranch) node.elseBranch->accept(*this);
 	}
 } // namespace zenith

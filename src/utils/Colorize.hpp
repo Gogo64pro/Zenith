@@ -56,8 +56,8 @@ constexpr void hslToRgb(float h, float s, float l, uint8_t& r, uint8_t& g, uint8
 #define BLINK_TEXT "\033[5m"
 
 // Simple colors
-#define RED_TEXT "[0;31m"
-#define YELLOW_TEXT "[0;33m"
+#define RED_TEXT "\033[0;31m"
+#define YELLOW_TEXT "\033[0;33m"
 
 #define CL_ORANGE MAKE_RGB_COLOR(204, 120, 50)
 #define CL_YELLOW MAKE_RGB_COLOR(255, 188, 89)

@@ -503,7 +503,7 @@ namespace zenith {
 					advance();
 				}
 				if(!declarations.empty()) {
-					if (auto annotatable_opt = declarations.back().cast().to<IAnnotatable>()) {
+					if (auto annotatable_opt = declarations.back().cast().non_throwing().to<IAnnotatable>()) {
 						annotatable_opt->setAnnotations(std::move(pendingAnnotations));
 					}
 					else if (!pendingAnnotations.empty()) {

@@ -199,14 +199,14 @@ export namespace zenith {
 
         private:
             template<typename To>
-            polymorphic<To> do_const_cast(const bool throw_on_fail = true) {
+            polymorphic<To> do_const_cast() {
                 if (!const_self_.has_value()) {
-                    if (throw_on_fail) throw std::bad_cast();
+                    if (throw_on_fail_) throw std::bad_cast();
                     return nullptr;
                 }
 
                 if (checked_ && !const_self_.is_type<To>()) {
-                    if (throw_on_fail) throw std::bad_cast();
+                    if (throw_on_fail_) throw std::bad_cast();
                     return nullptr;
                 }
 
@@ -214,14 +214,14 @@ export namespace zenith {
             }
 
             template<typename To>
-            polymorphic<To> do_non_const_cast(bool throw_on_fail = true) {
+            polymorphic<To> do_non_const_cast() {
                 if (!self_.has_value()) {
-                    if (throw_on_fail) throw std::bad_cast();
+                    if (throw_on_fail_) throw std::bad_cast();
                     return nullptr;
                 }
 
                 if (checked_ && !self_.is_type<To>()) {
-                    if (throw_on_fail) throw std::bad_cast();
+                    if (throw_on_fail_) throw std::bad_cast();
                     return nullptr;
                 }
 

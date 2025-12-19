@@ -130,7 +130,7 @@ export namespace zenith{
 		ACCEPT_METHODS
 
 	private:
-		static Op convertTokenType(TokenType type) {
+		static Op convertTokenType(const TokenType type) {
 			switch(type) {
 				case TokenType::INCREASE: return INC;
 				case TokenType::DECREASE: return DEC;

@@ -4,8 +4,10 @@ module;
 #include <sstream>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 #include <vector>
 import zenith.core.polymorphic;
+import zenith.core.polymorphic_variant;
 export module zenith.ast:typeNodes;
 import :visitor;
 import :ASTNode;
@@ -71,29 +73,36 @@ export namespace zenith {
 
 	// Array types
 	struct ArrayTypeNode : TypeNode {
-		polymorphic<TypeNode> elementType;
-		polymorphic<ExprNode> sizeExpr;
+		polymorphic_variant<TypeNode> elementType;
+		polymorphic_variant<ExprNode> sizeExpr;
 
-		ArrayTypeNode(SourceLocation loc, polymorphic<TypeNode> elemType, polymorphic<ExprNode> sizeExpr = nullptr)
+		ArrayTypeNode(SourceLocation loc, polymorphic_variant<TypeNode> elemType, polymorphic_variant<ExprNode> sizeExpr = nullptr)
 				: TypeNode(std::move(loc), Kind::ARRAY), elementType(std::move(elemType)), sizeExpr(std::move(sizeExpr)) {}
 
 		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
-			return pad + "ArrayType\n" +
-			       elementType->toString(indent + 2);
+			return pad + "ArrayType\n" + elementType->toString();
 		}
 		ACCEPT_METHODS
 	};
 	struct TemplateTypeNode : TypeNode {
 		std::string baseName;
-		std::vector<polymorphic<TypeNode>> templateArgs;
+		std::vector<polymorphic_variant<TypeNode>> templateArgs;
 
 		TemplateTypeNode(SourceLocation loc,
 		                 std::string baseName,
 		                 std::vector<polymorphic<TypeNode>> templateArgs)
 				: TypeNode(std::move(loc), Kind::TEMPLATE),
 				  baseName(std::move(baseName)),
-				  templateArgs(std::move(templateArgs)) {}
+				  templateArgs(std::make_move_iterator(templateArgs.begin()),
+							   std::make_move_iterator(templateArgs.end())) {}
+		TemplateTypeNode(SourceLocation loc,
+						 std::string baseName,
+						 std::vector<polymorphic_ref<TypeNode>> templateArgs)
+				: TypeNode(std::move(loc), Kind::TEMPLATE),
+				  baseName(std::move(baseName)),
+			      templateArgs(std::make_move_iterator(templateArgs.begin()),
+					 std::make_move_iterator(templateArgs.end())) {}
 
 		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
@@ -114,13 +123,14 @@ export namespace zenith {
 
 		ACCEPT_METHODS
 	};
+	//Node only used in semantic analyzer
 	struct FunctionTypeNode : TypeNode{
-		std::vector<polymorphic<TypeNode>> parameterTypes;
-		polymorphic<TypeNode> returnType;
+		std::vector<polymorphic_ref<TypeNode>> parameterTypes;
+		polymorphic_ref<TypeNode> returnType;
 
 		FunctionTypeNode(SourceLocation loc,
-		                 std::vector<polymorphic<TypeNode>> params,
-		                 polymorphic<TypeNode> retType)
+		                 std::vector<polymorphic_ref<TypeNode>> params,
+		                 polymorphic_ref<TypeNode> retType)
 				: TypeNode(std::move(loc), Kind::FUNCTION),
 				  parameterTypes(std::move(params)),
 				  returnType(std::move(retType)) {};

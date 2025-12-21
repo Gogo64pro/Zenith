@@ -186,9 +186,9 @@ namespace zenith{
 		visit(static_cast<ASTNode&>(node));
 	}
 
-	polymorphic_ref<TypeNode> Visitor::visitExpression(polymorphic_ref<ExprNode> expr) {
-		return nullptr;
-	}
+	//polymorphic_ref<TypeNode> Visitor::visitExpression(polymorphic_ref<ExprNode> expr) {
+	//	return nullptr;
+	//}
 
 	void Visitor::visit(ExprNode &node) {
 		visit(static_cast<ASTNode&>(node));

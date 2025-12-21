@@ -4,15 +4,20 @@ module;
 #include "utils/Colorize.hpp"
 #include "exceptions/ErrorReporter.hpp"
 #include <vector>
-module zenith.semantic;
 import zenith.ast;
-import zenith.core.polymorphic_ref;
+module zenith.semantic;
 namespace zenith{
-	SymbolInfo::SymbolInfo(const Kind k, polymorphic_ref<TypeNode> t, polymorphic_ref<ASTNode> node, const bool isConst, const bool isStatic)
-			: kind(k), type(std::move(t)), declarationNode(std::move(node)), isConst(isConst), isStatic(isStatic) {}
+	//SymbolInfo::SymbolInfo(const Kind k, polymorphic_ref<TypeNode> t, polymorphic_ref<ASTNode> node, const bool isConst, const bool isStatic)
+	//		: kind(k), type(t), declarationNode(node), isConst(isConst), isStatic(isStatic) {}
 
 	SymbolInfo::SymbolInfo(const Kind k, TypeNode& t, ASTNode& node, const bool isConst, const bool isStatic)
 			: kind(k), type(make_polymorphic_ref(t)), declarationNode(make_polymorphic_ref(node)), isConst(isConst), isStatic(isStatic) {}
+
+	//SymbolInfo::SymbolInfo(const Kind k, polymorphic<TypeNode> t, polymorphic_ref<ASTNode> node, const bool isConst, const bool isStatic)
+	//		: kind(k), type(std::move(t)), declarationNode(node), isConst(isConst), isStatic(isStatic) {}
+
+	SymbolInfo::SymbolInfo(const Kind k, polymorphic_variant<TypeNode> t, polymorphic_ref<ASTNode> node, const bool isConst, const bool isStatic)
+			: kind(k), type(std::move(t)), declarationNode(node), isConst(isConst), isStatic(isStatic) {}
 
 	SymbolTable::SymbolTable(ErrorReporter& reporter) : errorReporter(reporter) {
 		enterScope();
@@ -68,12 +73,12 @@ namespace zenith{
 		return nullptr;
 	}
 
-	const SymbolInfo *SymbolTable::lookup(const std::string &name, const SymbolInfo::Kind kind) {
+	polymorphic_ref<SymbolInfo> SymbolTable::lookup(const std::string &name, const SymbolInfo::Kind kind) {
 		for (auto & scope : std::ranges::reverse_view(scopeStack)) {
 				auto found = scope.find(name);
 			if (found != scope.end()) {
 				if(found->second.kind == kind)
-					return &found->second;
+					return make_polymorphic_ref(found->second);
 			}
 		}
 		return nullptr;

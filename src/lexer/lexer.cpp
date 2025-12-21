@@ -240,15 +240,27 @@ void Lexer::scanToken() {
 }
 
 void Lexer::string() {
-	while (peek() != '"' && !isAtEnd()) {
-		advance();
+	start = current - 1; // Include the opening quote
+	startColumn = column - 1;
+
+	while (!isAtEnd()) {
+		char c = peek();
+		if (c == '\\') {
+			advance();
+			if (!isAtEnd()) advance();
+		} else if (c == '"') {
+			break;
+		} else {
+			advance();
+		}
 	}
 
-	if (isAtEnd()) throw LexError( {line,column,0,current} ,"Unterminated string");
+	if (isAtEnd()) {
+		throw LexError({line, column, 0, current}, "Unterminated string literal");
+	}
 
 	advance();
 
-	// Calculate length including quotes
 	addToken(TokenType::STRING_LIT);
 }
 
@@ -262,7 +274,8 @@ void Lexer::templateString() {
 
 	while (peek() != '`' && !isAtEnd()) {
 		if (peek() == '\\') {
-			//TODO WONT DO Handle escape sequences...
+			advance();
+			if (!isAtEnd()) advance();
 		}
 		else if (peek() == '$' && peekNext() == '{') {
 			// Handle interpolation

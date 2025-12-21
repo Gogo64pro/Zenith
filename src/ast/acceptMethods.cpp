@@ -1,6 +1,4 @@
 module;
-#include <type_traits>
-#include <utility>
 module zenith.ast;
 import zenith.core.polymorphic;
 #define ACCEPT_METHOD(Node) void Node::accept(Visitor& visitor) {visitor.visit(*this);}

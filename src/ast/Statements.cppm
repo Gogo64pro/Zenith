@@ -179,7 +179,7 @@ export namespace zenith {
 		std::vector<polymorphic<StmtNode>> stmts;
 
 		explicit CompoundStmtNode(SourceLocation loc, std::vector<polymorphic<StmtNode>>&& statements ) : stmts(std::move(statements)){
-			loc = std::move(loc);
+			this->loc = std::move(loc);
 		}
 		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');

@@ -104,8 +104,8 @@ export namespace zenith{
 	};
 
 	// --- Unary Operations ---
-	struct UnaryOpNode : ExprNode{
-		enum Op : uint8_t {INC, DEC } op;
+	struct UnaryOpNode : ExprNode {
+		enum Op : uint8_t {INC, DEC, NEGATE } op;
 		polymorphic<ExprNode> right;
 		bool prefix = false;
 		UnaryOpNode(SourceLocation loc, TokenType tokenType,
@@ -122,7 +122,7 @@ export namespace zenith{
 		}
 
 		[[nodiscard]] std::string toString(int indent = 0) const override {
-			static const char* opNames[] = {"++", "--"};
+			static const char* opNames[] = {"++", "--", "-"};
 			std::string pad(indent, ' ');
 			return pad + "UnaryOp(" + opNames[op] + ")\n" +
 			       right->toString(indent + 2) + "\n";

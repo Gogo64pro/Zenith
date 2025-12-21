@@ -9,7 +9,6 @@ export namespace zenith {
     template<typename T>
     class polymorphic_ref {
         T* ptr_ = nullptr;
-        bool owns = false;
     public:
         using value_type = T;
 
@@ -21,67 +20,26 @@ export namespace zenith {
         requires std::derived_from<U, T> || std::derived_from<T, U>
         polymorphic_ref(polymorphic<U>& other) noexcept : ptr_(other.get()) {}
 
-        ~polymorphic_ref() {
-            if (owns && ptr_) delete ptr_;
-        }
 
         // Construct from pointer
-        explicit polymorphic_ref(T* ptr, const bool owns = false) noexcept : ptr_(ptr), owns(owns) {}
+        explicit polymorphic_ref(T* ptr) noexcept : ptr_(ptr) {}
 
         polymorphic_ref() = default;
 
         polymorphic_ref(std::nullptr_t) {}
 
-        polymorphic_ref(const polymorphic_ref& other)
-        : ptr_(other.ptr_) {}
-
-        polymorphic_ref(polymorphic_ref&& other) noexcept
-            : ptr_(other.ptr_), owns(other.owns) {
-            other.ptr_ = nullptr;
-            other.owns = false;
-        }
-
-        polymorphic_ref& operator=(const polymorphic_ref& other) {
-            if (this != &other) {
-                if (owns && ptr_) {
-                    delete ptr_;
-                }
-                ptr_  = other.ptr_;
-                owns = false;
-            }
-            return *this;
-        }
-        polymorphic_ref& operator=(polymorphic_ref&& other) noexcept {
-            if (this != &other) {
-                if (owns && ptr_) {
-                    delete ptr_;
-                }
-                ptr_  = other.ptr_;
-                owns = other.owns;
-                other.ptr_ = nullptr;
-                other.owns = false;
-            }
-            return *this;
-        }
-
         template<typename U>
         requires (std::derived_from<U, T> || std::derived_from<T, U>)
         polymorphic_ref(polymorphic_ref<U>&& other) noexcept
-            : ptr_(other.get()), owns(other.owns) {
+            : ptr_(other.get()) {
             other.ptr_ = nullptr;
-            other.owns = false;
         }
         template<typename U>
         requires (std::derived_from<U, T> || std::derived_from<T, U>)
         polymorphic_ref& operator=(polymorphic_ref<U>&& other) noexcept {
             if (this->ptr_ != other.ptr_) {
-                if (owns && ptr_) delete ptr_;
-
                 ptr_  = other.get();
-                owns = other.owns;
-
                 other.ptr_ = nullptr;
-                other.owns = false;
             }
             return *this;
         }
@@ -90,6 +48,13 @@ export namespace zenith {
         requires (std::derived_from<U, T> || std::derived_from<T, U>)
         polymorphic_ref(const polymorphic_ref<U>& other) noexcept
             : ptr_(other.get()) {}
+        template<typename U>
+        requires (std::derived_from<U, std::remove_const_t<T>> ||
+          std::derived_from<std::remove_const_t<T>, U>) &&
+         std::is_convertible_v<const U*, T*>
+        polymorphic_ref(const polymorphic<U>& other) noexcept : ptr_(other.get()) {}
+
+
 
         // Observers
         explicit operator bool() const noexcept { return ptr_ != nullptr; }
@@ -250,18 +215,4 @@ export namespace zenith {
         return polymorphic_ref<const T>(ref);
     }
 
-    template<typename T, typename... Args>
-    polymorphic_ref<T> make_polymorphic_ref_owns(Args&& ...args) noexcept {
-        return polymorphic_ref<T>(new T(std::forward<Args>(args)...), true);
-    }
-
-    template<typename To, typename From>
-    polymorphic_ref<To> polymorphic_cast(polymorphic_ref<From>&& p) {
-        return std::move(p).template cast<To>().template to<To>();
-    }
-
-    template<typename To, typename From>
-    polymorphic_ref<To> polymorphic_cast(const polymorphic_ref<From>& p) {
-        return p.template cast<To>().template to<To>();
-    }
 }

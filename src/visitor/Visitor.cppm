@@ -15,7 +15,7 @@ export namespace zenith {
 		virtual void visit(struct ExprNode& node);
 		virtual void visit(struct StmtNode& node);
 
-		virtual polymorphic_ref<struct TypeNode> visitExpression(polymorphic_ref<ExprNode> expr);
+		// virtual polymorphic_ref<struct TypeNode> visitExpression(polymorphic_ref<ExprNode> expr);
 
 		// Specific visitors
 		virtual void visit(struct ProgramNode& node);
@@ -58,7 +58,7 @@ export namespace zenith {
 		virtual void visit(struct StructInitializerNode& node);
 		virtual void visit(struct LambdaExprNode& node);
 
-		virtual void visit(TypeNode& node);
+		virtual void visit(struct TypeNode& node);
 		virtual void visit(struct PrimitiveTypeNode& node);
 		virtual void visit(struct NamedTypeNode& node);
 		virtual void visit(struct ArrayTypeNode& node);

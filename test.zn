@@ -1,25 +1,3 @@
-//fun add(let a, var b){
-//    return a+b
-//}
-//fun add(int a, long b){
-//    return a+b
-//}
-//fun int add(int a, float b){
-//    return a+b
-//}
-//int add(int a, int b){
-//    return a+b
-//}
-//int add({int a, int b}){
-//    return a+b
-//}
-//int add({int a,int  b, long c}){
-//    return a+b
-//}
-//@Async
-//string getPacket(){
-//    return Net.something()
-//}
 int fibonacci(int num){
     if(num==0){
         return 0;
@@ -31,5 +9,7 @@ int fibonacci(int num){
 }
 
 fun main(){
-  IO.print(fibbonaci(8))
+  for(int i = 0; i < 10; i++){
+    IO.print(fibonacci(i))
+  }
 }

@@ -2,8 +2,8 @@
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
 #include "utils/mainargs.hpp"
-#include "exceptions/ParseError.hpp"
 #include "utils/ReadFile.hpp"
+#include "exceptions/ParseError.hpp"
 import zenith.semantic;
 
 using namespace zenith;
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 			<< " (" << token.lexeme << ")\n";
 		}
 	} catch (const std::exception &e) {
-		lexerOut << "Lexer error: " << e.what() << std::endl;
+		std::cerr << "Lexer error: " << e.what() << std::endl;
 		return 1;
 	}
 	std::cout << "Done Lexing \n";

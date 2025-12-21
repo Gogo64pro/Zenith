@@ -112,9 +112,8 @@ export namespace zenith {
             return ptr_ ? typeid(*ptr_) : typeid(void);
         }
 
-        // Share - creates a new shared reference (explicit copy)
         polymorphic share() const {
-            return polymorphic(*this); // Uses private copy constructor
+            return polymorphic(*this);
         }
 
         template<typename U>
@@ -122,12 +121,9 @@ export namespace zenith {
         polymorphic<U> share() const {
             if (!ptr_) return nullptr;
 
-            // Use shared_ptr's built-in casting
             if constexpr (std::derived_from<U, T>) {
-                // U is derived from T - use dynamic_pointer_cast
                 return polymorphic<U>(std::dynamic_pointer_cast<U>(ptr_));
             } else {
-                // T is derived from U - static cast is safe
                 return polymorphic<U>(std::static_pointer_cast<U>(ptr_));
             }
         }

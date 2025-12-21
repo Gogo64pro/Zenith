@@ -1,0 +1,745 @@
+// Test file for Zenith language features
+package com.zenith.tests;
+
+// =====================
+// IMPORTS & EXTERN
+// =====================
+
+// Java interop
+import java.util.ArrayList;
+import java.util.HashMap;
+
+// C FFI (requires unsafe block)
+unsafe {
+    extern "C" {
+        fn printf(format: *const char, ...);
+        fn malloc(size: usize) -> *mut void;
+        fn free(ptr: *mut void);
+    }
+}
+
+// =====================
+// ANNOTATIONS & DECORATORS
+// =====================
+
+// Custom annotations
+annotation TestCase {
+    string description;
+    int priority;
+}
+
+annotation MemoryIntensive {}
+
+annotation ThreadSafe {
+    int maxThreads = 4;
+}
+
+// Custom decorator annotation
+annotation LogExecution {
+    string level = "INFO";
+}
+
+// =====================
+// STRUCTS & UNIONS
+// =====================
+
+// Basic struct
+struct Point {
+    int x;
+    int y;
+    int z;
+}
+
+// Struct with methods
+struct Rectangle {
+    privatew int width;
+    privatew int height;
+
+    public int getArea() {
+        return this.width * this.height;
+    }
+
+    public void setDimensions(int w, int h) {
+        if (w > 0 && h > 0) {
+            this.width = w;
+            this.height = h;
+        }
+    }
+}
+
+// Union example
+union DataValue {
+    int intValue;
+    float floatValue;
+    double doubleValue;
+    bool boolValue;
+}
+
+// Union containing structs
+union ShapeData {
+    Point point;
+    Rectangle rect;
+}
+
+// =====================
+// CLASSES
+// =====================
+
+@TestCase(description="Basic class with write restrictions", priority=1)
+class Animal {
+    privatew string name;
+    protectedw int age;
+    public const string species;
+    private bool isHungry;
+
+    // Constructor
+    public Animal(string name, string species) : species(species) {
+        this.name = name;
+        this.age = 0;
+        this.isHungry = true;
+    }
+
+    // Getters
+    public string getName() {
+        return this.name;
+    }
+
+    public int getAge() {
+        return this.age;
+    }
+
+    // Protected setter for age
+    protected void setAge(int newAge) {
+        if (newAge >= 0) {
+            this.age = newAge;
+        }
+    }
+
+    // Public method
+    public void feed() {
+        this.isHungry = false;
+        IO.print(`${this.name} has been fed!`);
+    }
+
+    // Virtual method
+    public virtual void speak() {
+        IO.print(`${this.name} makes a sound`);
+    }
+}
+
+// Inheritance
+@TestCase(description="Inheritance example", priority=2)
+class Dog : Animal {
+    privatew string breed;
+
+    public Dog(string name, string breed) : Animal(name, "Canine") {
+        this.breed = breed;
+    }
+
+    // Override virtual method
+    public override void speak() {
+        IO.print(`${super.getName()} says: Woof!`);
+    }
+
+    // New method
+    public void fetch(string item) {
+        IO.print(`${this.getName()} fetches the ${item}`);
+        this.setAge(this.getAge() + 1); // Can modify protectedw through protected method
+    }
+
+    // Operator overloading
+    public Dog operator "+"(Dog other) {
+        string puppyName = `Puppy of ${this.getName()} and ${other.getName()}`;
+        return new Dog(puppyName, "Mixed");
+    }
+}
+
+// Interface-like class (using abstract)
+abstract class Drawable {
+    public abstract void draw();
+
+    public void render() {
+        IO.print("Rendering drawable...");
+        this.draw();
+    }
+}
+
+class Circle : Drawable {
+    privatew int radius;
+
+    public override void draw() {
+        IO.print(`Drawing circle with radius ${this.radius}`);
+    }
+}
+
+// =====================
+// FREE OBJECTS
+// =====================
+
+@TestCase(description="Free object demonstrations", priority=3)
+fun testFreeObjects() {
+    // Dynamic free object
+    let config = {
+        name: "Zenith",
+        version: 1.0f,
+        features: ["dynamic", "static", "low-level"],
+        enabled: true,
+        metadata: {
+            author: "Zenith Team",
+            year: 2067
+        }
+    };
+
+    // Type-strict free object
+    freeobj settings = {
+        theme: "dark",
+        fontSize: 14,
+        autoSave: true,
+        save: fun() {
+            IO.print("Settings saved!");
+        }
+    };
+
+    // Free object with methods
+    let calculator = {
+        value: 0,
+        add: fun(x) {
+            this.value += x;
+            return this.value;
+        },
+        multiply: fun(x) {
+            this.value *= x;
+            return this.value;
+        },
+        reset: () => {
+            this.value = 0;
+        }
+    };
+
+    calculator.add(5);
+    calculator.multiply(3);
+    IO.print(`Calculator value: ${calculator.value}`);
+
+    // Free object compiled as struct (static usage)
+    struct Color {
+        int r, g, b;
+    }
+
+    Color red = {255, 0, 0}; // Will compile as struct, not freeobj
+}
+
+// =====================
+// MEMORY MANAGEMENT
+// =====================
+
+@TestCase(description="Manual memory management", priority=4)
+@@MemoryIntensive
+fun testManualMemory() {
+    // Scope-based automatic cleanup
+    scope {
+        let buffer = new int[100];
+        for (int i = 0; i < 100; i++) {
+            buffer[i] = i * i;
+        }
+        // buffer automatically freed here
+    }
+
+    // Unsafe manual memory
+    unsafe {
+        let size = 1024;
+        let ptr = malloc(size);
+
+        if (ptr != null) {
+            // Pointer arithmetic
+            for (int i = 0; i < 10; i++) {
+                ptr[i] = i + 65; // ASCII letters
+            }
+
+            // Use C function
+            printf("Manual memory allocated: %p\n", ptr);
+
+            free(ptr);
+        }
+    }
+
+    // Different GC modes
+    @GC("none")
+    fun noGcFunction() {
+        let manualObj = new int[1000];
+        // Must manage memory manually
+    }
+
+    @GC("refcounting")
+    fun rcFunction() {
+        let obj1 = {};
+        let obj2 = obj1; // Reference count increases
+    }
+}
+
+// =====================
+// CONCURRENCY
+// =====================
+
+@TestCase(description="Async/await and actors", priority=5)
+@ThreadSafe(maxThreads=8)
+fun testConcurrency() {
+    // Async function
+    @Async
+    fun fetchData(string url) -> Future<string> {
+        IO.print(`Fetching data from ${url}...`);
+        // Simulate network delay
+        await sleep(1000);
+        return `Data from ${url}`;
+    }
+
+    // Using async
+    @Async
+    fun processMultipleRequests() {
+        let future1 = fetchData("https://api.example.com/data1");
+        let future2 = fetchData("https://api.example.com/data2");
+
+        let result1 = await future1;
+        let result2 = await future2;
+
+        IO.print(`Results: ${result1}, ${result2}`);
+    }
+
+    // Actor example
+    actor CounterActor {
+        private int count = 0;
+
+        public message increment() {
+            this.count++;
+            return this.count;
+        }
+
+        public message get() {
+            return this.count;
+        }
+
+        public message reset() {
+            this.count = 0;
+            return true;
+        }
+    }
+
+    // Using actor
+    let counter = new CounterActor();
+    let futureCount = counter.increment();
+    let current = await futureCount;
+    IO.print(`Counter: ${current}`);
+}
+
+// =====================
+// ERROR HANDLING
+// =====================
+
+@TestCase(description="Dual error handling model", priority=6)
+fun testErrorHandling() {
+    // Rust-like Result type
+    fun Result<int, string> divide(int a, int b) {
+        if (b == 0) {
+            return Err("Division by zero");
+        }
+        return Ok(a / b);
+    }
+
+    // Using Result
+    let result = divide(10, 2);
+    match result {
+        Ok(value) => IO.print(`Result: ${value}`),
+        Err(error) => IO.print(`Error: ${error}`)
+    }
+
+    // JVM-style exceptions
+    @Throws("IOException", "NumberFormatException")
+    fun parseFile(string path) -> int {
+        let content = IO.readFile(path);
+        return content.toInt(); // Might throw
+    }
+
+    // Try-catch
+    try {
+        let value = parseFile("data.txt");
+        IO.print(`Parsed value: ${value}`);
+    } catch (IOException e) {
+        IO.print("File error: " + e.getMessage());
+    } catch (NumberFormatException e) {
+        IO.print("Parse error: " + e.getMessage());
+    }
+}
+
+// =====================
+// METAPROGRAMMING
+// =====================
+
+// Decorator implementation
+@@LogExecution(level="DEBUG")
+fun expensiveCalculation(int n) -> int {
+    if (n <= 1) return 1;
+    return n * expensiveCalculation(n - 1);
+}
+
+// Compile-time decorator
+@@CompileTime
+fun generateConstants() {
+    // This code runs at compile time
+    let constants = {
+        PI: 3.14159265359,
+        E: 2.71828182846,
+        MAX_SIZE: 1024
+    };
+    return constants;
+}
+
+// =====================
+// TYPE SYSTEM TESTS
+// =====================
+
+@TestCase(description="Type system features", priority=7)
+fun testTypeSystem() {
+    // Dynamic typing
+    let dynamicVar = 42;
+    dynamicVar = "Now I'm a string";
+    dynamicVar = {key: "value"};
+
+    // Static typing
+    int staticInt = 100;
+    // staticInt = "string"; // Compile error
+
+    // Type inference
+    let inferred = 3.14; // Inferred as double
+    let another = "hello"; // Inferred as string
+
+    // Number types
+    unsigned int positiveOnly = 100;
+    signed int canBeNegative = -50;
+
+    // Big numbers
+    BigInt hugeInt = 12345678901234567890n;
+    BigNumber precise = 3.14159265358979323846264338327950288419716939937510;
+
+    // Arrays
+    int[10] fixedArray;
+    let dynamicArray = [1, 2, 3, 4, 5];
+
+    // Strings
+    string greeting = "Hello, ";
+    string name = "Zenith";
+    string message = greeting + name;
+    string interpolated = `${greeting}${name}! Today is ${new Date()}`;
+}
+
+// =====================
+// CONTROL FLOW
+// =====================
+
+@TestCase(description="Control flow structures", priority=8)
+fun testControlFlow() {
+    // If-else
+    let x = 10;
+
+    if (x > 5) {
+        IO.print("x is greater than 5");
+    } else if (x == 5) {
+        IO.print("x equals 5");
+    } else {
+        IO.print("x is less than 5");
+    }
+
+    // Ternary (if expression)
+    let result = x > 5 ? "big" : "small";
+
+    // For loops
+    for (let i = 0; i < 10; i++) {
+        IO.print(`Iteration ${i}`);
+    }
+
+    int[] numbers = [1, 2, 3, 4, 5];
+    for (int num : numbers) {
+        IO.print(`Number: ${num}`);
+    }
+
+    // While loop
+    let count = 0;
+    while (count < 5) {
+        IO.print(`Count: ${count}`);
+        count++;
+    }
+
+    // Do-while
+    do {
+        IO.print("This runs at least once");
+        count--;
+    } while (count > 0);
+
+    // Switch/match
+    let day = "Monday";
+    match day {
+        "Monday" => IO.print("Start of work week"),
+        "Friday" => IO.print("Almost weekend!"),
+        "Saturday", "Sunday" => IO.print("Weekend!"),
+        _ => IO.print("Regular day")
+    }
+}
+
+// =====================
+// JVM INTEROP
+// =====================
+
+@TestCase(description="Java interoperability", priority=9)
+@JVMExport
+fun testJavaInterop() {
+    // Using Java classes
+    let list = new ArrayList<string>();
+    list.add("Zenith");
+    list.add("Java");
+    list.add("Interop");
+
+    let map = new HashMap<string, int>();
+    map.put("one", 1);
+    map.put("two", 2);
+
+    // Exporting to Java
+    @JVMExport
+    fun string greetJava(string name) -> string {
+        return `Hello from Zenith, ${name}!`;
+    }
+
+    // Calling Java from Zenith
+    let systemTime = java.lang.System.currentTimeMillis();
+    IO.print(`Current time: ${systemTime}`);
+}
+
+// =====================
+// OPTIMIZATION TESTS
+// =====================
+
+@TestCase(description="Compiler optimizations", priority=10)
+fun testOptimizations() {
+    // Hidden class optimization
+    let obj1 = {x: 1, y: 2, z: 3};
+    let obj2 = {x: 4, y: 5, z: 6};
+    // Compiler creates hidden class for {x, y, z} pattern
+
+    // Escape analysis
+    fun createTempObject() {
+        let temp = {a: 1, b: 2, c: 3};
+        return temp.a + temp.b; // temp can be stack-allocated
+    }
+
+    // Inline caching
+    for (int i = 0; i < 1000; i++) {
+        let obj = {value: i};
+        let val = obj.value; // Inline cache for property access
+    }
+}
+
+// =====================
+// ADVANCED FEATURES
+// =====================
+
+@TestCase(description="Advanced language features", priority=11)
+fun testAdvancedFeatures() {
+    // Hoisting
+    hoist var globalConfig = {debug: true};
+
+    // Lambda expressions
+    let adder = (int a, int b) => a + b;
+    let square = x => x * x;
+
+    // Higher-order functions
+    fun applyTwice(fun f, int x) -> int {
+        return f(f(x));
+    }
+
+    let result = applyTwice(square, 3); // 81
+
+    // Closures
+    fun makeMultiplier(int factor) -> fun {
+        return (int x) => x * factor;
+    }
+
+    let triple = makeMultiplier(3);
+    IO.print(`Triple of 7: ${triple(7)}`);
+
+    // Pattern matching with destructuring
+    let point = {x: 10, y: 20, z: 30};
+    let {x, y} = point; // x=10, y=20
+
+    // Spread operator
+    let arr1 = [1, 2, 3];
+    let arr2 = [4, 5, 6];
+    let combined = [...arr1, ...arr2];
+
+    // Optional chaining
+    let config = {
+        database: {
+            host: "localhost",
+            port: 5432
+        }
+    };
+
+    let dbPort = config?.database?.port ?? 3306;
+}
+
+// =====================
+// COMPREHENSIVE EXAMPLE
+// =====================
+
+@TestCase(description="Comprehensive example combining features", priority=12)
+@JVMExport
+@@GC("generational")
+actor GameEngine {
+    privatew Map<string, Player> players;
+    private int frameCount;
+    @NotNull private PhysicsWorld physics;
+
+    public GameEngine() {
+        this.players = {};
+        this.frameCount = 0;
+        this.physics = new PhysicsWorld();
+    }
+
+    @Async
+    public message addPlayer(string name, string characterClass) -> Future<Player> {
+        let player = new Player(name, characterClass);
+        this.players[name] = player;
+
+        // Simulate async initialization
+        await player.initialize();
+
+        IO.print(`Player ${name} joined the game`);
+        return player;
+    }
+
+    @Async
+    public message updateGame(double deltaTime) -> Future<bool> {
+        // Update all players concurrently
+        let futures = [];
+        for (let {name, player} : this.players) {
+            futures.push(player.update(deltaTime));
+        }
+
+        // Wait for all updates
+        await all(futures);
+
+        // Update physics
+        unsafe {
+            this.physics.simulate(deltaTime);
+        }
+
+        this.frameCount++;
+        return true;
+    }
+
+    public Result<int, string> getPlayerLevel(string name) {
+        let player = this.players[name];
+        if (player == null) {
+            return Err(`Player ${name} not found`);
+        }
+        return Ok(player.getLevel());
+    }
+}
+
+// =====================
+// MAIN ENTRY POINT
+// =====================
+
+@JVMExport
+@TestCase(description="Main test runner", priority=0)
+fun main() {
+    IO.print("=== Zenith Language Test Suite ===");
+
+    // Run all test cases
+    testFreeObjects();
+    testManualMemory();
+    testConcurrency();
+    testErrorHandling();
+    testTypeSystem();
+    testControlFlow();
+    testJavaInterop();
+    testOptimizations();
+    testAdvancedFeatures();
+
+    // Memory cleanup demonstration
+    scope {
+        let largeObject = new int[10000];
+        // Automatically cleaned up
+    }
+
+    // Final message
+    let endMessage = {
+        status: "COMPLETED",
+        testsRun: 12,
+        timestamp: java.lang.System.currentTimeMillis(),
+        message: `All tests completed successfully!`
+    };
+
+    IO.print(endMessage.toString());
+
+    // Demonstrate string interpolation with complex expressions
+    IO.print(`
+    =====================================
+    Test Summary:
+    - Features tested: ${["Free Objects", "Memory Management", "Concurrency", "Error Handling"].length}
+    - Memory mode: ${@GC()}
+    - Target: ${@Target()}
+    =====================================
+    `);
+}
+
+// =====================
+// ADDITIONAL TEST CLASSES
+// =====================
+
+// Supporting classes
+class Player {
+    privatew string name;
+    privatew int level;
+    privatew double health;
+    protectedw string characterClass;
+
+    public Player(string name, string characterClass) {
+        this.name = name;
+        this.level = 1;
+        this.health = 100.0;
+        this.characterClass = characterClass;
+    }
+
+    @Async
+    public Future<void> initialize() {
+        // Async initialization
+        await sleep(100); // Simulate loading
+        IO.print(`${this.name} initialized`);
+    }
+
+    @Async
+    public Future<bool> update(double deltaTime) {
+        // Game update logic
+        this.health = min(100.0, this.health + deltaTime * 0.1);
+        return true;
+    }
+
+    public int getLevel() {
+        return this.level;
+    }
+}
+
+class PhysicsWorld {
+    private Vector3D gravity;
+
+    public PhysicsWorld() {
+        this.gravity = new Vector3D(0, -9.81, 0);
+    }
+
+    public void simulate(double deltaTime) {
+        // Physics simulation
+        unsafe {
+            // Low-level physics calculations
+            let buffer = malloc(1024);
+            // ... physics computations ...
+            free(buffer);
+        }
+    }
+}

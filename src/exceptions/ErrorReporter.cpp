@@ -7,29 +7,25 @@ namespace zenith{
 	void ErrorReporter::report(const SourceLocation &loc, const std::string &message, const errType& errorType) {
 		std::string line = getSourceLine(loc);
 
-		// Format the error message
-		errStream << "\033[1m" << loc.file << ":" << loc.line << ":" << loc.column << ": "
+		errStream << BOLD_TEXT << loc.file << ":" << loc.line << ":" << loc.column << ": "
 		  << errorType.second << errorType.first << ": " << RESET_COLOR
 		  << message << "\n";
 
-		// Show the problematic line
 		errStream << "  " << loc.line << " | " << line << "\n";
 
-		// Add the underline marker
 		errStream << "  " << std::string(std::to_string(loc.line).size(), ' ') << " | ";
-		for (size_t i = 0; i < loc.column + std::to_string(loc.line).size() + 3; ++i) {
+		for (size_t i = 0; i < loc.column + std::to_string(loc.line).size() - loc.length; ++i) {
 			errStream << " ";
 		}
 		errStream << errorType.second << "^";
 		for (size_t i = 1; i < loc.length; ++i) {
 			errStream << "~";
 		}
-		errStream << "\033[0m\n";
+		errStream << RESET_COLOR << '\n';
 	}
 
 	std::string ErrorReporter::getSourceLine(const SourceLocation &loc) {
-		// First check if we have this file in cache at all
-		auto fileIt = fileLineCache.find(loc.file);
+		const auto fileIt = fileLineCache.find(loc.file);
 		if (fileIt != fileLineCache.end()) {
 			// File is cached, check if we have this line
 			const auto& lineCache = fileIt->second;
@@ -38,7 +34,6 @@ namespace zenith{
 			}
 		}
 
-		// If not, read the file line by line
 		std::ifstream file(loc.file);
 		if (!file) {
 			return "[could not open file]";
@@ -59,8 +54,6 @@ namespace zenith{
 			}
 		}
 
-		// If we get here, the line number was too large
-		// Cache whatever lines we did read
 		if (!newLineCache.empty()) {
 			fileLineCache[loc.file] = std::move(newLineCache);
 		}

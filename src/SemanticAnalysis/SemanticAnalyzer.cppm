@@ -1,9 +1,9 @@
 module;
 #include "../exceptions/ErrorReporter.hpp"
 #include <string>
+export module zenith.semantic;
 import zenith.core.polymorphic_ref;
 import zenith.ast;
-export module zenith.semantic;
 export import :symbolTable;
 
 export namespace zenith {
@@ -17,18 +17,18 @@ export namespace zenith {
 		bool inLoop = false;
 
 		// Expression result type
-		polymorphic_ref<TypeNode> exprVR = nullptr;
+		polymorphic_variant<TypeNode> exprVR = nullptr;
 
 		// Type system helpers
 		bool areTypesCompatible(polymorphic_ref<TypeNode> targetType, polymorphic_ref<TypeNode> valueType);
 
-		polymorphic_ref<TypeNode> resolveType(polymorphic_ref<TypeNode> typeNode);
+		polymorphic_variant<TypeNode> resolveType(polymorphic_ref<TypeNode> typeNode);
 
-		[[nodiscard]] static std::string typeToString(const polymorphic_ref<TypeNode> &type);
+		[[nodiscard]] static std::string typeToString(const polymorphic_ref<TypeNode> type);
 
 		// Visitor methods
 		void visit(ASTNode& node) override;
-		polymorphic_ref<TypeNode> visitExpression(polymorphic_ref<ExprNode> expr) override;
+		polymorphic_variant<TypeNode> visitExpression(polymorphic_ref<ExprNode> expr);
 
 		// Declaration visitors
 		void visit(ProgramNode& node) override;
@@ -42,12 +42,13 @@ export namespace zenith {
 		void visit(ObjectDeclNode& node) override;
 		// void visit(UnionDeclNode& node) override;
 		// void visit(ActorDeclNode& node) override;
+		// Stmt
 		void visit(IfNode& node) override;
-		// void visit(WhileNode& node) override;
-		// void visit(DoWhileNode& node) override;
-		// void visit(ForNode& node) override;
-		// void visit(ExprStmtNode& node) override;
-		// void visit(EmptyStmtNode& node) override;
+		void visit(WhileNode& node) override;
+		void visit(DoWhileNode& node) override;
+		void visit(ForNode& node) override;
+		void visit(ExprStmtNode& node) override;
+		void visit(EmptyStmtNode& node) override {};
 		// void visit(AnnotationNode& node) override;
 		// void visit(TemplateDeclNode& node) override;
 		// void visit(OperatorOverloadNode& node) override;
@@ -59,7 +60,7 @@ export namespace zenith {
 		void visit(BinaryOpNode& node) override;              // polymorphic<TypeNode> -> exprVR
 		void visit(UnaryOpNode& node) override;               // polymorphic<TypeNode> -> exprVR
 		void visit(CallNode& node) override;                  // polymorphic<TypeNode> -> exprVR
-		// void visit(MemberAccessNode& node) override;          // polymorphic<TypeNode> -> exprVR
+		void visit(MemberAccessNode& node) override;          // polymorphic<TypeNode> -> exprVR
 		// void visit(ArrayAccessNode& node) override;           // polymorphic<TypeNode> -> exprVR
 		// void visit(NewExprNode& node) override;               // polymorphic<TypeNode> -> exprVR
 		// void visit(ThisNode& node) override;                  // polymorphic<TypeNode> -> exprVR

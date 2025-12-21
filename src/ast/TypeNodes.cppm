@@ -125,12 +125,12 @@ export namespace zenith {
 	};
 	//Node only used in semantic analyzer
 	struct FunctionTypeNode : TypeNode{
-		std::vector<polymorphic_ref<TypeNode>> parameterTypes;
-		polymorphic_ref<TypeNode> returnType;
+		std::vector<polymorphic_variant<TypeNode>> parameterTypes;
+		polymorphic_variant<TypeNode> returnType;
 
 		FunctionTypeNode(SourceLocation loc,
-		                 std::vector<polymorphic_ref<TypeNode>> params,
-		                 polymorphic_ref<TypeNode> retType)
+		                 std::vector<polymorphic_variant<TypeNode>> params,
+		                 polymorphic_variant<TypeNode> retType)
 				: TypeNode(std::move(loc), Kind::FUNCTION),
 				  parameterTypes(std::move(params)),
 				  returnType(std::move(retType)) {};

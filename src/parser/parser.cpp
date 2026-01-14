@@ -85,7 +85,7 @@ namespace zenith {
 
 	bool Parser::match(std::initializer_list<TokenType> types) const {
 		if (isAtEnd()) return false;
-		return std::find(types.begin(), types.end(), currentToken.type) != types.end();
+		return std::ranges::find(types, currentToken.type) != types.end();
 	}
 
 	Token Parser::consume(TokenType type, const std::string &errorMessage) {
@@ -539,7 +539,7 @@ namespace zenith {
 			TokenType::INT, TokenType::LONG, TokenType::SHORT, TokenType::BYTE, TokenType::FLOAT, TokenType::DOUBLE,
 			TokenType::STRING, TokenType::FREEOBJ, TokenType::BOOL, TokenType::VOID
 		};
-		return builtInTypes.count(type) > 0;
+		return builtInTypes.contains(type);
 	}
 
 	polymorphic<NewExprNode> Parser::parseNewExpression() {
@@ -561,10 +561,10 @@ namespace zenith {
 	polymorphic<FunctionDeclNode> Parser::parseFunction() {
 		SourceLocation loc = currentToken.loc;
 		// Handle annotations
-		bool isAsync = std::find_if(pendingAnnotations.begin(), pendingAnnotations.end(),
-		                            [](const polymorphic<AnnotationNode> &ann) {
-			                            return ann->name == "Async";
-		                            }) != pendingAnnotations.end();
+		bool isAsync = std::ranges::find_if(pendingAnnotations,
+		                                    [](const polymorphic<AnnotationNode> &ann) {
+			                                    return ann->name == "Async";
+		                                    }) != pendingAnnotations.end();
 
 
 		// Parse return type (optional)
@@ -930,7 +930,6 @@ namespace zenith {
 	}
 
 	polymorphic<ExprNode> Parser::parseMemberAccess(polymorphic<ExprNode> object) {
-		// Horse guarantee: We only get called when we see a DOT, if not I'm a horse or tramvai
 		SourceLocation loc = object->loc;
 
 		// First access (guaranteed to exist)
@@ -1456,27 +1455,6 @@ namespace zenith {
 		);
 	}
 
-	//std::vector<polymorphic<MemberDeclNode>> Parser::parseActorMembers(std::string& actorName) {
-	//	std::vector<polymorphic<MemberDeclNode>> members;
-	//	while (!match(TokenType::RBRACE) && !isAtEnd()) {
-	//		try {
-	//			// Parse annotations
-	//			std::vector<polymorphic<AnnotationNode>> annotations;
-	//			while (match(TokenType::AT)) {
-	//				annotations.push_back(parseAnnotation());
-	//			}
-	//			// Parse access modifier
-	//			members.push_back(parseObjectPrimary(actorName, annotations));
-	//
-	//		} catch (const ParseError& e) {
-	//			errorReporter.report(e.location, e.format());
-	//			errStream << e.what() << std::endl;
-	//			synchronize();
-	//		}
-	//	}
-	//	return members;
-	//}
-	//
 	polymorphic<MemberDeclNode> Parser::parseMessageHandler(std::vector<polymorphic<AnnotationNode> > annotations) {
 		SourceLocation loc = consume(TokenType::ON).loc;
 		std::string messageType = consume(TokenType::IDENTIFIER, "Expected message type").lexeme;

@@ -1,6 +1,5 @@
 module;
 #include <utility>
-
 #include "fmt/format.h"
 #include "../utils/RemovePadding.hpp"
 #include "../utils/Colorize.hpp"

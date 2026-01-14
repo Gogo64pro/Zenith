@@ -1,2 +1,0 @@
-cls
-cat ./parserout.log

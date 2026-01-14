@@ -25,7 +25,7 @@ export namespace zenith{
 		SymbolInfo(SymbolInfo&& other) noexcept
 				: kind(other.kind),
 				  type(std::move(other.type)),
-				  declarationNode(std::move(other.declarationNode)),
+				  declarationNode(other.declarationNode),
 				  isConst(other.isConst),
 				  isStatic(other.isStatic) {
 			other.kind = UNKNOWN;
@@ -37,7 +37,7 @@ export namespace zenith{
 			if (this != &other) {
 				kind = other.kind;
 				type = std::move(other.type);
-				declarationNode = std::move(other.declarationNode);
+				declarationNode = other.declarationNode;
 				isConst = other.isConst;
 				isStatic = other.isStatic;
 				other.kind = UNKNOWN;

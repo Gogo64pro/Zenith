@@ -91,18 +91,10 @@ export namespace zenith {
 
 		TemplateTypeNode(SourceLocation loc,
 		                 std::string baseName,
-		                 std::vector<polymorphic<TypeNode>> templateArgs)
+		                 std::vector<polymorphic_variant<TypeNode>> templateArgs)
 				: TypeNode(std::move(loc), Kind::TEMPLATE),
 				  baseName(std::move(baseName)),
-				  templateArgs(std::make_move_iterator(templateArgs.begin()),
-							   std::make_move_iterator(templateArgs.end())) {}
-		TemplateTypeNode(SourceLocation loc,
-						 std::string baseName,
-						 std::vector<polymorphic_ref<TypeNode>> templateArgs)
-				: TypeNode(std::move(loc), Kind::TEMPLATE),
-				  baseName(std::move(baseName)),
-			      templateArgs(std::make_move_iterator(templateArgs.begin()),
-					 std::make_move_iterator(templateArgs.end())) {}
+				  templateArgs(std::move(templateArgs)) {}
 
 		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');

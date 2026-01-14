@@ -15,8 +15,17 @@ export namespace zenith {
 		std::variant<polymorphic<T>, polymorphic_ref<T> > v_;
 
 		template<typename U>
-		polymorphic_variant &operator=(U &&value) {
-			v_ = std::forward<U>(value);
+		polymorphic_variant &operator=(U &&value)
+		requires (!std::same_as<std::remove_cvref_t<U>, polymorphic_variant> &&
+			  (std::convertible_to<U&&, polymorphic<T>> ||
+			   std::convertible_to<U&&, polymorphic_ref<T>>)){
+			if constexpr (std::is_convertible_v<U&&, polymorphic<T>>) {
+				v_.template emplace<0>(std::forward<U>(value));
+			} else if constexpr (std::is_convertible_v<U&&, polymorphic_ref<T>>) {
+				v_.template emplace<1>(std::forward<U>(value));
+			} else {
+				static_assert(sizeof(U) == 0, "Cannot assign this type to polymorphic_variant");
+			}
 			return *this;
 		}
 
@@ -42,7 +51,7 @@ export namespace zenith {
 
 		template<typename U>
 		polymorphic_variant(polymorphic<U> &&p)
-			: v_(std::move(p)) {
+			: v_(std::in_place_type<polymorphic<T>>, std::move(p)) {
 		}
 
 		template<typename U>
@@ -85,6 +94,8 @@ export namespace zenith {
 			}, v_);
 		}
 
+
+
 		polymorphic_variant copy_or_share() const {
 			return std::visit([]<typename U>(U const &x) -> polymorphic_variant {
 				using X = std::decay_t<U>;
@@ -99,7 +110,7 @@ export namespace zenith {
 		}
 
 		operator const polymorphic_ref<T>() const & {
-			return std::visit([](auto &x) -> const auto {
+			return std::visit([](auto &x) -> auto{
 				return polymorphic_ref<T>(x);
 			}, v_);
 		}

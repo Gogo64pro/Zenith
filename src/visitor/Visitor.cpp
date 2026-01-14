@@ -5,13 +5,29 @@
 module;
 #include <stdexcept>
 import zenith.core.polymorphic_ref;
+#if defined(__clang__) || defined(__GNUC__)
+#include <cxxabi.h>
+#include <cstdlib>
+#endif
 module zenith.ast;
-
+inline std::string type_name(const std::type_info& ti) {
+#if (defined(__clang__) || defined(__GNUC__)) && !defined(_MSC_VER)
+	// assume itanium abi idk if intel compiler defines this
+	int status = 0;
+	char* demangled = abi::__cxa_demangle(ti.name(), nullptr, nullptr, &status);
+	std::string result = (status == 0 && demangled) ? demangled : ti.name();
+	std::free(demangled);
+	return result;
+#else
+	//assume msvc abi
+	return ti.name();
+#endif
+}
 
 namespace zenith{
 
 	void Visitor::visit(ASTNode &node) {
-		throw std::runtime_error("Unhandled AST node type");
+		throw std::runtime_error("Unhandled AST node type " + type_name(typeid(node)));
 	}
 
 	void Visitor::visit(ImportNode& node) {

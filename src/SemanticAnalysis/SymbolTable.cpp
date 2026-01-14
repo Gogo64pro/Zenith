@@ -84,44 +84,43 @@ namespace zenith{
 		return nullptr;
 	}
 
-	std::string SymbolTable::toString(const int indent) const {
+	std::string SymbolTable::toString(int indent) const {
 		const std::string pad(indent, ' ');
+		const std::string conv = "main";
 		std::stringstream ss;
 		ss << pad << "SymbolTable {\n";
 
-		// Iterate through scopes (from global to innermost)
-		for (size_t scopeIndex = 0; scopeIndex < scopeStack.size(); ++scopeIndex) {
-			const auto& scope = scopeStack[scopeIndex];
+		for (const auto& [scopeIndex, scope] : std::views::enumerate(scopeStack)) {
 			ss << pad << "  Scope " << scopeIndex << " {\n";
 
-			// Iterate through symbols in the current scope
 			for (const auto& [name, symbolInfo] : scope) {
 				ss << pad << "    Symbol: " << name << "\n";
-				ss << pad << "      Kind: ";
+
+				ss << pad << "    Kind: ";
 				switch (symbolInfo.kind) {
-					case SymbolInfo::VARIABLE: ss << "VARIABLE"; break;
-					case SymbolInfo::FUNCTION: ss << "FUNCTION"; break;
-					case SymbolInfo::OBJECT: ss << "OBJECT"; break;
-					case SymbolInfo::ACTOR: ss << "ACTOR"; break;
-					case SymbolInfo::TYPE_ALIAS: ss << "TYPE_ALIAS"; break;
+					case SymbolInfo::VARIABLE:       ss << "VARIABLE";       break;
+					case SymbolInfo::FUNCTION:       ss << "FUNCTION";       break;
+					case SymbolInfo::OBJECT:         ss << "OBJECT";         break;
+					case SymbolInfo::ACTOR:          ss << "ACTOR";          break;
+					case SymbolInfo::TYPE_ALIAS:     ss << "TYPE_ALIAS";     break;
 					case SymbolInfo::TEMPLATE_PARAM: ss << "TEMPLATE_PARAM"; break;
-					case SymbolInfo::UNKNOWN: ss << "UNKNOWN"; break;
+					case SymbolInfo::UNKNOWN:        ss << "UNKNOWN";        break;
 				}
 				ss << "\n";
 
 				if (symbolInfo.type) {
-					ss << pad << "      Type: " << symbolInfo.type->toString(indent + 6) << "\n";
+					ss << pad << "    Type: " << symbolInfo.type->toString(indent + 6) << "\n";
 				} else {
-					ss << pad << "      Type: <none>\n";
+					ss << pad << "    Type: <none>\n";
 				}
 
-				ss << pad << "      Const: " << (symbolInfo.isConst ? "true" : "false") << "\n";
-				ss << pad << "      Static: " << (symbolInfo.isStatic ? "true" : "false") << "\n";
+				ss << pad << "    Const: "  << (symbolInfo.isConst  ? "true" : "false") << "\n";
+				ss << pad << "    Static: " << (symbolInfo.isStatic ? "true" : "false") << "\n";
 
 				if (symbolInfo.declarationNode) {
-					ss << pad << "      Declaration: " << symbolInfo.declarationNode->toString(indent + 6) << "\n";
+					ss << pad << "    Declaration: " /*<< symbolInfo.declarationNode->toString(indent + 6)*/ << "\n";
 				} else {
-					ss << pad << "      Declaration: <none>\n";
+					ss << pad << "    Declaration: <none>\n";
 				}
 			}
 
@@ -130,7 +129,6 @@ namespace zenith{
 
 		ss << pad << "}";
 		return ss.str();
-
 	}
 
 

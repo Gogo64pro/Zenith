@@ -1,23 +1,21 @@
 #pragma once
-//Definitions and declarations
-//This file is a mess
 #include <vector>
 #include <string>
 
 using namespace zenith;
 
-enum Target{
+enum class Target {
 	native,
 	jvm
 };
 
-enum GC{
+enum class GC {
 	generational,
 	refcounting,
 	none
 };
 
-struct Flags{
+struct Flags {
 	bool bracesRequired = true;
 	Target target = Target::native;
 	GC gc = GC::generational;

@@ -73,7 +73,7 @@ A hybrid programming language combining JVM interoperability, low-level control,
 
 ## Unique Features
 | Feature            | Example              | Notes                           |
-| ------------------ | -------------------- | ------------------------------- |
+|--------------------|----------------------|---------------------------------|
 | Write Restrictions | privatew int x;      | Class-only write, external read |
 | Hoisting           | hoist var x = 10;    | Like JavaScript.                |
 | Dual GC            | @GC("none")          | Manual + GC modes coexist.      |
@@ -134,11 +134,11 @@ unsafe {
 # Specific language specification
 
 ### Keywords
-- ```let``` - Declares a dynamic variable
-- ```var``` - Declares a dynamic variable, same as let
-- ```dyanmic``` - Marks a variable as dynamic, alternative to `let` and `var`
+- ```let``` - Declares a dynamic variable TODO do be deleted and replaced with auto
+- ```var``` - Declares a dynamic variable, same as let TODO do be deleted and replaced with auto
+- ```dynamic``` - Dynamic type(heap allocated)
 - ```fun``` - Declares a dynamic function, can be used with static return type functions too
-- ```hoist``` - Hoists a variable to the top of it's scope. Defines at the normal point
+- ```hoist``` - Hoists a variable to the top of its scope. Defines at the normal point
 - `unsigned` - Makes a number variable unsigned
 - `signed` - Makes a number variable signed
 - ```class``` - Makes a class
@@ -156,7 +156,7 @@ unsafe {
 
 **Imports**
 - ```import``` - Imports a file
-- ```import java``` - Imports a java class(must be compiled to JVM or have a JVM it can refrence to)
+- ```import java``` - Imports a java class(must be compiled to JVM or have a JVM it can reference to)
 - ```extern "C"``` - Creates a block where you can declare C functions, must be in an unsafe block
 - ```package``` - Sets a package, needed when compiling to JVM or integrating with java
 
@@ -164,17 +164,17 @@ unsafe {
 
 **<span style="font-size: 1.1em;">Built-in types</span>**
 
-**<span style="font-size: 0.95em; margin-left: 0.5em; display: block; ">Number Types</span>**  
+**<span style="font-size: 0.95em; margin-left: 0.5em; display: block;">Number Types</span>**  
 - `short` - 2 byte integer  
 - `int` - 4 byte integer  
 - `long` - 8 byte integer  
 - `byte` - 1 byte integer  
 - `float` - 4 byte decimal number
-- `double` -  8 byte decimal nunber
+- `double` -  8 byte decimal number
 
 **<span style="font-size: 0.95em; margin-left: 0.5em; display: block; ">Other primitive Types</span>**
 - `string` - A string !! Not a `class`
-- `freeobj` -  A javascript like object that can store data, functions, etc. If it is being used like a `struct` it will be compiled as if it is a `struct`. There are a couple of ways to use it 
+- `freeobj` -  A JavaScript like object that can store data, functions, etc. If it is being used like a `struct` it will be compiled as if it is a `struct`. There are a couple of ways to use it 
 - `Number` - A JS like number that supports decimals and whole numbers up to 8 bytes
 - `BigInt` - A JS like dynamically allocated integer, up to 32 bytes
 - `BigNumber` - A dynamically allocated number that can support numbers up to 32 bytes
@@ -308,7 +308,7 @@ union Pet{
 }
 ```
 ### Metaprogramming - Annotations, Decorators
-- **Annotations** can be added to anything and hold some extra info, work the same as Java Annotations can hold anything, they give runtime metadata(in some cases with the built in ones it's compile time)
+- **Annotations** can be added to anything and hold some extra info, work the same as Java Annotations can hold anything, they give runtime metadata(in some cases with the built-in ones it's compile time)
 ```
 @Breedable
 class Cat{...}
@@ -322,12 +322,10 @@ let somevarthatcantbenull = 1
 @IsAGreatFunction
 fun givesGreatResponses{...}
 ```
-- **Decorators** - can be added to functions/methods and function as a wrapper before executing the main code. Built-in annotations have equivalent decorators
+- **Decorators** - can be added to functions/methods and function as a wrapper before executing the main code
 ```
-@@GC("refcounting") // Same as @GC("refcounting")
-int a = 5
-@@NotNull //Same as @NotNull
-int a = 219
+  @@Memoize
+  fun fibbonaci(){}
 ```
 #### Creating
 **Annotations**
@@ -344,7 +342,7 @@ annotation Register{
     string registry;
     string id;
 }
-@Name(id="actor",registry="con")
+@Register(id="actor",registry="con")
 /************************/
 annotation Register{
     string registry;
@@ -361,7 +359,7 @@ annotation Register{
 
 Classes are the foundation of OOP, encapsulating data (fields) and behavior (methods). They support:
 
-- Inheritance (single inheritance only, no multiple inheritance)
+- Inheritance
 
 - Operator overloading (though not shown in this first example)
 
@@ -372,7 +370,7 @@ Classes are the foundation of OOP, encapsulating data (fields) and behavior (met
 Key Modifiers
 
 - `const` – Makes a field immutable (must be initialized at declaration or in the constructor).
-- ...
+- `static` - Makes the member not need an instance to be accessed
 
 ```
 class Dog {
@@ -446,7 +444,7 @@ class Vector3D {
 
     // --- Operator Overloading ---
     // Vector addition (+)
-    public Vector3D operator "+"(Vector3D other) {
+    public Vector3D operator+(Vector3D other) {
         return new Vector3D(
             this.x + other.x,
             this.y + other.y,
@@ -455,7 +453,7 @@ class Vector3D {
     }
 
     // Scalar multiplication (*)
-    public Vector3D operator "*"(double scalar) {
+    public Vector3D operator*(double scalar) {
         return new Vector3D(
             this.x * scalar,
             this.y * scalar,
@@ -464,7 +462,7 @@ class Vector3D {
     }
 
     // Equality check (==)
-    public bool operator "=="(Vector3D other) {
+    public bool operator==(Vector3D other) {
         return this.x == other.x 
             && this.y == other.y 
             && this.z == other.z;
@@ -509,15 +507,9 @@ fun main() {
      b: 2,
      c: 4
  }
- Vector c = {
-     .a = 1,
-     .b = 2,
-     .c = 4
- }
 ```
 
 **Union**
-- Unions are the same as in C++
 - A union is a special data type that lets you store different types of data in the same memory space, but only one at a time
 Key Idea:
 - Unlike a struct (where each field has its own memory), a union shares the same memory for all its fields
@@ -525,7 +517,7 @@ Key Idea:
 - Size = largest member’s size (since memory is shared)
 - Do not directly support dynamic variables
 - If they contain an object that contains dynamic variables they will be ignored (in size)
-
+- No way to know what type is active
 ```
 union arbnum {
     int,

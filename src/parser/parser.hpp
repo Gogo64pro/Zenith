@@ -58,7 +58,7 @@ namespace zenith {
 		polymorphic<MemberDeclNode> parseMessageHandler(std::vector<polymorphic<AnnotationNode>> annotations);
 		polymorphic<MemberDeclNode> parseField(std::vector<polymorphic<AnnotationNode>> &annotations, const MemberDeclNode::Access &access, bool isConst);
 		polymorphic<MemberDeclNode> parseConstructor(const MemberDeclNode::Access &access, bool isConst, std::string &className, std::vector<polymorphic<AnnotationNode>> &annotations);
-		polymorphic<MemberDeclNode> parseObjectPrimary(std::string &name, std::vector<polymorphic<AnnotationNode>> &annotations, MemberDeclNode::Access defaultLevel = MemberDeclNode::PUBLIC);
+		polymorphic<MemberDeclNode> parseObjectPrimary(std::string &name, std::vector<polymorphic<AnnotationNode>> &annotations, MemberDeclNode::Access defaultLevel = MemberDeclNode::Access::PUBLIC);
 
 		// Declaration parsers
 		polymorphic<ImportNode> parseImport();
@@ -80,6 +80,8 @@ namespace zenith {
 		polymorphic<TemplateDeclNode> parseTemplate();
 		polymorphic<BlockNode> parseBlock();
 		polymorphic<UnsafeNode> parseUnsafeBlock();
+
+		bool isArrowFunctionStart() const;
 
 		// Expression parsers
 		polymorphic<NewExprNode> parseNewExpression();

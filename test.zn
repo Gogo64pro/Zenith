@@ -1,3 +1,11 @@
+struct Vec3 {
+    int x;
+    int y;
+    int z;
+
+
+}
+
 int fibonacci(int num){
     if(num==0){
         return 0;
@@ -12,4 +20,7 @@ fun main(){
   for(int i = 0; i < 10; i++){
     IO.print(fibonacci(i))
   }
+  int a[100]
+  a[0] = 67
+  a[5-2] = 3
 }

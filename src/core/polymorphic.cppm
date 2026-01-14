@@ -15,7 +15,6 @@ export namespace zenith {
 
         template<typename U>
         friend class polymorphic;
-
         // Private constructor for sharing with different type
         template<typename U>
             requires std::derived_from<U, T> || std::derived_from<T, U>
@@ -52,11 +51,18 @@ export namespace zenith {
             requires std::derived_from<U, T>
         polymorphic(polymorphic<U>&& other) : ptr_(std::move(other.ptr_)) {}
 
+
         // Move constructor
         polymorphic(polymorphic&&) = default;
 
         // Move assignment
         polymorphic& operator=(polymorphic&&) = default;
+        template<typename U>
+            requires std::derived_from<U, T>
+        polymorphic& operator=(polymorphic<U>&& other) noexcept {
+            ptr_ = std::move(other.ptr_);
+            return *this;
+        }
 
         // Delete public copy assignment to prevent accidental sharing
         polymorphic& operator=(const polymorphic&) = delete;
@@ -201,12 +207,13 @@ export namespace zenith {
                     return nullptr;
                 }
 
-                if (checked_ && !const_self_.is_type<To>()) {
+                auto ptr = std::dynamic_pointer_cast<To>(const_self_.ptr_);
+                if (!ptr) {
                     if (throw_on_fail_) throw std::bad_cast();
                     return nullptr;
                 }
 
-                return polymorphic<To>(std::dynamic_pointer_cast<To>(const_self_.ptr_));
+                return polymorphic<To>(ptr);
             }
 
             template<typename To>
@@ -216,12 +223,13 @@ export namespace zenith {
                     return nullptr;
                 }
 
-                if (checked_ && !self_.is_type<To>()) {
+                auto ptr = std::dynamic_pointer_cast<To>(self_.ptr_);
+                if (!ptr) {
                     if (throw_on_fail_) throw std::bad_cast();
                     return nullptr;
                 }
 
-                return polymorphic<To>(std::dynamic_pointer_cast<To>(self_.ptr_));
+                return polymorphic<To>(ptr);
             }
         };
 

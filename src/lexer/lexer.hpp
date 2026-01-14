@@ -48,7 +48,7 @@ namespace zenith{
 		Token(TokenType type, std::string lexeme, SourceLocation loc): type(type), lexeme(std::move(lexeme)), loc(std::move(loc)) {}
 		Token(TokenType type, std::string lexeme, size_t line, size_t column, size_t length)
 				: type(type), lexeme(std::move(lexeme)),
-				  loc{line, column, length, 0} {}  // fileOffset=0
+				  loc{line, column, length, 0, ""} {}  // fileOffset=0
 	};
 
 	class Lexer {

@@ -16,10 +16,6 @@ export namespace zenith {
         friend class polymorphic_ref;
 
         polymorphic_ref(T& ref) noexcept : ptr_(&ref) {}
-        template<typename U>
-        requires std::derived_from<U, T> || std::derived_from<T, U>
-        polymorphic_ref(polymorphic<U>& other) noexcept : ptr_(other.get()) {}
-
 
         // Construct from pointer
         explicit polymorphic_ref(T* ptr) noexcept : ptr_(ptr) {}
@@ -46,15 +42,13 @@ export namespace zenith {
 
         template<typename U>
         requires (std::derived_from<U, T> || std::derived_from<T, U>)
-        polymorphic_ref(const polymorphic_ref<U>& other) noexcept
+        polymorphic_ref(polymorphic<U>& other) noexcept
             : ptr_(other.get()) {}
+
         template<typename U>
-        requires (std::derived_from<U, std::remove_const_t<T>> ||
-          std::derived_from<std::remove_const_t<T>, U>) &&
-         std::is_convertible_v<const U*, T*>
-        polymorphic_ref(const polymorphic<U>& other) noexcept : ptr_(other.get()) {}
-
-
+        requires (std::derived_from<U, T> || std::derived_from<T, U>)
+        polymorphic_ref(const polymorphic<U>& other) noexcept
+            : ptr_(const_cast<T*>(other.get())) {}
 
         // Observers
         explicit operator bool() const noexcept { return ptr_ != nullptr; }
@@ -112,6 +106,7 @@ export namespace zenith {
 
             cast_builder&& unchecked() && {
                 checked_ = false;
+                //add a change
                 return std::move(*this);
             }
 

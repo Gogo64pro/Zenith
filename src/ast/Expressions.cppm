@@ -105,7 +105,7 @@ export namespace zenith{
 
 	// --- Unary Operations ---
 	struct UnaryOpNode : ExprNode {
-		enum Op : uint8_t {INC, DEC, NEGATE } op;
+		enum class Op : uint8_t {INC, DEC, NEGATE, NOT} op;
 		polymorphic<ExprNode> right;
 		bool prefix = false;
 		UnaryOpNode(SourceLocation loc, TokenType tokenType,
@@ -124,7 +124,7 @@ export namespace zenith{
 		[[nodiscard]] std::string toString(int indent = 0) const override {
 			static const char* opNames[] = {"++", "--", "-"};
 			std::string pad(indent, ' ');
-			return pad + "UnaryOp(" + opNames[op] + ")\n" +
+			return pad + "UnaryOp(" + opNames[static_cast<int>(op)] + ")\n" +
 			       right->toString(indent + 2) + "\n";
 		}
 		ACCEPT_METHODS
@@ -132,8 +132,8 @@ export namespace zenith{
 	private:
 		static Op convertTokenType(const TokenType type) {
 			switch(type) {
-				case TokenType::INCREASE: return INC;
-				case TokenType::DECREASE: return DEC;
+				case TokenType::INCREASE: return Op::INC;
+				case TokenType::DECREASE: return Op::DEC;
 				default: throw std::invalid_argument("Invalid binary operator");
 			}
 		}
@@ -214,9 +214,9 @@ export namespace zenith{
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "FreeObject {\n";
-			for (const auto& prop : properties) {
-				ss << pad << "  " << prop.first << ": "
-				   << prop.second->toString(0) << "\n";
+			for (const auto&[key, val] : properties) {
+				ss << pad << "  " << key << ": "
+				   << val->toString(0) << "\n";
 			}
 			ss << pad << "}";
 			return ss.str();
@@ -257,7 +257,7 @@ export namespace zenith{
 			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "new " << className << "(";

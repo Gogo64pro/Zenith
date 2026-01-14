@@ -2,3 +2,6 @@
 cmake-build*/
 build/
 CMakeFiles/
+*.zn
+*.log
+count_non_comment_lines.ps1

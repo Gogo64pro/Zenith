@@ -4,9 +4,9 @@
 module;
 #include <optional>
 #include <variant>
+export module zenith.core.polymorphic_variant;
 import zenith.core.polymorphic;
 import zenith.core.polymorphic_ref;
-export module zenith.core.polymorphic_variant;
 
 export namespace zenith {
 	template<typename T>

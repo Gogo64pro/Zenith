@@ -4,12 +4,12 @@
 
 module;
 #include <stdexcept>
-import zenith.core.polymorphic_ref;
 #if defined(__clang__) || defined(__GNUC__)
 #include <cxxabi.h>
 #include <cstdlib>
 #endif
 module zenith.ast;
+import zenith.core.polymorphic_ref;
 inline std::string type_name(const std::type_info& ti) {
 #if (defined(__clang__) || defined(__GNUC__)) && !defined(_MSC_VER)
 	// assume itanium abi idk if intel compiler defines this

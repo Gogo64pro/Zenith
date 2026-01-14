@@ -1,8 +1,8 @@
 module;
 #include <string>
-import zenith.core.polymorphic;
 export module zenith.ast:ASTNode;
 export import zenith.sourceLocation;
+import zenith.core.polymorphic;
 namespace zenith {
 	class Visitor;
 }

@@ -4,11 +4,10 @@ module;
 #include <sstream>
 #include <unordered_set>
 #include <utility>
-#include <variant>
 #include <vector>
+export module zenith.ast:typeNodes;
 import zenith.core.polymorphic;
 import zenith.core.polymorphic_variant;
-export module zenith.ast:typeNodes;
 import :visitor;
 import :ASTNode;
 import :visitor;

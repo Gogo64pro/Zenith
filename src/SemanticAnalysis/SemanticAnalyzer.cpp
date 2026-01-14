@@ -10,10 +10,10 @@ module;
 
 #define CREATE_ERROR_INFO(loc) ExpressionInfo(make_polymorphic<TypeNode>(loc, TypeNode::Kind::ERROR), false, false)
 #define CREATE_ERROR_TYPE(loc) make_polymorphic<TypeNode>(loc, TypeNode::Kind::ERROR)
+module zenith.semantic;
 import zenith.core.polymorphic_ref;
 import zenith.core.polymorphic;
 import zenith.ast;
-module zenith.semantic;
 
 namespace zenith {
 	auto isNumeric = [](const polymorphic_ref<TypeNode>& t) -> bool {

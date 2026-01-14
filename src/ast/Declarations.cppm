@@ -7,8 +7,8 @@ module;
 #include "fmt/ranges.h"
 #include "utils/small_vector.hpp"
 #include "acceptMethods.hpp"
-import zenith.core.polymorphic;
 export module zenith.ast:declarations;
+import zenith.core.polymorphic;
 import :ASTNode;
 import :typeNodes;
 import :statements;

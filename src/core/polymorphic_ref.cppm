@@ -2,8 +2,8 @@ module;
 #include <utility>
 #include <typeinfo>
 #include <optional>
-import zenith.core.polymorphic;
 export module zenith.core.polymorphic_ref;
+import zenith.core.polymorphic;
 
 export namespace zenith {
     template<typename T>
@@ -209,5 +209,8 @@ export namespace zenith {
     polymorphic_ref<const T> make_polymorphic_ref(const T& ref) noexcept {
         return polymorphic_ref<const T>(ref);
     }
-
+    template<typename T>
+    T test(T arg) {
+        return arg;
+    }
 }

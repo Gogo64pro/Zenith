@@ -3,8 +3,8 @@ module;
 #include <sstream>
 #include <vector>
 #include "acceptMethods.hpp"
-import zenith.core.polymorphic;
 export module zenith.ast:statements;
+import zenith.core.polymorphic;
 import :ASTNode;
 import :visitor;
 

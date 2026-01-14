@@ -6,8 +6,8 @@ module;
 #include "../utils/RemovePadding.hpp"
 #include "lexer/lexer.hpp"
 #include "acceptMethods.hpp"
-import zenith.core.polymorphic;
 export module zenith.ast:expressions;
+import zenith.core.polymorphic;
 import :ASTNode;
 import :declarations;
 import :visitor;

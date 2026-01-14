@@ -1061,7 +1061,7 @@ namespace zenith {
 
 	polymorphic<ObjectDeclNode> Parser::parseObject() {
 		if (!match({TokenType::STRUCT, TokenType::CLASS})) {
-			errorReporter.report(currentToken.loc, "Uhhh, +1 the compiler fucked up point",
+			errorReporter.report(currentToken.loc, "Yeah no",
 			                     {"Internal Error", RED_TEXT});
 		}
 		bool isClass = match(TokenType::CLASS);
@@ -1156,12 +1156,12 @@ namespace zenith {
 				MemberDeclNode::Kind::METHOD,
 				access,
 				isConst,
-				std::move(funcDecl->name), // std::string&&
-				std::move(funcDecl->returnType), // unique_ptr<TypeNode>
+				std::move(funcDecl->name),
+				std::move(funcDecl->returnType),
 				nullptr, // No field init
-				std::vector<std::pair<std::string, polymorphic<ExprNode> > >{}, // Empty ctor inits
-				std::move(funcDecl->body), // unique_ptr<BlockNode>
-				std::move(annotations) // vector<unique_ptr<AnnotationNode>>
+				std::vector<std::pair<std::string, polymorphic<ExprNode> > >{},
+				std::move(funcDecl->body),
+				std::move(annotations)
 			);
 		}
 		else {

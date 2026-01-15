@@ -41,21 +41,21 @@ set(TUs
 )
 
 set(MODULES
-        src/ast/AST.cppm
-        src/ast/SourceLocation.cppm
+        src/ast/AST.hpp
+        src/ast/SourceLocation.hpp
         src/core/polymorphic.cppm
         src/core/polymorphic_ref.cppm
-        src/visitor/Visitor.cppm
-        src/ast/ASTNode.cppm
-        src/ast/Declarations.cppm
-        src/ast/Expressions.cppm
-        src/ast/MainNodes.cppm
-        src/ast/Other.cppm
-        src/ast/Statements.cppm
-        src/ast/TypeNodes.cppm
-        src/ast/IAnnotatable.cppm
-        src/SemanticAnalysis/SymbolTable.cppm
-        src/SemanticAnalysis/SemanticAnalyzer.cppm
+        src/visitor/Visitor.hpp
+        src/ast/ASTNode.hpp
+        src/ast/Declarations.hpp
+        src/ast/Expressions.hpp
+        src/ast/MainNodes.hpp
+        src/ast/Other.hpp
+        src/ast/Statements.hpp
+        src/ast/TypeNodes.hpp
+        src/ast/IAnnotatable.hpp
+        src/SemanticAnalysis/SymbolTable.hpp
+        src/SemanticAnalysis/SemanticAnalyzer.hpp
         src/core/polymorphic_variant.cppm
 )
 add_executable(Zenith ${TUs} src/main.cpp

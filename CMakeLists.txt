@@ -38,24 +38,13 @@ set(TUs
         src/SemanticAnalysis/SymbolTable.cpp
         src/ast/acceptMethods.cpp
         src/visitor/Visitor.cpp
+        src/ast/AST.hpp
+        src/ast/SourceLocation.hpp
 )
 
 set(MODULES
-        src/ast/AST.hpp
-        src/ast/SourceLocation.hpp
         src/core/polymorphic.cppm
         src/core/polymorphic_ref.cppm
-        src/visitor/Visitor.hpp
-        src/ast/ASTNode.hpp
-        src/ast/Declarations.hpp
-        src/ast/Expressions.hpp
-        src/ast/MainNodes.hpp
-        src/ast/Other.hpp
-        src/ast/Statements.hpp
-        src/ast/TypeNodes.hpp
-        src/ast/IAnnotatable.hpp
-        src/SemanticAnalysis/SymbolTable.hpp
-        src/SemanticAnalysis/SemanticAnalyzer.hpp
         src/core/polymorphic_variant.cppm
 )
 add_executable(Zenith ${TUs} src/main.cpp

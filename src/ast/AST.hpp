@@ -1,8 +1,7 @@
 //
 // Created by gogop on 8/4/2025.
 //
-
-export module zenith.ast;
+#pragma once
 export import :ASTNode;
 export import :expressions;
 export import :declarations;

@@ -1,9 +1,8 @@
-module;
+#pragma once
 #include <utility>
 #include <sstream>
 #include <vector>
 #include "acceptMethods.hpp"
-export module zenith.ast:statements;
 import zenith.core.polymorphic;
 import :ASTNode;
 import :visitor;

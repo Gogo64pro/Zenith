@@ -1,4 +1,4 @@
-module;
+#pragma once
 #include <memory>
 #include <utility>
 #include <vector>
@@ -6,7 +6,6 @@ module;
 #include "../utils/RemovePadding.hpp"
 #include "lexer/lexer.hpp"
 #include "acceptMethods.hpp"
-export module zenith.ast:expressions;
 import zenith.core.polymorphic;
 import :ASTNode;
 import :declarations;

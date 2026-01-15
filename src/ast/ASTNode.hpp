@@ -1,6 +1,5 @@
-module;
+#pragma once
 #include <string>
-export module zenith.ast:ASTNode;
 export import zenith.sourceLocation;
 import zenith.core.polymorphic;
 namespace zenith {

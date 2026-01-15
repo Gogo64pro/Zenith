@@ -1,11 +1,11 @@
-module;
+#pragma once
+
 #include "acceptMethods.hpp"
 #include <algorithm>
 #include <sstream>
 #include <unordered_set>
 #include <utility>
 #include <vector>
-export module zenith.ast:typeNodes;
 import zenith.core.polymorphic;
 import zenith.core.polymorphic_variant;
 import :visitor;

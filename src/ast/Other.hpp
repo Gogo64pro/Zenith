@@ -1,10 +1,8 @@
-module;
 #include <string>
 #include <utility>
 #include <vector>
 #include <sstream>
 #include "acceptMethods.hpp"
-export module zenith.ast:other;
 import zenith.core.polymorphic;
 import :ASTNode;
 import :typeNodes;

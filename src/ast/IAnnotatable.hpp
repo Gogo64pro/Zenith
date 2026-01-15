@@ -1,7 +1,7 @@
-module;
+#pragma once
+
 #include <vector>
 #include "../utils/small_vector.hpp"
-export module zenith.ast:IAnnotatable;
 import zenith.core.polymorphic;
 import :other;
 

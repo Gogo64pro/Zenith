@@ -1,12 +1,12 @@
+#pragma once
 #include <string>
 #include <utility>
 #include <vector>
 #include <sstream>
 #include "acceptMethods.hpp"
 import zenith.core.polymorphic;
-import :ASTNode;
-import :typeNodes;
-
+#include "ASTNode.hpp"
+#include "TypeNodes.hpp"
 
 export namespace zenith{
 	struct AnnotationNode : ASTNode {

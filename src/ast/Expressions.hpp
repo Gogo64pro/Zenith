@@ -7,10 +7,9 @@
 #include "lexer/lexer.hpp"
 #include "acceptMethods.hpp"
 import zenith.core.polymorphic;
-import :ASTNode;
-import :declarations;
-import :visitor;
-
+#include "ASTNode.hpp"
+#include "Declarations.hpp"
+#include "MainNodes.hpp"
 export namespace zenith{
 	// --- Literal Values ---
 	struct LiteralNode : ExprNode {

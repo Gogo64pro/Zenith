@@ -8,9 +8,7 @@
 #include <vector>
 import zenith.core.polymorphic;
 import zenith.core.polymorphic_variant;
-import :visitor;
-import :ASTNode;
-import :visitor;
+#include "ASTNode.hpp"
 
 
 export namespace zenith {

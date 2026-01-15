@@ -4,8 +4,7 @@
 #include <vector>
 #include "acceptMethods.hpp"
 import zenith.core.polymorphic;
-import :ASTNode;
-import :visitor;
+#include "ASTNode.hpp"
 
 
 export namespace zenith {

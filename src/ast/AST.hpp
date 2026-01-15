@@ -2,12 +2,12 @@
 // Created by gogop on 8/4/2025.
 //
 #pragma once
-export import :ASTNode;
-export import :expressions;
-export import :declarations;
-export import :mainNodes;
-export import :other;
-export import :statements;
-export import :typeNodes;
-export import :visitor;
-export import :IAnnotatable;
+#include "ASTNode.hpp";
+#include "Expressions.hpp";
+#include "Declarations.hpp";
+#include "MainNodes.hpp";
+#include "Other.hpp";
+#include "Statements.hpp";
+#include "TypeNodes.hpp";
+#include "../visitor/Visitor.hpp";
+#include "IAnnotatable.hpp";

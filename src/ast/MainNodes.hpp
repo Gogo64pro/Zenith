@@ -4,8 +4,8 @@
 #include <sstream>
 #include"acceptMethods.hpp"
 import zenith.core.polymorphic;
-import :visitor;
-import :ASTNode;
+#include "ASTNode.hpp"
+
 
 export namespace zenith {
 	struct ProgramNode : ASTNode {

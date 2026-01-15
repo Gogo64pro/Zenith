@@ -3,7 +3,8 @@
 #include <vector>
 #include "../utils/small_vector.hpp"
 import zenith.core.polymorphic;
-import :other;
+#include "ASTNode.hpp"
+#include "Other.hpp"
 
 export namespace zenith{
 	struct IAnnotatable{

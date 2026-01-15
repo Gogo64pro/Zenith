@@ -6,13 +6,12 @@
 #include "fmt/ranges.h"
 #include "utils/small_vector.hpp"
 #include "acceptMethods.hpp"
+#include "ASTNode.hpp"
+#include "TypeNodes.hpp"
+#include "Statements.hpp"
+#include "IAnnotatable.hpp"
+#include "Other.hpp"
 import zenith.core.polymorphic;
-import :ASTNode;
-import :typeNodes;
-import :statements;
-import :IAnnotatable;
-import :other;
-
 export namespace zenith {
 	struct VarDeclNode : StmtNode {
 		enum Kind { STATIC, DYNAMIC, CLASS_INIT } kind;

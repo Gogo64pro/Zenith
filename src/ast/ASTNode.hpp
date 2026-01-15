@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-export import zenith.sourceLocation;
+#include "SourceLocation.hpp"
 import zenith.core.polymorphic;
 namespace zenith {
 	class Visitor;

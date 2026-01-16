@@ -2,7 +2,7 @@
 // Created by gogop on 7/29/2025.
 //
 
-#include "../core/polymorphic.cppm"
+#include "../core/polymorphic.hpp"
 #include <gtest/gtest.h>
 
 // Base and derived classes for testing

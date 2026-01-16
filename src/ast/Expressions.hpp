@@ -1,4 +1,4 @@
-module;
+#pragma once
 #include <memory>
 #include <utility>
 #include <vector>
@@ -6,13 +6,11 @@ module;
 #include "../utils/RemovePadding.hpp"
 #include "lexer/lexer.hpp"
 #include "acceptMethods.hpp"
-export module zenith.ast:expressions;
-import zenith.core.polymorphic;
-import :ASTNode;
-import :declarations;
-import :visitor;
-
-export namespace zenith{
+#include "../core/polymorphic.hpp"
+#include "ASTNode.hpp"
+#include "Declarations.hpp"
+#include "MainNodes.hpp"
+namespace zenith{
 	// --- Literal Values ---
 	struct LiteralNode : ExprNode {
 		enum Type : uint8_t { NUMBER, STRING, BOOL, NIL } type;

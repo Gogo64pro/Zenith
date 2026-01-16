@@ -1,19 +1,16 @@
-module;
+#pragma once
+
 #include "acceptMethods.hpp"
 #include <algorithm>
 #include <sstream>
 #include <unordered_set>
 #include <utility>
 #include <vector>
-export module zenith.ast:typeNodes;
-import zenith.core.polymorphic;
-import zenith.core.polymorphic_variant;
-import :visitor;
-import :ASTNode;
-import :visitor;
+#include "../core/polymorphic_variant.hpp"
+#include "ASTNode.hpp"
 
 
-export namespace zenith {
+namespace zenith {
 	struct TypeNode : ASTNode {
 		enum class Kind { PRIMITIVE, OBJECT, ARRAY, FUNCTION, DYNAMIC, TEMPLATE, ERROR } kind;
 

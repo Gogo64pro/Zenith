@@ -1,12 +1,11 @@
-module;
+#pragma once
 #include <string>
-export module zenith.ast:ASTNode;
-export import zenith.sourceLocation;
-import zenith.core.polymorphic;
+#include "SourceLocation.hpp"
+#include "../core/polymorphic.hpp"
 namespace zenith {
 	class Visitor;
 }
-export namespace zenith {
+namespace zenith {
 	struct ASTNode {
 		virtual ~ASTNode() = default;
 		SourceLocation loc;

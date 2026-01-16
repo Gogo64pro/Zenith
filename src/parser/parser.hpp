@@ -7,12 +7,10 @@
 #include "../lexer/lexer.hpp"
 #include "../utils/mainargs.hpp"
 #include "../exceptions/ErrorReporter.hpp"
-import zenith.core.polymorphic;
-import zenith.ast;
+#include "../ast/AST.hpp"
 
 namespace zenith {
 	class Parser {
-	private:
 		std::vector<Token> tokens;
 		size_t current = 0;
 		size_t previous = 0;

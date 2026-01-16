@@ -1,11 +1,10 @@
 //
 // Created by gogop on 11/9/2025.
 //
-export module zenith.ast:visitor;
-import zenith.core.polymorphic_ref;
+#pragma once
 
 
-export namespace zenith {
+namespace zenith {
 	class Visitor {
 	public:
 		virtual ~Visitor() = default;

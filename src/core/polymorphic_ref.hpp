@@ -1,11 +1,11 @@
-module;
+#pragma once
+
 #include <utility>
 #include <typeinfo>
 #include <optional>
-export module zenith.core.polymorphic_ref;
-import zenith.core.polymorphic;
+#include "polymorphic.hpp"
 
-export namespace zenith {
+namespace zenith {
     template<typename T>
     class polymorphic_ref {
         T* ptr_ = nullptr;

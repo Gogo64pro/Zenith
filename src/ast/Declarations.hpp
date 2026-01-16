@@ -1,4 +1,4 @@
-module;
+#pragma once
 #include <utility>
 #include "fmt/format.h"
 #include "../utils/RemovePadding.hpp"
@@ -6,15 +6,13 @@ module;
 #include "fmt/ranges.h"
 #include "utils/small_vector.hpp"
 #include "acceptMethods.hpp"
-export module zenith.ast:declarations;
-import zenith.core.polymorphic;
-import :ASTNode;
-import :typeNodes;
-import :statements;
-import :IAnnotatable;
-import :other;
-
-export namespace zenith {
+#include "ASTNode.hpp"
+#include "TypeNodes.hpp"
+#include "Statements.hpp"
+#include "IAnnotatable.hpp"
+#include "Other.hpp"
+#include "../core/polymorphic.hpp"
+namespace zenith {
 	struct VarDeclNode : StmtNode {
 		enum Kind { STATIC, DYNAMIC, CLASS_INIT } kind;
 

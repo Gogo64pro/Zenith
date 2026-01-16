@@ -1,11 +1,12 @@
-module;
+#pragma once
+
 #include <vector>
 #include "../utils/small_vector.hpp"
-export module zenith.ast:IAnnotatable;
-import zenith.core.polymorphic;
-import :other;
+#include "../core/polymorphic.hpp"
+#include "ASTNode.hpp"
+#include "Other.hpp"
 
-export namespace zenith{
+namespace zenith{
 	struct IAnnotatable{
 		small_vector<polymorphic<AnnotationNode>, 2> annotations;
 		virtual ~IAnnotatable() = default;

@@ -5,9 +5,8 @@
 #include <algorithm>
 #include <unordered_set>
 #include "../exceptions/ParseError.hpp"
-import zenith.ast;
-import zenith.core.polymorphic;
-import zenith.core.polymorphic_variant;
+#include <SemanticAnalysis/SemanticAnalyzer.hpp>
+
 
 std::string debug_lexeme_string(const std::vector<Token> &tokens) {
 	std::stringstream ss;

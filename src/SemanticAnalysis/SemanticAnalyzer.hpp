@@ -1,12 +1,9 @@
-module;
+#pragma once
 #include "../exceptions/ErrorReporter.hpp"
 #include <string>
-export module zenith.semantic;
-import zenith.core.polymorphic_ref;
-import zenith.ast;
-export import :symbolTable;
+#include "SymbolTable.hpp"
 
-export namespace zenith {
+namespace zenith {
 	class SemanticAnalyzer : public Visitor {
 		struct ExpressionInfo {
 			polymorphic_variant<TypeNode> type;

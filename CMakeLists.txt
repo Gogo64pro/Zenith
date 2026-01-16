@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.31)
+message(STATUS "CMAKE_ROOT = ${CMAKE_ROOT}")
+cmake_minimum_required(VERSION 4.0)
 
 project(Zenith)
 
@@ -40,32 +41,8 @@ set(TUs
         src/visitor/Visitor.cpp
 )
 
-set(MODULES
-        src/ast/AST.cppm
-        src/ast/SourceLocation.cppm
-        src/core/polymorphic.cppm
-        src/core/polymorphic_ref.cppm
-        src/visitor/Visitor.cppm
-        src/ast/ASTNode.cppm
-        src/ast/Declarations.cppm
-        src/ast/Expressions.cppm
-        src/ast/MainNodes.cppm
-        src/ast/Other.cppm
-        src/ast/Statements.cppm
-        src/ast/TypeNodes.cppm
-        src/ast/IAnnotatable.cppm
-        src/SemanticAnalysis/SymbolTable.cppm
-        src/SemanticAnalysis/SemanticAnalyzer.cppm
-        src/core/polymorphic_variant.cppm
-)
-add_executable(Zenith ${TUs} src/main.cpp
-)
+add_executable(Zenith ${TUs} src/main.cpp)
 target_include_directories(Zenith PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_sources(Zenith
-        PUBLIC
-        FILE_SET cxx_modules TYPE CXX_MODULES FILES
-        ${MODULES}
-        )
 
 target_link_libraries(Zenith PRIVATE fmt::fmt)
 

@@ -1,11 +1,8 @@
-module;
+#pragma once
 #include "../exceptions/ErrorReporter.hpp"
-export module zenith.semantic:symbolTable;
-import zenith.ast;
-import zenith.core.polymorphic_variant;
-import zenith.core.polymorphic_ref;
-import zenith.core.polymorphic;
-export namespace zenith{
+#include "../ast/AST.hpp"
+#include <core/polymorphic_variant.hpp>
+ namespace zenith{
 	struct SymbolInfo {
 		enum Kind {
 			VARIABLE, FUNCTION, OBJECT, ACTOR, TYPE_ALIAS, TEMPLATE_PARAM, UNKNOWN

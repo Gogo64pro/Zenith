@@ -4,8 +4,7 @@
 #include "utils/mainargs.hpp"
 #include "utils/ReadFile.hpp"
 #include "exceptions/ParseError.hpp"
-import zenith.semantic;
-
+#include <SemanticAnalysis/SemanticAnalyzer.hpp>
 using namespace zenith;
 
 int main(int argc, char *argv[]) {

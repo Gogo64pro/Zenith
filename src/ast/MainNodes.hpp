@@ -1,14 +1,13 @@
-module;
+#pragma once
 #include <utility>
 #include <vector>
 #include <sstream>
 #include"acceptMethods.hpp"
-export module zenith.ast:mainNodes;
-import zenith.core.polymorphic;
-import :visitor;
-import :ASTNode;
+#include "../core/polymorphic.hpp"
+#include "ASTNode.hpp"
 
-export namespace zenith {
+
+namespace zenith {
 	struct ProgramNode : ASTNode {
 		std::vector<polymorphic<ASTNode>> declarations;
 

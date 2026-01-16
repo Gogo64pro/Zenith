@@ -1,6 +1,4 @@
-module;
-module zenith.ast;
-import zenith.core.polymorphic;
+#include "AST.hpp"
 #define ACCEPT_METHOD(Node) void Node::accept(Visitor& visitor) {visitor.visit(*this);}
 namespace zenith {
 	ACCEPT_METHOD(VarDeclNode)

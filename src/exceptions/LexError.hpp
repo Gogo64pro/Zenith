@@ -6,7 +6,7 @@
 
 #include <stdexcept>
 #include <utility>
-import zenith.ast;
+#include "../ast/AST.hpp"
 
 namespace zenith {
 

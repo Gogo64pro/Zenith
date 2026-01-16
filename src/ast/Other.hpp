@@ -1,16 +1,14 @@
-module;
+#pragma once
 #include <string>
 #include <utility>
 #include <vector>
 #include <sstream>
 #include "acceptMethods.hpp"
-export module zenith.ast:other;
-import zenith.core.polymorphic;
-import :ASTNode;
-import :typeNodes;
+#include "../core/polymorphic.hpp"
+#include "ASTNode.hpp"
+#include "TypeNodes.hpp"
 
-
-export namespace zenith{
+namespace zenith{
 	struct AnnotationNode : ASTNode {
 		std::string name;
 		std::vector<std::pair<std::string, polymorphic<ExprNode>>> arguments;

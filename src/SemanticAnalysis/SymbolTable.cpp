@@ -1,11 +1,8 @@
-module;
+#include "SymbolTable.hpp"
 #include <ranges>
 #include <sstream>
-#include "utils/Colorize.hpp"
 #include "exceptions/ErrorReporter.hpp"
 #include <vector>
-module zenith.semantic;
-import zenith.ast;
 namespace zenith{
 	//SymbolInfo::SymbolInfo(const Kind k, polymorphic_ref<TypeNode> t, polymorphic_ref<ASTNode> node, const bool isConst, const bool isStatic)
 	//		: kind(k), type(t), declarationNode(node), isConst(isConst), isStatic(isStatic) {}

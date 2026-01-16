@@ -1,4 +1,4 @@
-module;
+#pragma once
 #include <memory>
 #include <type_traits>
 #include <concepts>
@@ -6,9 +6,7 @@ module;
 #include <typeinfo>
 #include <optional>
 
-export module zenith.core.polymorphic;
-
-export namespace zenith {
+namespace zenith {
     template<typename T>
     class polymorphic {
         std::shared_ptr<T> ptr_;

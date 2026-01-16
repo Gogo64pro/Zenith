@@ -1,14 +1,14 @@
 //
 // Created by gogop on 11/28/2025.
 //
-module;
+#pragma once
+
 #include <optional>
 #include <variant>
-export module zenith.core.polymorphic_variant;
-import zenith.core.polymorphic;
-import zenith.core.polymorphic_ref;
+#include "polymorphic.hpp"
+#include "polymorphic_ref.hpp"
 
-export namespace zenith {
+namespace zenith {
 	template<typename T>
 	class polymorphic_variant {
 	public:
@@ -18,7 +18,7 @@ export namespace zenith {
 		polymorphic_variant &operator=(U &&value)
 		requires (!std::same_as<std::remove_cvref_t<U>, polymorphic_variant> &&
 			  (std::convertible_to<U&&, polymorphic<T>> ||
-			   std::convertible_to<U&&, polymorphic_ref<T>>)){
+			   std::convertible_to<U&&, polymorphic_ref<T>>)) {
 			if constexpr (std::is_convertible_v<U&&, polymorphic<T>>) {
 				v_.template emplace<0>(std::forward<U>(value));
 			} else if constexpr (std::is_convertible_v<U&&, polymorphic_ref<T>>) {

@@ -40,13 +40,11 @@ set(TUs
         src/visitor/Visitor.cpp
         src/ast/AST.hpp
         src/ast/SourceLocation.hpp
+        src/core/polymorphic.hpp
+        src/core/polymorphic_ref.hpp
+        src/core/polymorphic_variant.hpp
 )
 
-set(MODULES
-        src/core/polymorphic.cppm
-        src/core/polymorphic_ref.cppm
-        src/core/polymorphic_variant.cppm
-)
 add_executable(Zenith ${TUs} src/main.cpp
 )
 target_include_directories(Zenith PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)

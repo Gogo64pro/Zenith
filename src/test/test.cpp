@@ -3,7 +3,7 @@
 //
 
 #include <gtest/gtest.h>
-#include "../core/polymorphic.cppm"
+#include "../core/polymorphic.hpp"
 #include "../lexer/lexer.hpp"
 #include "../parser/parser.hpp"
 

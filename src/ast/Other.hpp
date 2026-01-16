@@ -4,11 +4,11 @@
 #include <vector>
 #include <sstream>
 #include "acceptMethods.hpp"
-import zenith.core.polymorphic;
+#include "../core/polymorphic.hpp"
 #include "ASTNode.hpp"
 #include "TypeNodes.hpp"
 
-export namespace zenith{
+namespace zenith{
 	struct AnnotationNode : ASTNode {
 		std::string name;
 		std::vector<std::pair<std::string, polymorphic<ExprNode>>> arguments;

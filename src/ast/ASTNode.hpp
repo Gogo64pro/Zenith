@@ -1,11 +1,11 @@
 #pragma once
 #include <string>
 #include "SourceLocation.hpp"
-import zenith.core.polymorphic;
+#include "../core/polymorphic.hpp"
 namespace zenith {
 	class Visitor;
 }
-export namespace zenith {
+namespace zenith {
 	struct ASTNode {
 		virtual ~ASTNode() = default;
 		SourceLocation loc;

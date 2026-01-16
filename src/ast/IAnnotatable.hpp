@@ -2,11 +2,11 @@
 
 #include <vector>
 #include "../utils/small_vector.hpp"
-import zenith.core.polymorphic;
+#include "../core/polymorphic.hpp"
 #include "ASTNode.hpp"
 #include "Other.hpp"
 
-export namespace zenith{
+namespace zenith{
 	struct IAnnotatable{
 		small_vector<polymorphic<AnnotationNode>, 2> annotations;
 		virtual ~IAnnotatable() = default;

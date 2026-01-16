@@ -11,8 +11,8 @@
 #include "Statements.hpp"
 #include "IAnnotatable.hpp"
 #include "Other.hpp"
-import zenith.core.polymorphic;
-export namespace zenith {
+#include "../core/polymorphic.hpp"
+namespace zenith {
 	struct VarDeclNode : StmtNode {
 		enum Kind { STATIC, DYNAMIC, CLASS_INIT } kind;
 

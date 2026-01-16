@@ -6,11 +6,11 @@
 #include "../utils/RemovePadding.hpp"
 #include "lexer/lexer.hpp"
 #include "acceptMethods.hpp"
-import zenith.core.polymorphic;
+#include "../core/polymorphic.hpp"
 #include "ASTNode.hpp"
 #include "Declarations.hpp"
 #include "MainNodes.hpp"
-export namespace zenith{
+namespace zenith{
 	// --- Literal Values ---
 	struct LiteralNode : ExprNode {
 		enum Type : uint8_t { NUMBER, STRING, BOOL, NIL } type;

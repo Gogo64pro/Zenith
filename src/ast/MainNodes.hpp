@@ -3,11 +3,11 @@
 #include <vector>
 #include <sstream>
 #include"acceptMethods.hpp"
-import zenith.core.polymorphic;
+#include "../core/polymorphic.hpp"
 #include "ASTNode.hpp"
 
 
-export namespace zenith {
+namespace zenith {
 	struct ProgramNode : ASTNode {
 		std::vector<polymorphic<ASTNode>> declarations;
 

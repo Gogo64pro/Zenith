@@ -6,12 +6,11 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-import zenith.core.polymorphic;
-import zenith.core.polymorphic_variant;
+#include "../core/polymorphic_variant.hpp"
 #include "ASTNode.hpp"
 
 
-export namespace zenith {
+namespace zenith {
 	struct TypeNode : ASTNode {
 		enum class Kind { PRIMITIVE, OBJECT, ARRAY, FUNCTION, DYNAMIC, TEMPLATE, ERROR } kind;
 

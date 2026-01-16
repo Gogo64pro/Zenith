@@ -1,19 +1,13 @@
-module;
-#include <iostream>
 #include <ranges>
 #include "exceptions/ErrorReporter.hpp"
 #include <string>
 #include <vector>
 #include <unordered_set>
-
+#include "SemanticAnalyzer.hpp"
 #include "fmt/args.h"
 
 #define CREATE_ERROR_INFO(loc) ExpressionInfo(make_polymorphic<TypeNode>(loc, TypeNode::Kind::ERROR), false, false)
 #define CREATE_ERROR_TYPE(loc) make_polymorphic<TypeNode>(loc, TypeNode::Kind::ERROR)
-module zenith.semantic;
-import zenith.core.polymorphic_ref;
-import zenith.core.polymorphic;
-import zenith.ast;
 
 namespace zenith {
 	auto isNumeric = [](const polymorphic_ref<TypeNode>& t) -> bool {

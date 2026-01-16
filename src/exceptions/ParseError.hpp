@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 #include <utility>
-import zenith.ast;
+#include "../ast/AST.hpp"
 namespace zenith {
 
 	class ParseError : public std::runtime_error {

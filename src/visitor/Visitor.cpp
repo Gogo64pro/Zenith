@@ -2,14 +2,13 @@
 // Created by gogop on 4/25/2025.
 //
 
-module;
 #include <stdexcept>
 #if defined(__clang__) || defined(__GNUC__)
 #include <cxxabi.h>
 #include <cstdlib>
 #endif
-module zenith.ast;
-import zenith.core.polymorphic_ref;
+#include "Visitor.hpp"
+#include "../ast/AST.hpp"
 inline std::string type_name(const std::type_info& ti) {
 #if (defined(__clang__) || defined(__GNUC__)) && !defined(_MSC_VER)
 	// assume itanium abi idk if intel compiler defines this

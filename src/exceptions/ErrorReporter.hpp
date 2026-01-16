@@ -1,10 +1,9 @@
 #pragma once
 
-#include <ostream>
 #include <unordered_map>
 #include <vector>
 #include "../utils/Colorize.hpp"
-import zenith.ast;
+#include "../ast/SourceLocation.hpp"
 
 namespace zenith{
 	class ErrorReporter{

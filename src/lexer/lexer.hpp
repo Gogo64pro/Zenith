@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
-import zenith.sourceLocation;
+#include "../ast/SourceLocation.hpp"
 namespace zenith{
 	enum class TokenType {
 		// Keywords

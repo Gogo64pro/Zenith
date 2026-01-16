@@ -4,10 +4,12 @@
 #pragma once
 #include <string>
 
-struct SourceLocation {
-	size_t line;
-	size_t column;
-	size_t length;
-	[[maybe_unused]] size_t fileOffset;
-	std::string file;
-};
+namespace zenith {
+	struct SourceLocation {
+		size_t line;
+		size_t column;
+		size_t length;
+		[[maybe_unused]] size_t fileOffset;
+		std::string file;
+	};
+}

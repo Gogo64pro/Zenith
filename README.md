@@ -1,4 +1,4 @@
-# **UNFINISHED AND WRONG**
+# **UNFINISHED, PARSER NOTUP TO DATE**
 
 
 # Language Specification: Zenith
@@ -51,7 +51,7 @@ A hybrid programming language combining JVM interoperability, low-level control,
 
 - **Dual Model**:
 
-  - ```Result<T, E>``` (Rust-like).
+  - Enum based
 
   - ```@Throws``` for JVM exceptions.
 
@@ -524,3 +524,37 @@ union arbnum {
     float
 }
 ```
+
+
+# Enum error handling model (syntax not mentioned up top needs to be fixed)
+
+```
+enum ReadFileRV {
+  SUCCESS(data: string)
+  ERR_NO_ACCESS,
+  ERR_IN_USE
+}
+```
+Used with 
+```
+match value{
+  SUCCESS => {
+    //LAMBDA
+    
+  }
+  //etc...
+}
+```
+# Pipelines (Wip)
+```
+path
+|> readFile
+|> fileType
+|> match {
+  XML |> parseXml |> docFromXml
+  JSON |> parseJson |> docFromJson
+  _ |=> {/*lambda*/ IO.print("wrong type")} |> break //breaks parent lambda
+}
+|> modifyDoc
+|> saveDoc(path, _) //_ is result from previous 
+

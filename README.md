@@ -206,7 +206,6 @@ somestruct nicename = freeobj {} //Type conversion error
 **<span style="font-size: 1.1em;">Built-in `class` types</span>**
 
 - `IO` - simple console and file IO
-- `Result<T,E>` - for Rust-like error handling
 - Some other ones I forgot
 
 ### Blocks

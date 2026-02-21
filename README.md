@@ -1,7 +1,7 @@
 # **UNFINISHED, PARSER NOTUP TO DATE**
 
 
-# Language Specification: Zenith
+<!--# Language Specification: Zenith
 
 A hybrid programming language combining JVM interoperability, low-level control, and dynamic scripting.
 
@@ -129,22 +129,21 @@ unsafe {
 - WASM support. (NOT PLANNED YET)
 
 - IDE plugins (VS Code/LSP).
-
+-->
 
 # Specific language specification
 
 ### Keywords
-- ```let``` - Declares a dynamic variable TODO do be deleted and replaced with auto
-- ```var``` - Declares a dynamic variable, same as let TODO do be deleted and replaced with auto
-- ```dynamic``` - Dynamic type(heap allocated)
+- `auto` - Type inference
+- ```dynamic``` - Dynamic type (primitive) (heap allocated)
 - ```fun``` - Declares a dynamic function, can be used with static return type functions too
-- ```hoist``` - Hoists a variable to the top of its scope. Defines at the normal point
+- [DEPRECATED] ```hoist``` - Hoists a variable to the top of its scope. Defines at the normal point
 - `unsigned` - Makes a number variable unsigned
 - `signed` - Makes a number variable signed
 - ```class``` - Makes a class
 - ```struct``` - Makes a struct
 - ```unsafe``` - Creates a block where you can use unsafe functions
-- ```new``` - Optional new keyword, used when creating objects
+- ```new``` - New keyword, used when creating objects
 
 
 **Class Scopes**  
@@ -171,68 +170,54 @@ unsafe {
 - `byte` - 1 byte integer  
 - `float` - 4 byte decimal number
 - `double` -  8 byte decimal number
+- `dynamic` - heap allocated dynamic data type
 
 **<span style="font-size: 0.95em; margin-left: 0.5em; display: block; ">Other primitive Types</span>**
 - `string` - A string !! Not a `class`
-- `freeobj` -  A JavaScript like object that can store data, functions, etc. If it is being used like a `struct` it will be compiled as if it is a `struct`. There are a couple of ways to use it 
+- `freeobj` -  A JavaScript like object that can store data, functions, etc. If it can be lowered to a structure it will be to save on heap memory and overhead
+- [DEPRECATED]
 - `Number` - A JS like number that supports decimals and whole numbers up to 8 bytes
 - `BigInt` - A JS like dynamically allocated integer, up to 32 bytes
 - `BigNumber` - A dynamically allocated number that can support numbers up to 32 bytes
 ```
 //Easiest way
-let dynamic = {
+auto dynamic = { //inferred as freeobj
     name: "Zenith",
     version: 1.0f,
     getInfo: () => "${this.name} v${this.version}"
 }
 //Redundant freeobj way
-let dynamic = freeobj {
+auto dynamic = freeobj {
     name: "Zenith",
     version: 1.0f,
     getInfo: () => "${this.name} v${this.version}"
 }
 //Type strict way
-freeobj dynamic = freeobj { //second "freeobj" is not reqired here, it is optional
+freeobj dynamic = freeobj { //second freeobj Infront of { is optional
     name: "Zenith",
     version: 1.0f,
     getInfo: () => `"${this.name} v${this.version}"`
 }
 //Edge cases
 struct somestruct{...}
-let whatever = {} //will be a free obj
 somestruct name = {} //will be a struct
-somestruct nicename = freeobj {} //Type conversion error
+somestruct nicename = freeobj {} //Type conversion error as you are specifically making a freeobject but assigning it to a structure yype
 ```
 **<span style="font-size: 1.1em;">Built-in `class` types</span>**
 
 - `IO` - simple console and file IO
-- Some other ones I forgot
+- Std lib not done
 
 ### Blocks
 **Functions**
-- Dynamic function(returns anything)
 ```
-fun coolname(var dynamicarg1, long staticarg1, dynamicarg2){
-    if(dynamicarg1==5) return true //requires the braces requirement to be OFF
-    if(staticarg1==900) {return 9}
-    if(dynamicarg2=="cats are good") {return new Cat("Mqucho")}
-    return new Cat("Murcho")
-}
-```
-- Static Function - returns a specific type
-```
-fun Cat catfactory(var dynamicarg1, long staticarg1, dynamicarg2){ // Keyword fun is not required
-    if(dynamicarg1==5) return new Cat("bob ross") //requires the braces requirement to be OFF
-    if(staticarg1==900) {return new Cat("snowball")}
-    if(dynamicarg2=="cats are good") {return new Cat("Mqucho")}
-    return new Cat("Murcho")
-}
+fun type name(type argName){}
 ```
 **Loops**
 - `for` loop
 ```
 for(let i=0;i<123;i++){
-    //tell snowball something
+    //
 }
 int arr[1024] = ...
 for(int i : arr){
@@ -242,13 +227,13 @@ for(int i : arr){
 - `while` loop
 ```
 while(somecondition){
-    //feed snowball, bob ross, Mqucho and Murcho
+    //
 }
 ```
 - `do-while` loop
 ```
 do {
-  // code block to be executed
+  // 
 }
 while (condition)
 ```
@@ -263,8 +248,6 @@ if(condition){
     //do 1
 }else if(condition){
     //do 2
-}elif(condition){
-    //do3
 }
 ```
 **Objects**
@@ -274,7 +257,7 @@ if(condition){
 ```
 class Cat{
     privatew string name;
-    privatew double age;
+    privatew double age // ; optional
     public void pet(){
         IO.print(`"${this.name} feels very Loved!"`)
     }
@@ -299,6 +282,7 @@ struct Vector3{
     int z;
 }
 ```
+[DEPRECATED]
 **<span style="font-size: 0.95em; margin-left: 0.5em; display: block; ">Union</span>**
 ```
 union Pet{
@@ -347,11 +331,10 @@ annotation Register{
     string registry;
     Cat mother;
 }
-@Name(mother=new Cat("pissssi"),registry="con")
 ```
 **Decorators**
 
-//not sure yet
+[WIP]
 
 ### Object-Oriented Programming (OOP) in Depth
 **Classes**
@@ -374,9 +357,9 @@ Key Modifiers
 ```
 class Dog {
     // Fields with restricted write access
-    privatew double age;         // Writable only in Dog
-    protectedw string breed;    // Writable in Dog and subclasses
-    const public string name;  // Immutable, readable everywhere
+    privatew double age;
+    protectedw string breed;
+    const public string name; 
 
     public Dog(string name, string breed) : name(name) {
         this.age = 0;           
@@ -508,6 +491,7 @@ fun main() {
  }
 ```
 
+[DEPRECATED]
 **Union**
 - A union is a special data type that lets you store different types of data in the same memory space, but only one at a time
 Key Idea:

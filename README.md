@@ -1,543 +1,110 @@
-# **UNFINISHED, PARSER NOTUP TO DATE**
+# Zenith
 
+Zenith is an in-development, hybrid programming language compiler written in C++23. It aims to combine JVM interoperability, low-level memory control, and dynamic scripting in a single language.
 
-<!--# Language Specification: Zenith
+> **Status:** Early development. The lexer and parser are functional. The semantic analyser is partially implemented. Code generation is not yet available.
 
-A hybrid programming language combining JVM interoperability, low-level control, and dynamic scripting.
+## Features
 
-## Core Features
+- **Static and dynamic typing** — explicit types (`int`, `float`, `string`, …) or inferred with `let`/`auto`
+- **OOP** — classes with access modifiers, inheritance, operator overloading, constructors/destructors
+- **Structs** — public-by-default value types
+- **Unsafe blocks** — manual memory management and C FFI
+- **Annotations and decorators** — runtime metadata (`@Route`) and compile-time wrappers (`@@Memoize`)
+- **Enum-based error handling** with pattern matching via `match`
+- **Multiple compile targets** — `native` (in progress), `jvm` (planned)
 
-### 1. Memory Management
-- **Free Objects**  
-  - `let obj = {}` → Inferred as `freeobj` (dynamic properties).  
-  - Optimized via hidden classes/static access.  
-- **Manual Memory**  
-  - `unsafe { let ptr = malloc(size); free(ptr); }`  
-  - `scope` blocks for auto-free.  
-- **Garbage Collection** (Optional)  
-  - `@GC("generational")` (default for JVM).  
-  - `@GC("refcounting")` or `@GC("none")`.
+For the full language reference see [docs/LANGUAGE_SPEC.md](docs/LANGUAGE_SPEC.md).
 
-### 2. Types
-- **Static Types**: `int`, `long`, `struct`, etc.  
-- **Dynamic Types**: `dynamic` or inferred (`let x = 10`).  
-- **First-Class Objects**: Everything is an object.  
+## Prerequisites
 
-### 3. OOP & Structs
-- **Classes**:  
-  ```
-  class Example { 
-    privatew int x; // Write-restricted 
-    protectedw int y; 
-  }
-  ```
-- **Structs/Unions**:
-    ```
-    struct Point { int x, y; }
-    union Data { int i; float f; } //Can't contain dynamic variables
-    ```
+| Tool | Minimum version |
+|------|----------------|
+| C++ compiler with C++23 support | GCC 13 / Clang 16 / MSVC 19.38 |
+| CMake | 4.0 |
+| Internet access (first build only) | — |
 
-### 4. Concurrency
+CMake downloads [GoogleTest](https://github.com/google/googletest) and [fmtlib](https://github.com/fmtlib/fmt) automatically on the first build.
 
-- **Async/Await**:
-    ```
-    @Async fun fetch() -> Future<String> { 
-      let data = await http.get(url); 
-    }
-    ```
-- **Actors**: Isolated state with message-passing.
+## Building from Source
 
-### 5. Error Handling
-
-- **Dual Model**:
-
-  - Enum based
-
-  - ```@Throws``` for JVM exceptions.
-
-### 6. FFI (Foreign Function Interface)
-
-- C/JVM/Wasm:
-```extern "C" { fn printf(format: *const char, ...); }```
-
-### 7. Metaprogramming
-
-- Decorators: @@Log (applied at compile-time).
-
-- Annotations: @Route("/path") (runtime metadata).
-
-### 8. Syntax Sugar
-- Braces: Configurable (--braces=optional).
-
-- String Interpolation: ```\`"Hello, {name}!"\````.
-
-## Unique Features
-| Feature            | Example              | Notes                           |
-|--------------------|----------------------|---------------------------------|
-| Write Restrictions | privatew int x;      | Class-only write, external read |
-| Hoisting           | hoist var x = 10;    | Like JavaScript.                |
-| Dual GC            | @GC("none")          | Manual + GC modes coexist.      |
-| Free Objects       | let obj = { x: 10 }; | Optimized as structs if static. |
-
-## Compiler Optimizations
-
-1. Hidden Classes: Speed up property access.
-
-2. Escape Analysis: Stack-allocate free objects.
-
-3. Inline Caching: Cache frequent property lookups.
-
-## Grammar Highlights (EBNF)
-```ebnf
-freeobj      = "{" [ IDENT ":" expr { "," IDENT ":" expr } ] "}" ;
-unsafe_block = "unsafe" "{" { stmt } "}" ;
-async_func   = "@Async" "fun" IDENT "(" params ")" "->" "Future" "<" type ">" ;
+```bash
+git clone https://github.com/Gogo64pro/Zenith.git
+cd Zenith
+cmake -B build
+cmake --build build
 ```
 
-## Examples
- **JVM Interop**
-```
-@JVMExport or @@JVMExport
-class Main {
-  static void main() {
-    let obj = { msg: "Hello, JVM!" };
-    print(obj.msg);
-  }
-}
-```
-- **!! To export to Java you must have a `package` set. You can export to java even if you are trying to export a normal function. From Java's side the function would be a method in the `functions` class**
+The compiler binary is placed at `build/Zenith` (or `build\Zenith.exe` on Windows).
 
- **Low-Level Control**
-```
-unsafe {
-  let buf = malloc(1024);
-  buf[0] = 42; // Pointer arithmetic
-}
-```
-## Tooling
+## Usage
 
-- Compiler Flags:
- --target=jvm|native|wasm
- --braces=required|optional
+```
+Zenith [options] <input-file>
+```
 
-- Package Manager: zenith-pkg (WIP). RIP if you think this will exist
+### Options
+
+| Flag | Values | Default | Description |
+|------|--------|---------|-------------|
+| `--target=` | `native`, `jvm` | `native` | Compilation target |
+| `--braces=` | `required`, `optional` | `required` | Whether braces are mandatory around blocks |
+| `--gc=` | `generational`, `refcounting`, `none` | `generational` | Garbage-collection strategy |
+
+### Example
+
+```bash
+./build/Zenith --target=native hello.zn
+```
+
+After a successful run you will find:
+
+- `lexerout.log` — token stream produced by the lexer
+- `parserout.log` — AST dump produced by the parser
+
+## Running the Tests
+
+```bash
+cmake --build build --target ptest
+cd build && ctest --output-on-failure
+```
+
+The test suite uses [GoogleTest](https://github.com/google/googletest) and covers the lexer/parser pipeline.
+
+## Project Structure
+
+```
+Zenith/
+├── CMakeLists.txt
+├── docs/
+│   └── LANGUAGE_SPEC.md   # Full language reference
+└── src/
+    ├── main.cpp            # Compiler entry point
+    ├── lexer/              # Tokeniser
+    ├── parser/             # Recursive-descent parser → AST
+    ├── ast/                # AST node definitions
+    ├── SemanticAnalysis/   # Type checking and symbol resolution
+    ├── visitor/            # Visitor pattern for AST traversal
+    ├── core/               # Polymorphic type utilities
+    ├── exceptions/         # LexError, ParseError, SemanticAnalysisError
+    ├── utils/              # File I/O, argument parsing, helpers
+    └── test/               # GoogleTest unit tests
+```
 
 ## Roadmap
 
-- JVM target.
+- [ ] Complete parser
+- [ ] Finish semantic analysis
+- [ ] Native code generation
+- [ ] JVM compilation target
+- [ ] Standard library (`IO`, collections, …)
+- [ ] IDE / LSP support
 
-- WASM support. (NOT PLANNED YET)
+## License
 
-- IDE plugins (VS Code/LSP).
--->
+No license file is present in this repository. All rights are reserved by the author unless otherwise stated. Contact the repository owner for licensing enquiries.
 
-# Specific language specification
-
-### Keywords
-- `auto` - Type inference
-- ```dynamic``` - Dynamic type (primitive) (heap allocated)
-- ```fun``` - Declares a dynamic function, can be used with static return type functions too
-- [DEPRECATED] ```hoist``` - Hoists a variable to the top of its scope. Defines at the normal point
-- `unsigned` - Makes a number variable unsigned
-- `signed` - Makes a number variable signed
-- ```class``` - Makes a class
-- ```struct``` - Makes a struct
-- ```unsafe``` - Creates a block where you can use unsafe functions
-- ```new``` - New keyword, used when creating objects
+---
 
 
-**Class Scopes**  
-- ```public``` - Class public scope  
-- ```protected``` - Class protected scope  
-- ```private``` - Class private scope  
-- ```privatew``` - Class privatew scope (only private scope can write, everyone can read)  
-- ```protectedw``` - Class protectedw scope (only protected/private scope can write, everyone can read
-
-**Imports**
-- ```import``` - Imports a file
-- ```import java``` - Imports a java class(must be compiled to JVM or have a JVM it can reference to)
-- ```extern "C"``` - Creates a block where you can declare C functions, must be in an unsafe block
-- ```package``` - Sets a package, needed when compiling to JVM or integrating with java
-
-### Types
-
-**<span style="font-size: 1.1em;">Built-in types</span>**
-
-**<span style="font-size: 0.95em; margin-left: 0.5em; display: block;">Number Types</span>**  
-- `short` - 2 byte integer  
-- `int` - 4 byte integer  
-- `long` - 8 byte integer  
-- `byte` - 1 byte integer  
-- `float` - 4 byte decimal number
-- `double` -  8 byte decimal number
-- `dynamic` - heap allocated dynamic data type
-
-**<span style="font-size: 0.95em; margin-left: 0.5em; display: block; ">Other primitive Types</span>**
-- `string` - A string !! Not a `class`
-- `freeobj` -  A JavaScript like object that can store data, functions, etc. If it can be lowered to a structure it will be to save on heap memory and overhead
-- [DEPRECATED]
-- `Number` - A JS like number that supports decimals and whole numbers up to 8 bytes
-- `BigInt` - A JS like dynamically allocated integer, up to 32 bytes
-- `BigNumber` - A dynamically allocated number that can support numbers up to 32 bytes
-```
-//Easiest way
-auto dynamic = { //inferred as freeobj
-    name: "Zenith",
-    version: 1.0f,
-    getInfo: () => "${this.name} v${this.version}"
-}
-//Redundant freeobj way
-auto dynamic = freeobj {
-    name: "Zenith",
-    version: 1.0f,
-    getInfo: () => "${this.name} v${this.version}"
-}
-//Type strict way
-freeobj dynamic = freeobj { //second freeobj Infront of { is optional
-    name: "Zenith",
-    version: 1.0f,
-    getInfo: () => `"${this.name} v${this.version}"`
-}
-//Edge cases
-struct somestruct{...}
-somestruct name = {} //will be a struct
-somestruct nicename = freeobj {} //Type conversion error as you are specifically making a freeobject but assigning it to a structure yype
-```
-**<span style="font-size: 1.1em;">Built-in `class` types</span>**
-
-- `IO` - simple console and file IO
-- Std lib not done
-
-### Blocks
-**Functions**
-```
-fun type name(type argName){}
-```
-**Loops**
-- `for` loop
-```
-for(let i=0;i<123;i++){
-    //
-}
-int arr[1024] = ...
-for(int i : arr){
-    //Log i
-}
-```
-- `while` loop
-```
-while(somecondition){
-    //
-}
-```
-- `do-while` loop
-```
-do {
-  // 
-}
-while (condition)
-```
-**If statements**
-```
-if(condition){
-    //do this
-}else{
-    //do that
-}
-if(condition){
-    //do 1
-}else if(condition){
-    //do 2
-}
-```
-**Objects**
-
-**<span style="font-size: 0.95em; margin-left: 0.5em; display: block; ">Classes</span>**
-
-```
-class Cat{
-    privatew string name;
-    privatew double age // ; optional
-    public void pet(){
-        IO.print(`"${this.name} feels very Loved!"`)
-    }
-    public void age(double age){
-        if(age>0){
-            this.age+=age
-        }
-    }
-
-    public Cat(string name, Gender gender){
-        this.name = name
-        this.age = 0
-    }
-
-}
-```
-**<span style="font-size: 0.95em; margin-left: 0.5em; display: block; ">Structs</span>**
-```
-struct Vector3{
-    int x;
-    int y;
-    int z;
-}
-```
-[DEPRECATED]
-**<span style="font-size: 0.95em; margin-left: 0.5em; display: block; ">Union</span>**
-```
-union Pet{
-    Cat;
-    Dog;
-}
-```
-### Metaprogramming - Annotations, Decorators
-- **Annotations** can be added to anything and hold some extra info, work the same as Java Annotations can hold anything, they give runtime metadata(in some cases with the built-in ones it's compile time)
-```
-@Breedable
-class Cat{...}
-
-@Register(id="some_registry_entry",registry="block")
-class Cube{...}
-
-@NotNull
-let somevarthatcantbenull = 1
-
-@IsAGreatFunction
-fun givesGreatResponses{...}
-```
-- **Decorators** - can be added to functions/methods and function as a wrapper before executing the main code
-```
-  @@Memoize
-  fun fibbonaci(){}
-```
-#### Creating
-**Annotations**
-```
-annotation ComesFromNet
-@ComesFromNet
-/************************/
-annotation Name{
-    string value;
-}
-@Name("John Cena")
-/************************/
-annotation Register{
-    string registry;
-    string id;
-}
-@Register(id="actor",registry="con")
-/************************/
-annotation Register{
-    string registry;
-    Cat mother;
-}
-```
-**Decorators**
-
-[WIP]
-
-### Object-Oriented Programming (OOP) in Depth
-**Classes**
-
-Classes are the foundation of OOP, encapsulating data (fields) and behavior (methods). They support:
-
-- Inheritance
-
-- Operator overloading (though not shown in this first example)
-
-- Automatic getters/setters (though not shown in this first example)
-
-- Constructors, destructors, and method overriding
-
-Key Modifiers
-
-- `const` – Makes a field immutable (must be initialized at declaration or in the constructor).
-- `static` - Makes the member not need an instance to be accessed
-
-```
-class Dog {
-    // Fields with restricted write access
-    privatew double age;
-    protectedw string breed;
-    const public string name; 
-
-    public Dog(string name, string breed) : name(name) {
-        this.age = 0;           
-        this.breed = breed;     
-    }
-
-    public void describe() {
-        IO.print(`"${this.name} is a ${this.breed} aged ${this.age}."`);
-        this.age = 5
-    }
-
-    // Protected method (can modify protected fields)
-    protected void setBreed(string newBreed) {
-        this.breed = newBreed;
-    }
-}
-
-class Mallinois : Dog {
-    public Mallinois(string name) : Dog(name, "Mallinois") {}
-
-    public void train() {
-        this.age = 3;
-        this.breed = "Trained Mallinois";  
-        IO.print(`"${super.name} is now a ${this.breed}!"`);
-    }
-}
-
-// Example Usage
-fun main() {
-    Dog buddy = new Dog("Buddy", "Labrador");
-    buddy.describe();  // "Buddy is a Labrador aged 0."
-
-    // Can READ but NOT WRITE privatew/protectedw from public scope:
-    // buddy.age = 5;   // ERROR: privatew write outside class!
-    // buddy.breed = "Poodle"; // ERROR: protectedw write outside hierarchy!
-
-    Mallinois rex = new Mallinois("Rex");
-    rex.train();       // "Rex is now a Trained Mallinois!"
-    rex.describe();    // "Rex is a Trained Mallinois aged 0."
-}
-```
-
-```
-class Vector3D {
-    // Private fields (readable everywhere, writable only in Vector3D)
-    privatew double x;
-    privatew double y;
-    privatew double z;
-
-    // Constructor
-    public Vector3D(double x, double y, double z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-
-    // --- Setters (with validation) ---
-    public void setter(x) setX(double x) { 
-        if (!x.isNaN()) {  // Example validation
-            this.x = x; 
-        }
-    }
-    // (Similar for setY/setZ...)
-
-    // --- Operator Overloading ---
-    // Vector addition (+)
-    public Vector3D operator+(Vector3D other) {
-        return new Vector3D(
-            this.x + other.x,
-            this.y + other.y,
-            this.z + other.z
-        );
-    }
-
-    // Scalar multiplication (*)
-    public Vector3D operator*(double scalar) {
-        return new Vector3D(
-            this.x * scalar,
-            this.y * scalar,
-            this.z * scalar
-        );
-    }
-
-    // Equality check (==)
-    public bool operator==(Vector3D other) {
-        return this.x == other.x 
-            && this.y == other.y 
-            && this.z == other.z;
-    }
-
-    // --- String representation ---
-    public string toString() {
-        return `"(${this.x}, ${this.y}, ${this.z})"`;
-    }
-}
-
-// Example Usage
-fun main() {
-    Vector3D v1 = new Vector3D(1.0, 2.0, 3.0);
-    Vector3D v2 = new Vector3D(4.0, 5.0, 6.0);
-
-    // Operator overloading
-    Vector3D sum = v1 + v2;               // (5.0, 7.0, 9.0)
-    Vector3D scaled = v1 * 2.0;           // (2.0, 4.0, 6.0)
-    bool isEqual = (v1 == v2);            // false
-
-    // Getters/setters
-    IO.print(v1.getX());                   // 1.0
-    v1.x = 10.0;                          // Valid write ↓
-    // v1.x = 10.0;                      // Usually would error, but will automatically use setter, ERROR: privatew write outside class!
-
-    IO.print(sum.toString());             // "(5.0, 7.0, 9.0)"
-}
-```
-**Structs**
-- Structs are the same as classes, but have a default access level of public
-```
- struct Vector3{
-     public int x;
-     public int y;
-     public int z;
-     //By default they don't have a constuctor
- }
- Vector3 a = {1,2,4}
- Vector b = {
-     a: 1,
-     b: 2,
-     c: 4
- }
-```
-
-[DEPRECATED]
-**Union**
-- A union is a special data type that lets you store different types of data in the same memory space, but only one at a time
-Key Idea:
-- Unlike a struct (where each field has its own memory), a union shares the same memory for all its fields
-- Changing one field overwrites the others
-- Size = largest member’s size (since memory is shared)
-- Do not directly support dynamic variables
-- If they contain an object that contains dynamic variables they will be ignored (in size)
-- No way to know what type is active
-```
-union arbnum {
-    int,
-    float
-}
-```
-
-
-# Enum error handling model (syntax not mentioned up top needs to be fixed)
-
-```
-enum ReadFileRV {
-  SUCCESS(data: string)
-  ERR_NO_ACCESS,
-  ERR_IN_USE
-}
-```
-Used with 
-```
-match value{
-  SUCCESS => {
-    //LAMBDA
-    
-  }
-  //etc...
-}
-```
-# Pipelines (Wip)
-```
-path
-|> readFile
-|> fileType
-|> match {
-  XML |> parseXml |> docFromXml
-  JSON |> parseJson |> docFromJson
-  _ |=> {/*lambda*/ IO.print("wrong type")} |> break //breaks parent lambda
-}
-|> modifyDoc
-|> saveDoc(path, _) //_ is result from previous 
-
+The full language reference has moved to **[docs/LANGUAGE_SPEC.md](docs/LANGUAGE_SPEC.md)**.

@@ -1,0 +1,220 @@
+(* Zenith Language EBNF Grammar *)
+(* Rule names correspond to Parser method names in src/parser/parser.cpp *)
+
+
+(* ===== Program Entry Point ===== *)
+
+parse = { parseAnnotations topLevelDecl } ;
+
+topLevelDecl = parseImport
+             | parseTemplate
+             | parseObject
+             | parseUnion
+             | parseFunction
+             | parseVarDecl
+             | parseActorDecl ;
+
+
+(* ===== Imports ===== *)
+
+parseImport = "import" ( "java" IDENTIFIER { "." IDENTIFIER }
+                       | STRING_LIT
+                       | IDENTIFIER { "." IDENTIFIER } )
+             [ ";" ] ;
+
+
+(* ===== Variable Declarations ===== *)
+
+parseVarDecl = [ "hoist" ]
+               ( ( builtInType | IDENTIFIER ) IDENTIFIER [ "[" parseExpression "]" ]
+               | ( "let" | "var" | "dynamic" ) IDENTIFIER [ "[" parseExpression "]" ] [ ":" parseType ] )
+               [ "=" parseExpression ] ;
+
+
+(* ===== Types ===== *)
+
+parseType = builtInType
+          | "[" parseType "]"
+          | IDENTIFIER [ "<" parseType { "," parseType } ">" ] ;
+
+builtInType = "int" | "long" | "short" | "byte" | "float" | "double"
+            | "string" | "Number" | "BigInt" | "BigNumber" | "freeobj"
+            | "bool" | "void" ;
+
+
+(* ===== Expressions ===== *)
+
+parseExpression = ( "++" | "--" ) parseExpression
+                | parsePrimary ( "++" | "--" )
+                | parsePrimary { binaryOp parseExpression } ;
+
+binaryOp = "=" | "+=" | "-=" | "*=" | "/=" | "%="
+         | "||" | "&&"
+         | "!=" | "=="
+         | "<" | "<=" | ">" | ">="
+         | "+" | "-" | "*" | "/" | "%" ;
+
+
+(* ===== Primary Expressions ===== *)
+
+parsePrimary = parseNewExpression
+             | INTEGER
+             | FLOAT_LIT
+             | STRING_LIT
+             | "true" | "false"
+             | "null"
+             | parseStructInitializer
+             | parseFreeObject
+             | "freeobj" parseFreeObject
+             | parseArrowFunction
+             | "(" parseExpression ")"
+             | ( IDENTIFIER | "this" ) { parseFunctionCall | parseMemberAccess | parseArrayAccess } ;
+
+
+(* ===== New Expression ===== *)
+
+parseNewExpression = "new" IDENTIFIER "(" [ parseExpression { "," parseExpression } ] ")" ;
+
+
+(* ===== Postfix / Call Operations ===== *)
+
+parseFunctionCall = "(" [ parseExpression { "," parseExpression } ] ")" ;
+
+parseMemberAccess = "." IDENTIFIER [ parseFunctionCall ] { "." IDENTIFIER [ parseFunctionCall ] } ;
+
+parseArrayAccess = "[" parseExpression "]" { "[" parseExpression "]" } ;
+
+
+(* ===== Functions ===== *)
+
+parseFunction = ( "fun" [ parseType ] | parseType ) IDENTIFIER parseParameters
+               [ "->" parseType ] parseBlock ;
+
+parseParameters = "(" ( "{" [ param { "," param } ] "}" ")"
+                      | [ param { "," param } ] ")" ) ;
+
+param = ( parseType | "let" | "var" | "dynamic" ) IDENTIFIER ;
+
+
+(* ===== Blocks and Statements ===== *)
+
+parseBlock = "{" { parseStatement } "}" ;
+
+parseStatement = parseVarDecl
+               | parseIfStmt
+               | parseForStmt
+               | parseWhileStmt
+               | parseDoWhileStmt
+               | parseReturnStmt
+               | "unsafe" parseUnsafeBlock
+               | parseScopeBlock
+               | parseBlock
+               | parseExpression [ ";" ]
+               | ";" ;
+
+parseIfStmt = "if" "(" parseExpression ")" parseStatement
+             [ "else" parseStatement ] ;
+
+parseForStmt = "for" "(" ( ";" | parseVarDecl | parseExpression ) ";"
+                         [ parseExpression ] ";"
+                         [ parseExpression ] ")"
+              parseStatement ;
+
+parseWhileStmt = "while" "(" parseExpression ")" parseStatement ;
+
+parseDoWhileStmt = "do" parseStatement "while" "(" parseExpression ")" [ ";" ] ;
+
+parseReturnStmt = "return" [ parseExpression ] [ ";" ] ;
+
+parseScopeBlock = "scope" "{" { parseStatement } "}" ;
+
+parseUnsafeBlock = "{" { parseStatement } "}" ;
+
+
+(* ===== Objects / Classes / Structs ===== *)
+
+parseObject = ( "class" | "struct" ) IDENTIFIER [ ":" IDENTIFIER ]
+             "{" { parseAnnotations parseObjectPrimary } "}" ;
+
+parseObjectPrimary = [ accessModifier ] [ "const" ]
+                    ( parseConstructor | parseFunction | parseField ) ;
+
+accessModifier = "public" | "protected" | "private" | "privatew" | "protectedw" ;
+
+parseField = parseVarDecl ";" ;
+
+parseConstructor = IDENTIFIER parseParameters
+                  [ ":" IDENTIFIER "(" parseExpression ")"
+                    { "," IDENTIFIER "(" parseExpression ")" } ]
+                  parseBlock ;
+
+
+(* ===== Free Objects ===== *)
+
+parseFreeObject = "{" [ IDENTIFIER ":" parseExpression
+                       { "," IDENTIFIER ":" parseExpression } ] "}" ;
+
+
+(* ===== Struct Initializers ===== *)
+
+parseStructInitializer = "{" [ structField { "," structField } ] "}" ;
+
+structField = "." IDENTIFIER "=" parseExpression   (* C-style: .field = value *)
+            | IDENTIFIER ":" parseExpression        (* JS-style: field: value *)
+            | parseExpression ;                     (* positional *)
+
+
+(* ===== Arrow Functions ===== *)
+
+parseArrowFunctionParams = "(" [ IDENTIFIER { "," IDENTIFIER } ] ")" ;
+
+parseArrowFunction = parseArrowFunctionParams "=>" ( parseExpression | parseBlock ) ;
+
+
+(* ===== Unions ===== *)
+
+parseUnion = "union" IDENTIFIER "{" parseType { "," parseType } "}" ;
+
+
+(* ===== Actors ===== *)
+
+parseActorDecl = "actor" IDENTIFIER [ ":" IDENTIFIER ]
+                "{" { parseMessageHandler | ( parseAnnotations parseObjectPrimary ) } "}" ;
+
+parseMessageHandler = "on" IDENTIFIER parseParameters [ "->" parseType ] parseBlock ;
+
+
+(* ===== Templates ===== *)
+
+parseTemplate = "template" "<" parseTemplateParameters ">"
+               ( parseObject | parseFunction | parseUnion | parseActorDecl ) ;
+
+parseTemplateParameters = parseTemplateParameter { "," parseTemplateParameter } ;
+
+parseTemplateParameter = [ "..." ] "typename" [ "..." ] IDENTIFIER [ "=" parseType ]
+                       | [ "..." ] parseType IDENTIFIER [ "=" parsePrimary ] ;
+
+
+(* ===== Annotations ===== *)
+
+parseAnnotations = { parseAnnotation } ;
+
+parseAnnotation = "@" IDENTIFIER [ "(" [ annotationArg { "," annotationArg } ] ")" ] ;
+
+annotationArg = [ IDENTIFIER "=" ] parseExpression ;
+
+
+(* ===== Terminals ===== *)
+
+IDENTIFIER = letter { letter | digit } ;
+INTEGER    = digit { digit } ;
+FLOAT_LIT  = digit { digit } "." digit { digit } ;
+STRING_LIT = '"' { character } '"' ;
+
+letter    = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+          | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+          | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
+          | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+          | "_" ;
+digit     = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+character = ? any character except '"' and newline ? ;

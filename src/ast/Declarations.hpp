@@ -175,7 +175,7 @@ namespace zenith {
 			this->loc = std::move(loc);
 			this->annotations = std::move(ann);
 		}
-
+		[[nodiscard]] virtual polymorphic_ref<TypeNode> getType() const = 0;
 		ACCEPT_METHODS
 	protected:
 		[[nodiscard]] static const char* getKindName(Kind kind) {
@@ -183,13 +183,11 @@ namespace zenith {
 			return kindNames[static_cast<int>(kind)];
 		}
 
-		// Helper method to get the access name
 		[[nodiscard]] static const char* getAccessName(Access access) {
 			static const char* accessNames[] = {"PUBLIC", "PROTECTED", "PRIVATE", "PRIVATEW", "PROTECTEDW"};
 			return accessNames[static_cast<int>(access)];
 		}
 
-		// Helper method to build the member declaration header
 		[[nodiscard]] std::string buildMemberHeader(int indent) const {
 			static const char* kindNames[] = {"FIELD", "METHOD", "METHOD_CONSTRUCTOR", "MESSAGE_HANDLER"};
 			static const char* accessNames[] = {"PUBLIC", "PROTECTED", "PRIVATE", "PRIVATEW", "PROTECTEDW"};
@@ -220,11 +218,11 @@ namespace zenith {
 			SourceLocation loc,
 			Access access,
 			bool isConst,
+			bool isStatic,
 			std::string &&name,
 			polymorphic<TypeNode> type,
 			polymorphic<ExprNode> initializer = nullptr,
-			std::vector<polymorphic<AnnotationNode> > ann = {},
-			bool isStatic = false
+			std::vector<polymorphic<AnnotationNode> > ann = {}
 		) : MemberDeclNode(
 			    std::move(loc),
 			    Kind::FIELD,
@@ -251,7 +249,9 @@ namespace zenith {
 			ss << ";";
 			return ss.str();
 		}
-
+		[[nodiscard]] polymorphic_ref<TypeNode> getType() const override {
+			return type;
+		}
 		ACCEPT_METHODS
 	};
 
@@ -302,7 +302,9 @@ namespace zenith {
 
 	    	return ss.str();
 	    }
-
+		[[nodiscard]] polymorphic_ref<TypeNode> getType() const override {
+	    	return returnType;
+	    }
 	    ACCEPT_METHODS
 	};
 
@@ -314,12 +316,12 @@ namespace zenith {
 	        SourceLocation loc,
 	        Access access,
 	        bool isConst,
+	        bool isStatic,
 	        std::string&& name,
 	        std::vector<Param> params,
 	        polymorphic<BlockNode> body,
 	        std::vector<std::pair<std::string, polymorphic<ExprNode>>> ctor_inits = {},
-	        std::vector<polymorphic<AnnotationNode>> ann = {},
-	        bool isStatic = false
+	        std::vector<polymorphic<AnnotationNode>> ann = {}
 	        ) : MethodDeclNode(
 				std::move(loc),
 				access,
@@ -368,7 +370,9 @@ namespace zenith {
 	    	}
 	    	return ss.str();
 	    }
-
+		[[nodiscard]] polymorphic_ref<TypeNode> getType() const override {
+	    	return returnType;
+	    }
 	    ACCEPT_METHODS
 	};
 
@@ -407,7 +411,9 @@ namespace zenith {
 		[[nodiscard]] std::string toString(int indent = 0) const override {
 			return MethodDeclNode::toString(indent);
 		}
-
+		[[nodiscard]] polymorphic_ref<TypeNode> getType() const override {
+			return returnType;
+		}
 		ACCEPT_METHODS
 	};
 
@@ -417,10 +423,11 @@ namespace zenith {
 		LambdaNode(
 			SourceLocation loc,
 			std::vector<Param> params,
+			bool usingSS,
 			polymorphic<TypeNode> returnType = nullptr,
 			polymorphic<BlockNode> body = nullptr,
 			bool isAsync = false) : ASTNode(),
-		FunctionDeclNode(std::move(loc), "", std::move(params), std::move(returnType), std::move(body), isAsync, false, {}) {}
+		FunctionDeclNode(std::move(loc), "", std::move(params), std::move(returnType), std::move(body), isAsync, usingSS, {}) {}
 
 		ACCEPT_METHODS
 	};
@@ -458,7 +465,7 @@ namespace zenith {
 		static bool isValidOp(std::string op) {
 			if (op.size() >= 4) return false;
 			std::string allowedChars = "+-*/%!>=<~";
-			return std::all_of(op.begin(), op.end(), [&allowedChars](char c) {
+			return std::ranges::all_of(op, [&allowedChars](char c) {
 				return allowedChars.find(c) != std::string::npos;
 			});
 		}

@@ -37,7 +37,7 @@ namespace zenith{
 			this->loc = std::move(loc);
 		}
 
-		std::string toString(int indent = 0) const override {
+		[[nodiscard]] std::string toString(int indent = 0) const override {
 			return std::string(indent, ' ') + "Var(" + name + ")";
 		}
 		ACCEPT_METHODS
@@ -130,8 +130,8 @@ namespace zenith{
 	private:
 		static Op convertTokenType(const TokenType type) {
 			switch(type) {
-				case TokenType::INCREASE: return Op::INC;
-				case TokenType::DECREASE: return Op::DEC;
+				case TokenType::PLUS_PLUS: return Op::INC;
+				case TokenType::MINUS_MINUS: return Op::DEC;
 				default: throw std::invalid_argument("Invalid binary operator");
 			}
 		}

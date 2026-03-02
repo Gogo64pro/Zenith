@@ -48,14 +48,15 @@ namespace zenith {
 		polymorphic<TypeNode> parseType();
 		polymorphic<ExprNode> parsePrimary();
 		polymorphic<StmtNode> parseStatement();
-		std::vector<std::string> parseArrowFunctionParams();
+		std::vector<FunctionDeclNode::Param> parseArrowFunctionParams();
 		std::vector<TemplateParameter> parseTemplateParameters();
 		polymorphic<ExprNode> parseExpression(int precedence = 0);
 		polymorphic<StructInitializerNode> parseStructInitializer();
-		std::pair<std::vector<std::pair<std::string, polymorphic<TypeNode>>>, bool> parseParameters();
+
+		std::pair<std::vector<FunctionDeclNode::Param>, bool> parseParameters();
 		polymorphic<MemberDeclNode> parseMessageHandler(std::vector<polymorphic<AnnotationNode>> annotations);
-		polymorphic<MemberDeclNode> parseField(std::vector<polymorphic<AnnotationNode>> &annotations, const MemberDeclNode::Access &access, bool isConst);
-		polymorphic<MemberDeclNode> parseConstructor(const MemberDeclNode::Access &access, bool isConst, std::string &className, std::vector<polymorphic<AnnotationNode>> &annotations);
+		polymorphic<MemberDeclNode> parseField(std::vector<polymorphic<AnnotationNode>> &annotations, const MemberDeclNode::Access &access, bool isConst, bool isStatic);
+		polymorphic<MemberDeclNode> parseConstructor(const MemberDeclNode::Access &access, bool isConst, bool isStatic,  std::string &className, std::vector<polymorphic<AnnotationNode>> &annotations);
 		polymorphic<MemberDeclNode> parseObjectPrimary(std::string &name, std::vector<polymorphic<AnnotationNode>> &annotations, MemberDeclNode::Access defaultLevel = MemberDeclNode::Access::PUBLIC);
 
 		// Declaration parsers
@@ -86,7 +87,7 @@ namespace zenith {
 		polymorphic<FreeObjectNode> parseFreeObject();
 		polymorphic<CallNode> parseFunctionCall(polymorphic<ExprNode> callee);
 		polymorphic<ExprNode> parseArrayAccess(polymorphic<ExprNode> arrayExpr);
-		polymorphic<LambdaExprNode> parseArrowFunction(std::vector<std::string>&& params);
+		polymorphic<LambdaExprNode> parseArrowFunction(std::vector<FunctionDeclNode::Param> &&params);
 		polymorphic<ExprNode> parseMemberAccess(polymorphic<ExprNode> object);
 		// Error handling
 		polymorphic<ErrorNode> createErrorNode();

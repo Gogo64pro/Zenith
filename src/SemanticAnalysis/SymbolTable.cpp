@@ -13,7 +13,7 @@ namespace zenith{
 	//SymbolInfo::SymbolInfo(const Kind k, polymorphic<TypeNode> t, polymorphic_ref<ASTNode> node, const bool isConst, const bool isStatic)
 	//		: kind(k), type(std::move(t)), declarationNode(node), isConst(isConst), isStatic(isStatic) {}
 
-	SymbolInfo::SymbolInfo(const Kind k, polymorphic_variant<TypeNode> t, polymorphic_ref<ASTNode> node, const bool isConst, const bool isStatic)
+	SymbolInfo::SymbolInfo(const Kind k, polymorphic_variant<TypeNode> t, const polymorphic_ref<ASTNode> node, const bool isConst, const bool isStatic)
 			: kind(k), type(std::move(t)), declarationNode(node), isConst(isConst), isStatic(isStatic) {}
 
 	SymbolTable::SymbolTable(ErrorReporter& reporter) : errorReporter(reporter) {

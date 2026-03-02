@@ -51,6 +51,7 @@ const std::unordered_map<std::string, TokenType> Lexer::keywords = {
 		{"void", TokenType::VOID},
 
 		{"const", TokenType::CONST},
+		{"static", TokenType::STATIC},
 		{"java", TokenType::JAVA},
 		{"if", TokenType::IF},
 		{"for", TokenType::FOR},
@@ -148,13 +149,13 @@ void Lexer::scanToken() {
 			// Operators
 		case '+':
 			if (match('=')) addToken(TokenType::PLUS_EQUALS);
-			else if (match('+')) addToken(TokenType::INCREASE);
+			else if (match('+')) addToken(TokenType::PLUS_PLUS);
 			else addToken(TokenType::PLUS);
 			break;
 		case '-':
 			if (match('>')) addToken(TokenType::ARROW);
 			else if(match('=')) addToken(TokenType::MINUS_EQUALS);
-			else if (match('-')) addToken(TokenType::DECREASE);
+			else if (match('-')) addToken(TokenType::MINUS_MINUS);
 			else addToken(TokenType::MINUS);
 			break;
 		case '*':
@@ -348,7 +349,7 @@ void Lexer::number() {
 		if (peek() == 'l' || peek() == 'L') {
 			advance(); // Consume the l
 		}
-		addToken(TokenType::INTEGER);
+		addToken(TokenType::INTEGER_LIT);
 	}
 }
 
@@ -421,7 +422,7 @@ std::string Lexer::tokenToString(TokenType type) {
 
 			// Literals
 		case TokenType::IDENTIFIER: return "IDENTIFIER";
-		case TokenType::INTEGER: return "INTEGER";
+		case TokenType::INTEGER_LIT: return "INTEGER";
 		case TokenType::FLOAT_LIT: return "FLOAT_LIT";
 		case TokenType::STRING_LIT: return "STRING_LIT";
 		case TokenType::TRUE: return "TRUE";
@@ -468,6 +469,7 @@ std::string Lexer::tokenToString(TokenType type) {
 		case TokenType::THIS: return "THIS";
 
 		case TokenType::CONST: return "CONST";
+		case TokenType::STATIC: return "STATIC";
 		case TokenType::JAVA: return "JAVA";
 		case TokenType::IF: return "IF";
 		case TokenType::FOR: return "FOR";

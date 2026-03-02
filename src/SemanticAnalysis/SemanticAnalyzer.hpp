@@ -65,7 +65,7 @@ namespace zenith {
 		void visit(CallNode& node) override;                  // polymorphic<TypeNode> -> exprVR
 		void visit(MemberAccessNode& node) override;          // polymorphic<TypeNode> -> exprVR
 		void visit(ArrayAccessNode& node) override;           // polymorphic<TypeNode> -> exprVR
-		void visit(NewExprNode& node) override;               // polymorphic<TypeNode> -> exprVR
+		// void visit(NewExprNode& node) override;               // polymorphic<TypeNode> -> exprVR
 		// void visit(ThisNode& node) override;                  // polymorphic<TypeNode> -> exprVR
 		// void visit(FreeObjectNode& node) override;            // polymorphic<TypeNode> -> exprVR
 		// void visit(TemplateStringNode& node) override;        // polymorphic<TypeNode> -> exprVR

@@ -157,7 +157,7 @@ namespace zenith {
 
     symbolTable.enterScope();
 
-    for (const auto& param : node.params) {
+    for (auto& param : node.params) {
         auto pType = resolveType(param.type);
         if (!pType) {
             pType = make_polymorphic<TypeNode>(
@@ -184,6 +184,7 @@ namespace zenith {
     if (node.body) {
         node.body->accept(*this);
         // TODO: When in current function scope make sure a ReturnNode is found (for non-void functions)
+    	// Todo also make sure its the correct type as returnType
     }
 
     symbolTable.exitScope();
@@ -194,7 +195,7 @@ namespace zenith {
 		std::vector<polymorphic_variant<TypeNode>> paramTypes;
 		bool paramError = false;
 		paramTypes.reserve(node.lambda->params.size());
-		for (auto &[name, param]: node.lambda->params) {
+		for (auto &[name, param, defaultVal]: node.lambda->params) {
 			if (auto resolvedParamType = resolveType(param); !resolvedParamType) {
 				errorReporter.report(param ? param->loc : node.loc,
 				                     "Could not resolve type for lambda parameter '" + name);
@@ -242,7 +243,7 @@ namespace zenith {
 		symbolTable.enterScope();
 
 		for (auto&& [i, param] : std::views::enumerate(node.lambda->params)) {
-			auto& [name, param] = param;
+			auto& [name, paramName, defaultValue] = param;
 
 			polymorphic_variant<TypeNode> paramTypeForSymbol = paramTypes[i].copy_or_share();
 			if (!paramTypeForSymbol) {
@@ -251,7 +252,7 @@ namespace zenith {
 				paramTypeForSymbol = CREATE_ERROR_TYPE(node.loc);
 			}
 
-			const polymorphic_ref<ASTNode> paramDeclNode = param.cast().to<ASTNode>();
+			const polymorphic_ref<ASTNode> paramDeclNode = paramName.cast().to<ASTNode>();
 			symbolTable.declare(
 				name,
 				SymbolInfo(SymbolInfo::VARIABLE,
@@ -721,9 +722,6 @@ namespace zenith {
         return;
     }
 
-    // Helper: is the type a numeric primitive?
-
-
     bool isNumericType = isNumeric(operandInfo.type);
 
     switch (node.op) {
@@ -869,7 +867,7 @@ namespace zenith {
 			exprVR = CREATE_ERROR_INFO(node.loc);
 			return;
 		}
-		exprVR = ExpressionInfo((*it)->type);
+		exprVR = ExpressionInfo((*it)->getType());
 	}
 	void SemanticAnalyzer::visit(WhileNode& node) {
 		const bool areCompatible = areTypesCompatible(visitExpression(node.condition).type, constants::BOOL_TYPE);
@@ -886,6 +884,7 @@ namespace zenith {
 		node.body->accept(*this);
 	}
 	void SemanticAnalyzer::visit(ForNode& node) {
+
 		node.initializer->accept(*this);
 		const bool areCompatible = areTypesCompatible(visitExpression(node.condition).type, constants::BOOL_TYPE);
 		if (!areCompatible) {

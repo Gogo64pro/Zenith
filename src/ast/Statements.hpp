@@ -123,12 +123,12 @@ namespace zenith {
 	};
 
 	struct ForNode : StmtNode {
-		polymorphic<ASTNode> initializer;
+		polymorphic<StmtNode> initializer;
 		polymorphic<ExprNode> condition;
 		polymorphic<ExprNode> increment;
 		polymorphic<ASTNode> body;
 
-		ForNode(SourceLocation loc, polymorphic<ASTNode> init,
+		ForNode(SourceLocation loc, polymorphic<StmtNode> init,
 		        polymorphic<ExprNode> cond,
 		        polymorphic<ExprNode> incr,
 		        polymorphic<ASTNode> b)
@@ -164,7 +164,7 @@ namespace zenith {
 			std::string pad(indent, ' ');
 			std::stringstream ss;
 			ss << pad << "Unsafe {\n";
-			for (const auto& stmt : statements) {
+			for (const auto &stmt: statements) {
 				ss << stmt->toString(indent + 2) << "\n";
 			}
 			ss << pad << "}";

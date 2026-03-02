@@ -49,10 +49,9 @@ target_link_libraries(Zenith PRIVATE fmt::fmt)
 # Testing
 
 add_executable(ptest
-        src/test/test.cpp
-        src/test/PolymorphicTest.cpp
         ${ZENITH_SOURCES}
-        )
+        src/test/LexerTest.cpp
+)
 target_precompile_headers(ptest PRIVATE ${PCH_HEADERS})
 target_include_directories(ptest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(ptest PRIVATE gtest gtest_main)

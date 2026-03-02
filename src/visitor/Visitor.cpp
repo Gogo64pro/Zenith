@@ -49,6 +49,22 @@ namespace zenith{
 		visit(static_cast<ASTNode&>(node));
 	}
 
+	void Visitor::visit(CtorDeclNode& node) {
+		visit(static_cast<MemberDeclNode &>(node));
+	}
+
+	void Visitor::visit(MessageHandlerNode& node) {
+		visit(static_cast<MemberDeclNode &>(node));
+	}
+
+	void Visitor::visit(FieldDeclNode& node) {
+		visit(static_cast<MemberDeclNode &>(node));
+	}
+
+	void Visitor::visit(MethodDeclNode& node) {
+		visit(static_cast<MemberDeclNode &>(node));
+	}
+
 	void Visitor::visit(OperatorOverloadNode& node) {
 		visit(static_cast<ASTNode&>(node));
 	}

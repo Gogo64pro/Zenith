@@ -46,4 +46,8 @@ namespace zenith {
 	ACCEPT_METHOD(ArrayTypeNode)
 	ACCEPT_METHOD(TemplateTypeNode)
 	ACCEPT_METHOD(FunctionTypeNode)
+	ACCEPT_METHOD(FieldDeclNode)
+	ACCEPT_METHOD(CtorDeclNode)
+	ACCEPT_METHOD(MethodDeclNode)
+	ACCEPT_METHOD(MessageHandlerNode)
 }

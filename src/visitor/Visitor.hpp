@@ -35,7 +35,11 @@ namespace zenith {
 		virtual void visit(struct AnnotationNode& node);
 		virtual void visit(struct TemplateDeclNode& node);
 		virtual void visit(struct LambdaNode& node);
+		virtual void visit(struct MessageHandlerNode& node);
 		virtual void visit(struct MemberDeclNode& node);
+		virtual void visit(struct CtorDeclNode& node);
+		virtual void visit(struct FieldDeclNode& node);
+		virtual void visit(struct MethodDeclNode& node);
 		virtual void visit(struct OperatorOverloadNode& node);
 		virtual void visit(struct UnsafeNode& node);
 		virtual void visit(struct CompoundStmtNode& node);

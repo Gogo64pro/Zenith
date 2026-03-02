@@ -6,3 +6,4 @@ CMakeFiles/
 *.log
 count_non_comment_lines.ps1
 ZenithExprimental.ebnf
+spec/book
